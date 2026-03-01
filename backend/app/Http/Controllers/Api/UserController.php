@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\UserService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -35,14 +36,26 @@ class UserController extends Controller
      * @param StoreUserRequest $request
      * @return UserResource
      */
-    public function store(StoreUserRequest $request): UserResource
+    public function store(StoreUserRequest $request): JsonResponse
     {
         $dto = new UserDto(...$request->validated());
         $user = $this->userService->create($dto);
 
+        // Welcome email + Verify email
         event(new UserRegistration($user));
 
+        // Access token and refresh token
+        $accessToken = $user->createToken('access-token', ['*'], Carbon::now()->addDays(1));
+        $refreshToken = $user->createToken('refresh-token', ['refresh'], Carbon::now()->addDays(7));
+
         return (new UserResource($user))
+            ->additional([
+                'access_token' => $accessToken->plainTextToken,
+                'access_token_expires_at' => Carbon::now()->addDays(1),
+                'refresh_token' => $refreshToken->plainTextToken,
+                'refresh_token_expires_at' => Carbon::now()->addDays(7)
+            ])
+            ->response()
             ->setStatusCode(201);
     }
 
@@ -84,11 +97,14 @@ class UserController extends Controller
 
     /**
      * Verify user email
-     * @param User $user
+     * @param string $id
+     * @param string $hash
      * @return JsonResponse
      */
-    public function verifyEmail(User $user): JsonResponse
+    public function verifyEmail(string $id, string $hash): JsonResponse
     {
+        $user = User::findOrFail($id);
+
         if ($user->hasVerifiedEmail()) {
             return response()->json(['message' => 'Email already verified.']);
         }

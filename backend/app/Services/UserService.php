@@ -35,15 +35,12 @@ class UserService
 
     public function update(User $user, UserDto $dto): User
     {
-        $data = [
+        $data = array_filter([
             'name' => $dto->name,
             'surname' => $dto->surname,
             'email' => $dto->email,
-        ];
-
-        if ($dto->password !== null) {
-            $data['password'] = $dto->password;
-        }
+            'password' => $dto->password,
+        ], fn ($value) => $value !== null);
 
         return $this->userRepository->update($user, $data);
     }

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Welcome to {{ config('app.name') }}</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f6f9;">
+        <tr>
+            <td align="center" style="padding:40px 16px;">
+
+                <!-- Email Card -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="background-color:#1a1a2e;border-radius:8px 8px 0 0;padding:36px 48px;">
+                            <h1 style="margin:0;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">
+                                {{ config('app.name') }}
+                            </h1>
+                            <p style="margin:6px 0 0;font-size:13px;color:#a0aec0;letter-spacing:1.5px;text-transform:uppercase;">
+                                Smart Relocation Solutions
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td style="background-color:#ffffff;padding:48px;">
+
+                            <!-- Welcome Icon -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td align="center" style="padding-bottom:32px;">
+                                        <div style="display:inline-block;background-color:#eef2ff;border-radius:50%;width:72px;height:72px;line-height:72px;text-align:center;font-size:32px;">
+                                            🎉
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Greeting -->
+                            <h2 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#1a1a2e;text-align:center;">
+                                Welcome aboard, {{ $name }}!
+                            </h2>
+                            <p style="margin:0 0 32px;font-size:15px;color:#64748b;text-align:center;line-height:1.6;">
+                                We're thrilled to have you as part of the {{ config('app.name') }} community.
+                            </p>
+
+                            <!-- Divider -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td style="border-top:1px solid #e2e8f0;padding-bottom:32px;"></td>
+                                </tr>
+                            </table>
+
+                            <!-- Body text -->
+                            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.7;">
+                                Dear <strong>{{ $name }} {{ $surname }}</strong>,
+                            </p>
+                            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.7;">
+                                Your account has been successfully created. {{ config('app.name') }} is your trusted partner for smart, seamless relocation — connecting you with the right services, tools, and people to make every move effortless.
+                            </p>
+                            <p style="margin:0 0 32px;font-size:15px;color:#374151;line-height:1.7;">
+                                Here's what you can expect from us:
+                            </p>
+
+                            <!-- Feature list -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:32px;">
+                                <tr>
+                                    <td style="padding:14px 20px;background-color:#f8fafc;border-left:4px solid #4f46e5;border-radius:4px;margin-bottom:12px;">
+                                        <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">
+                                            <strong style="color:#1a1a2e;">📦 Streamlined Move Management</strong><br>
+                                            Plan, track, and manage every aspect of your relocation in one place.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr><td style="height:10px;"></td></tr>
+                                <tr>
+                                    <td style="padding:14px 20px;background-color:#f8fafc;border-left:4px solid #4f46e5;border-radius:4px;">
+                                        <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">
+                                            <strong style="color:#1a1a2e;">🤝 Verified Service Providers</strong><br>
+                                            Access a curated network of trusted movers, logistics partners, and more.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr><td style="height:10px;"></td></tr>
+                                <tr>
+                                    <td style="padding:14px 20px;background-color:#f8fafc;border-left:4px solid #4f46e5;border-radius:4px;">
+                                        <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">
+                                            <strong style="color:#1a1a2e;">📊 Real-Time Insights</strong><br>
+                                            Monitor your move status and costs with transparent, up-to-date reporting.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td align="center" style="padding-bottom:32px;">
+                                        <a href="{{ config('app.url') }}"
+                                           style="display:inline-block;background-color:#4f46e5;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 36px;border-radius:6px;letter-spacing:0.3px;">
+                                            Go to Your Dashboard
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Divider -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td style="border-top:1px solid #e2e8f0;padding-bottom:24px;"></td>
+                                </tr>
+                            </table>
+
+                            <!-- Closing -->
+                            <p style="margin:0 0 4px;font-size:14px;color:#374151;line-height:1.6;">
+                                Warm regards,
+                            </p>
+                            <p style="margin:0;font-size:14px;font-weight:700;color:#1a1a2e;">
+                                The {{ config('app.name') }} Team
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;border-radius:0 0 8px 8px;padding:24px 48px;text-align:center;">
+                            <p style="margin:0 0 8px;font-size:12px;color:#94a3b8;line-height:1.6;">
+                                You are receiving this email because an account was created for this address on {{ config('app.name') }}.
+                            </p>
+                            <p style="margin:0;font-size:12px;color:#94a3b8;">
+                                &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>
