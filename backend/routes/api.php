@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -8,16 +9,19 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
 
     // PUBLIC Routes
+    Route::prefix('auth')->group(function () {
+        Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::get('/email/verify/{id}/{hash}', [UserController::class, 'verifyEmail'])
+            ->middleware('signed')
+            ->name('verification.verify');
+    });
 
-    Route::get('/email/verify/{id}/{hash}', [UserController::class, 'verifyEmail'])
-        ->middleware('signed')
-        ->name('verification.verify');
-
-    // Register
-    Route::post('/users/register', [UserController::class, 'store']);
 
     // PROTECTED Routes
-    Route::middleware('auth:sanctum')
-        ->apiResource('users', UserController::class)
-        ->except(['store']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('users', UserController::class);
+        Route::post('refresh-token', [AuthController::class, 'refreshToken'])
+            ->name('refresh');
+    });
 });

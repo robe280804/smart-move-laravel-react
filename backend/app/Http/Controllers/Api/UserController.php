@@ -9,10 +9,12 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\AuthService;
 use App\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cookie;
 
 class UserController extends Controller
 {
@@ -41,20 +43,7 @@ class UserController extends Controller
         $dto = new UserDto(...$request->validated());
         $user = $this->userService->create($dto);
 
-        // Welcome email + Verify email
-        event(new UserRegistration($user));
-
-        // Access token and refresh token
-        $accessToken = $user->createToken('access-token', ['*'], Carbon::now()->addDays(1));
-        $refreshToken = $user->createToken('refresh-token', ['refresh'], Carbon::now()->addDays(7));
-
-        return (new UserResource($user))
-            ->additional([
-                'access_token' => $accessToken->plainTextToken,
-                'access_token_expires_at' => Carbon::now()->addDays(1),
-                'refresh_token' => $refreshToken->plainTextToken,
-                'refresh_token_expires_at' => Carbon::now()->addDays(7)
-            ])
+        return new UserResource($user)
             ->response()
             ->setStatusCode(201);
     }
@@ -93,24 +82,5 @@ class UserController extends Controller
         $this->userService->delete($user);
 
         return response()->json(null, 204);
-    }
-
-    /**
-     * Verify user email
-     * @param string $id
-     * @param string $hash
-     * @return JsonResponse
-     */
-    public function verifyEmail(string $id, string $hash): JsonResponse
-    {
-        $user = User::findOrFail($id);
-
-        if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Email already verified.']);
-        }
-
-        $user->markEmailAsVerified();
-
-        return response()->json(['message' => 'Email successfully verified.']);
     }
 }
