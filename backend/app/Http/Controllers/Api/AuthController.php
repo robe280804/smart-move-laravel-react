@@ -73,7 +73,7 @@ class AuthController extends Controller
     {
         $user = Auth::user();
         $request->user()->tokens()->delete();
-        $tokens = $this->authService->generateTokens($user);
+        $tokens = $this->authService->generateTokens($request->user());
 
         return $this->sendResponseWithTokens($tokens);
     }
