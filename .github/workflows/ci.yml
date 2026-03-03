@@ -16,18 +16,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
-
       - name: Build Docker image
-        run: docker build -f docker/Dockerfile -t smart-move-app .
+        run: docker build -f backend/docker/Dockerfile -t smart-move-app backend
 
       - name: Start app container
-        run: docker run -d --name app -v ${{ github.workspace }}:/var/www/html smart-move-app
+        run: docker run -d --name app -v ${{ github.workspace }}/backend:/var/www/html smart-move-app
 
       - name: Copy environment file
         run: docker exec app cp .env.example .env
