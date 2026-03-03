@@ -71,11 +71,12 @@ class AuthController extends Controller
      */
     public function refreshToken(Request $request): JsonResponse
     {
-        $user = Auth::user();
         $request->user()->tokens()->delete();
         $tokens = $this->authService->generateTokens($request->user());
 
-        return $this->sendResponseWithTokens($tokens);
+        return $this->sendResponseWithTokens($tokens, [
+            'user' => UserResource::make($request->user()),
+        ]);
     }
 
 

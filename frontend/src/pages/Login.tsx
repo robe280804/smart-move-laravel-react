@@ -13,11 +13,12 @@ import {
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Checkbox } from "../components/ui/checkbox";
-import { loginSchema } from "../types/forms";
+import { loginSchema } from "../components/forms/authentication";
 import type { LoginFormData, LoginFormErrors } from "../types/forms";
 import { login } from "../services/authentication";
 import { ApiError } from "../lib/apiError";
 import { toast } from "sonner";
+import { useAuth } from "../contexts/AuthContext";
 
 export const Login = () => {
     const navigate = useNavigate();
@@ -26,6 +27,7 @@ export const Login = () => {
     const [errors, setErrors] = useState<LoginFormErrors>({});
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const { setSession } = useAuth();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -51,7 +53,7 @@ export const Login = () => {
         setErrors({});
         try {
             const response = await login(result.data);
-            localStorage.setItem("access_token", response.token);
+            setSession(response);
             navigate("/dashboard");
         } catch (error: unknown) {
             if (error instanceof ApiError) {
@@ -62,7 +64,7 @@ export const Login = () => {
                         ) as LoginFormErrors
                     );
                 } else {
-                    toast.error("Something went wrong", {
+                    toast.error(error.message, {
                         position: "top-center", duration: 5000,
                         style: {
                             background: "#FF4D4F",
@@ -151,7 +153,7 @@ export const Login = () => {
                             )}
                         </div>
 
-                        {/* Remember me */}
+                        {/* Remember me 
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="rememberMe"
@@ -162,6 +164,7 @@ export const Login = () => {
                                 Remember me
                             </Label>
                         </div>
+                        */}
 
                         <Button
                             type="submit"
@@ -216,7 +219,7 @@ export const Login = () => {
             </Card>
 
             <div className="mt-6 text-center">
-                <Link to="/" className="text-sm text-slate-600 hover:text-slate-900">
+                <Link to="/welcome" className="text-sm text-slate-600 hover:text-slate-900">
                     ← Back to home
                 </Link>
             </div>

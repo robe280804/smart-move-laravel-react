@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Dumbbell, Eye, EyeOff, Sparkles } from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
@@ -12,11 +12,13 @@ import {
 } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { registerSchema } from "../types/forms";
+import { registerSchema } from "../components/forms/authentication";
 import type { RegisterFormData, RegisterFormErrors } from "../types/forms";
 import { register } from "../services/authentication";
 import { ApiError } from "../lib/apiError";
 import { toast } from "sonner";
+import { useAuth } from "../contexts/AuthContext";
+
 
 export const Register = () => {
     const [form, setForm] = useState<RegisterFormData>({
@@ -30,6 +32,8 @@ export const Register = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const { setSession } = useAuth();
+    const navigate = useNavigate();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -54,10 +58,9 @@ export const Register = () => {
         setIsLoading(true);
         setErrors({});
         try {
-            console.log("Register payload:", result.data);
             const response = await register(result.data);
-            localStorage.setItem("access_token", response.token);
-            console.log("Register response:", response);
+            setSession(response);
+            navigate('/dashboard');
         } catch (error: unknown) {
             if (error instanceof ApiError) {
                 if (error.fieldErrors) {
@@ -292,7 +295,7 @@ export const Register = () => {
                                 {" "}and{" "}
                                 <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
                             </p>
-                            <Link to="/" className="text-sm text-slate-600 hover:text-slate-900 mx-auto">
+                            <Link to="/welcome" className="text-sm text-slate-600 hover:text-slate-900 mx-auto">
                                 ← Back to home
                             </Link>
                         </CardFooter>

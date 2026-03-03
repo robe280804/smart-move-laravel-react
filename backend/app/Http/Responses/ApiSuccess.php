@@ -21,7 +21,7 @@ class ApiSuccess implements Responsable
         return response()->json(
             [
                 'data' => $this->data,
-                'metaData' => $this->metaData
+                'meta_data' => $this->metaData
             ],
             $this->statusCode,
             $this->headers,

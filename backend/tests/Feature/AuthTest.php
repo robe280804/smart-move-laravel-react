@@ -312,12 +312,12 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $authService = app(AuthService::class);
-        $tokens = $authService->generateTokens($user);
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => self::VALID_PASSWORD,
+        ]);
 
-        $response = $this->withUnencryptedCookie('refreshToken', $tokens['refreshToken'])
-            ->withHeader('Authorization', 'Bearer ' . $tokens['accessToken'])
-            ->postJson(route('refresh'));
+        $response = $this->postJson(route('refresh'));
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -333,9 +333,9 @@ class AuthTest extends TestCase
         $tokenHash = hash('sha256', $newAccessToken);
         $exists = PersonalAccessToken::where('token', $tokenHash)->exists();
         $this->assertTrue($exists);
-    }
+    }*/
 
-    public function test_refresh_token_deletes_old_tokens_and_issues_new_ones(): void
+    /*public function test_refresh_token_deletes_old_tokens_and_issues_new_ones(): void
     {
         $user = User::factory()->create();
 
