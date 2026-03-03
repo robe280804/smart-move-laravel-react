@@ -295,7 +295,7 @@ export const Register = () => {
                                 {" "}and{" "}
                                 <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
                             </p>
-                            <Link to="/welcome" className="text-sm text-slate-600 hover:text-slate-900 mx-auto">
+                            <Link to="/" className="text-sm text-slate-600 hover:text-slate-900 mx-auto">
                                 ← Back to home
                             </Link>
                         </CardFooter>

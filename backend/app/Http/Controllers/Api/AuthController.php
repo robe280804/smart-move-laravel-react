@@ -17,6 +17,8 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
@@ -48,7 +50,7 @@ class AuthController extends Controller
     }
 
 
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): JsonResponse|Responsable
     {
         $credentials = $request->validated();
         if (!Auth::attempt($credentials)) {
@@ -84,7 +86,7 @@ class AuthController extends Controller
      * Verify user email
      * @param string $id
      * @param string $hash
-     * @return JsonResponse
+     * @return Responsable
      */
     public function verifyEmail(string $id, string $hash): Responsable
     {
@@ -103,6 +105,32 @@ class AuthController extends Controller
         return new ApiSuccess(
             data: null,
             metaData: ['message' => 'Email successfully verified.'],
+            statusCode: Response::HTTP_OK
+        );
+    }
+
+    /**
+     * Reset password request 
+     * @param Request user mail
+     * @return Responsable
+     */
+    public function resetPassword(Request $request): Responsable
+    {
+        $request->validate(['email' => 'required|email|max:255']);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            Log::error('Send reset password link failed', [
+                'email' => $request->only('email'),
+            ]);
+        }
+
+        return new ApiSuccess(
+            data: null,
+            metaData: ['message' => 'If your email exists in our system, a reset link has been sent.'],
             statusCode: Response::HTTP_OK
         );
     }
