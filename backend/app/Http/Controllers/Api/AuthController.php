@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Dto\UserDto;
@@ -12,14 +14,12 @@ use App\Http\Resources\UserResource;
 use App\Http\Responses\ApiError;
 use App\Http\Responses\ApiSuccess;
 use App\Models\User;
-use App\Services\UserService;
 use App\Services\AuthService;
+use App\Services\UserService;
 use Illuminate\Contracts\Support\Responsable;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -31,52 +31,45 @@ class AuthController extends Controller
     ) {}
 
 
-    /**
-     * Register user
-     * @param StoreUserRequest $request
-     * @return UserResource
-     */
     public function register(StoreUserRequest $request): JsonResponse
     {
-        $dto = new UserDto(...$request->validated());
-        $user = $this->userService->create($dto);
+        $user = $this->userService->create(new UserDto(...$request->validated()));
 
-        // Welcome email + Verify email
         event(new UserRegistration($user));
 
         $tokens = $this->authService->generateTokens($user);
 
         return $this->sendResponseWithTokens($tokens, [
-            'user' => new UserResource($user)
+            'user' => new UserResource($user),
         ])->setStatusCode(201);
     }
 
 
     public function login(LoginRequest $request): JsonResponse|Responsable
     {
-        $credentials = $request->validated();
-        if (!Auth::attempt($credentials)) {
-            return new ApiError(null, ' Wrong credentials', Response::HTTP_UNAUTHORIZED);
+        $user = $this->authService->attemptLogin($request->validated());
+
+        if (! $user) {
+            return new ApiError(null, 'Wrong credentials', Response::HTTP_UNAUTHORIZED);
         }
 
-        $user = Auth::user();
         $tokens = $this->authService->generateTokens($user);
 
         return $this->sendResponseWithTokens($tokens, [
-            'user' => UserResource::make($user)
+            'user' => UserResource::make($user),
         ]);
     }
 
 
     /**
      * Refresh token
-     * @param Request $request refresh-token via Cookie
+     *
+     * @param  Request  $request  refresh-token via Cookie
      * @return JsonResponse access-token
      */
     public function refreshToken(Request $request): JsonResponse
     {
-        $request->user()->tokens()->delete();
-        $tokens = $this->authService->generateTokens($request->user());
+        $tokens = $this->authService->refreshToken($request->user());
 
         return $this->sendResponseWithTokens($tokens, [
             'user' => UserResource::make($request->user()),
@@ -86,20 +79,13 @@ class AuthController extends Controller
 
     /**
      * Perform the actual password reset using the token from the email link.
-     * @param Request $request token + email + password + password_confirmation
+     *
+     * @param  UpdatePasswordRequest  $request  token + email + password + password_confirmation
      * @return Responsable
      */
     public function updatePassword(UpdatePasswordRequest $request): Responsable
     {
-        $credentials = $request->validated();
-
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user, string $password) {
-                $user->forceFill(['password' => $password])->save();
-                $user->tokens()->delete();
-            }
-        );
+        $status = $this->authService->resetPassword($request->validated());
 
         if ($status !== Password::PASSWORD_RESET) {
             return new ApiError(null, __($status), Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -114,52 +100,35 @@ class AuthController extends Controller
 
 
     /**
-     * Verify user email
-     * @param string $id
-     * @param string $hash
-     * @return Responsable
+     * Verify user email.
+     * @param $id 
+     * @param $hash 
+     * @return RedirectResponse
      */
     public function verifyEmail(string $id, string $hash): RedirectResponse
     {
         $user = User::findOrFail($id);
 
         if ($user->hasVerifiedEmail()) {
-            /*return new ApiSuccess(
-                data: null,
-                metaData: ['message' => 'Email already verified.'],
-                statusCode: Response::HTTP_OK
-            );*/
             return redirect(config('app.frontend_url') . '/email-verify?status=alredy');
         }
 
         $user->markEmailAsVerified();
 
         return redirect(config('app.frontend_url') . '/email-verify?status=success');
-        /*return new ApiSuccess(
-            data: null,
-            metaData: ['message' => 'Email successfully verified.'],
-            statusCode: Response::HTTP_OK
-        );*/
     }
 
+
     /**
-     * Reset password request 
-     * @param Request user mail
+     * Send a password reset link to the given email.
+     * @param $request email
      * @return Responsable
      */
     public function resetPassword(Request $request): Responsable
     {
         $request->validate(['email' => 'required|email|max:255']);
 
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
-
-        if ($status !== Password::RESET_LINK_SENT) {
-            Log::error('Send reset password link failed', [
-                'email' => $request->only('email'),
-            ]);
-        }
+        $this->authService->sendResetLink($request->input('email'));
 
         return new ApiSuccess(
             data: null,
@@ -170,19 +139,18 @@ class AuthController extends Controller
 
 
 
-    private function sendResponseWithTokens(array $tokens, $body = []): JsonResponse
+    private function sendResponseWithTokens(array $tokens, array $body = []): JsonResponse
     {
-        $rtExpireTime = config('sanctum.rt_expiration');
         $cookie = cookie(
             'refreshToken',
             $tokens['refreshToken'],
-            $rtExpireTime,  // minutes
-            '/',               // path
-            null,            // domain
-            true,            // secure
-            true,          // httpOnly
-            false,              // raw
-            'Strict'       // sameSite
+            config('sanctum.rt_expiration'),
+            '/',
+            null,
+            true,
+            true,
+            false,
+            'Strict'
         );
 
         return (new ApiSuccess(
