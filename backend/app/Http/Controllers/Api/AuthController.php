@@ -101,20 +101,28 @@ class AuthController extends Controller
 
     /**
      * Verify user email.
+     * 
+     * @param Request $request
      * @param $id 
      * @param $hash 
      * @return RedirectResponse
      */
-    public function verifyEmail(string $id, string $hash): RedirectResponse
+    public function verifyEmail(Request $request, string $id, string $hash): Responsable|RedirectResponse
     {
         $user = User::findOrFail($id);
 
         if ($user->hasVerifiedEmail()) {
+            if ($request->wantsJson()) {
+                return new ApiSuccess(data: null, metaData: ['message' => 'Email already verified.'], statusCode: Response::HTTP_OK);
+            }
             return redirect(config('app.frontend_url') . '/email-verify?status=alredy');
         }
 
         $user->markEmailAsVerified();
 
+        if ($request->wantsJson()) {
+            return new ApiSuccess(data: null, metaData: ['message' => 'Email successfully verified.'], statusCode: Response::HTTP_OK);
+        }
         return redirect(config('app.frontend_url') . '/email-verify?status=success');
     }
 

@@ -53,7 +53,7 @@ class AuthTest extends TestCase
                 'data' => [
                     'user' => ['id', 'name', 'surname', 'email', 'created_at', 'updated_at'],
                 ],
-                'metaData' => ['accessToken', 'accessTokenExpiresAt'],
+                'meta_data' => ['accessToken', 'accessTokenExpiresAt'],
             ])
             ->assertJsonPath('data.user.email', 'john@example.com')
             ->assertJsonPath('data.user.name', 'John')
@@ -245,7 +245,7 @@ class AuthTest extends TestCase
                 'data' => [
                     'user' => ['id', 'name', 'surname', 'email'],
                 ],
-                'metaData' => ['accessToken', 'accessTokenExpiresAt'],
+                'meta_data' => ['accessToken', 'accessTokenExpiresAt'],
             ])
             ->assertJsonPath('data.user.email', $user->email);
     }
@@ -392,7 +392,7 @@ class AuthTest extends TestCase
         $response = $this->getJson($url);
 
         $response->assertOk()
-            ->assertJsonPath('metaData.message', 'Email successfully verified.');
+            ->assertJsonPath('meta_data.message', 'Email successfully verified.');
 
         $this->assertNotNull($user->fresh()->email_verified_at);
     }
@@ -410,7 +410,7 @@ class AuthTest extends TestCase
         $response = $this->getJson($url);
 
         $response->assertOk()
-            ->assertJsonPath('metaData.message', 'Email already verified.');
+            ->assertJsonPath('meta_data.message', 'Email already verified.');
     }
 
     public function test_verify_email_fails_without_valid_signature(): void

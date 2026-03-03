@@ -1,0 +1,45 @@
+# CI/CD
+name: CI
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Build Docker image
+        run: docker build -f docker/Dockerfile -t smart-move-app .
+
+      - name: Start app container
+        run: docker run -d --name app -v ${{ github.workspace }}:/var/www/html smart-move-app
+
+      - name: Copy environment file
+        run: docker exec app cp .env.example .env
+
+      - name: Install Composer dependencies
+        run: docker exec app composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Generate application key
+        run: docker exec app php artisan key:generate
+
+      - name: Run Pint (code style check)
+        run: docker exec app ./vendor/bin/pint --test
+
+      - name: Run tests
+        run: docker exec app php artisan test --compact
