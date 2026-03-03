@@ -223,7 +223,7 @@ export const Login = () => {
             </Card>
 
             <div className="mt-6 text-center">
-                <Link to="/welcome" className="text-sm text-slate-600 hover:text-slate-900">
+                <Link to="/" className="text-sm text-slate-600 hover:text-slate-900">
                     ← Back to home
                 </Link>
             </div>

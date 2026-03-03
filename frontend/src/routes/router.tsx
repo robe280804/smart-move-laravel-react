@@ -8,6 +8,7 @@ import { Dashboard } from "../pages/Dashboard";
 import { ForgotPassword } from "../pages/ForgotPassword";
 import { ResetPassword } from "../pages/ResetPassword";
 import { EmailVerify } from "../pages/EmailVerify";
+import { ProtectedRoute } from "../layouts/ProtectedRoute";
 
 export const router = createBrowserRouter([
     {
@@ -25,9 +26,15 @@ export const router = createBrowserRouter([
         ],
     },
     {
-        element: <DashboardLayout />,
+        element: <ProtectedRoute />,
         children: [
-            { path: "/dashboard", element: <Dashboard /> },
-        ],
+            {
+                element: <DashboardLayout />,
+                children: [
+                    { path: "/dashboard", element: <Dashboard /> },
+                ],
+            }
+        ]
+
     },
 ]);
