@@ -21,6 +21,8 @@ Route::prefix('v1')
                     ->name('verification.verify');
                 Route::post('/reset-password', [AuthController::class, 'resetPassword'])
                     ->name('password.reset');
+                Route::post('/update-password', [AuthController::class, 'updatePassword'])
+                    ->name('password.update');
             });
 
 

@@ -29,3 +29,24 @@ export const refresh = async (): Promise<RefreshResponse> => {
     const response = await api.post<RefreshResponse>('/refresh-token');
     return response.data;
 };
+
+export const forgotPassword = async (email: string): Promise<void> => {
+    try {
+        await api.post('/auth/reset-password', { email });
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
+export const resetPassword = async (
+    token: string,
+    email: string,
+    password: string,
+    password_confirmation: string,
+): Promise<void> => {
+    try {
+        await api.post('/auth/update-password', { token, email, password, password_confirmation });
+    } catch (error) {
+        return handleApiError(error);
+    }
+};

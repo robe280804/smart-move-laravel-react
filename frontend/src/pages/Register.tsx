@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Dumbbell, Eye, EyeOff, Sparkles } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -32,8 +32,15 @@ export const Register = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const { setSession } = useAuth();
+    const { setSession, isAuthenticated } = useAuth();
     const navigate = useNavigate();
+
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/dashboard');
+        }
+    })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

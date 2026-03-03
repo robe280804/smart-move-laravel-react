@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Dumbbell, Eye, EyeOff, LogIn } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -12,7 +12,6 @@ import {
 } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Checkbox } from "../components/ui/checkbox";
 import { loginSchema } from "../components/forms/authentication";
 import type { LoginFormData, LoginFormErrors } from "../types/forms";
 import { login } from "../services/authentication";
@@ -23,11 +22,16 @@ import { useAuth } from "../contexts/AuthContext";
 export const Login = () => {
     const navigate = useNavigate();
     const [form, setForm] = useState<LoginFormData>({ email: "", password: "" });
-    const [rememberMe, setRememberMe] = useState(false);
     const [errors, setErrors] = useState<LoginFormErrors>({});
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const { setSession } = useAuth();
+    const { setSession, isAuthenticated } = useAuth();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/dashboard');
+        }
+    });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

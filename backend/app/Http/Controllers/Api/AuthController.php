@@ -7,6 +7,7 @@ use App\Events\UserRegistration;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\ApiError;
 use App\Http\Responses\ApiSuccess;
@@ -16,6 +17,7 @@ use App\Services\AuthService;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
@@ -83,30 +85,61 @@ class AuthController extends Controller
 
 
     /**
+     * Perform the actual password reset using the token from the email link.
+     * @param Request $request token + email + password + password_confirmation
+     * @return Responsable
+     */
+    public function updatePassword(UpdatePasswordRequest $request): Responsable
+    {
+        $credentials = $request->validated();
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill(['password' => $password])->save();
+                $user->tokens()->delete();
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            return new ApiError(null, __($status), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return new ApiSuccess(
+            data: null,
+            metaData: ['message' => 'Password reset successfully.'],
+            statusCode: Response::HTTP_OK
+        );
+    }
+
+
+    /**
      * Verify user email
      * @param string $id
      * @param string $hash
      * @return Responsable
      */
-    public function verifyEmail(string $id, string $hash): Responsable
+    public function verifyEmail(string $id, string $hash): RedirectResponse
     {
         $user = User::findOrFail($id);
 
         if ($user->hasVerifiedEmail()) {
-            return new ApiSuccess(
+            /*return new ApiSuccess(
                 data: null,
                 metaData: ['message' => 'Email already verified.'],
                 statusCode: Response::HTTP_OK
-            );
+            );*/
+            return redirect(config('app.frontend_url') . '/email-verify?status=alredy');
         }
 
         $user->markEmailAsVerified();
 
-        return new ApiSuccess(
+        return redirect(config('app.frontend_url') . '/email-verify?status=success');
+        /*return new ApiSuccess(
             data: null,
             metaData: ['message' => 'Email successfully verified.'],
             statusCode: Response::HTTP_OK
-        );
+        );*/
     }
 
     /**

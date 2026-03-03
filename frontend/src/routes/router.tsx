@@ -6,6 +6,8 @@ import { Login } from "../pages/Login";
 import { WelcomePage } from "../pages/Welcome";
 import { Dashboard } from "../pages/Dashboard";
 import { ForgotPassword } from "../pages/ForgotPassword";
+import { ResetPassword } from "../pages/ResetPassword";
+import { EmailVerify } from "../pages/EmailVerify";
 
 export const router = createBrowserRouter([
     {
@@ -18,6 +20,8 @@ export const router = createBrowserRouter([
             { path: "/register", element: <Register /> },
             { path: "/login", element: <Login /> },
             { path: "/forgot-password", element: <ForgotPassword /> },
+            { path: "/reset-password", element: <ResetPassword /> },
+            { path: "/email-verify", element: <EmailVerify /> },
         ],
     },
     {
