@@ -2,11 +2,10 @@
 
 use App\Enums\TokenAbility;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\FitnessInfoController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\SetBearerTokenFromCookie;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 
 Route::prefix('v1')
     ->group(function () {
@@ -25,7 +24,6 @@ Route::prefix('v1')
                     ->name('password.update');
             });
 
-
         // REFRESH TOKEN Route
         Route::post('refresh-token', [AuthController::class, 'refreshToken'])
             ->middleware([SetBearerTokenFromCookie::class, 'auth:sanctum', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value])
@@ -34,5 +32,6 @@ Route::prefix('v1')
         // PROTECTED Routes
         Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value])->group(function () {
             Route::apiResource('users', UserController::class);
+            Route::apiResource('fitness-info', FitnessInfoController::class);
         });
     });

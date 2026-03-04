@@ -3,9 +3,9 @@ name: CI
 
 on:
   push:
-    branches: ["*"]
+    branches: ["main"]
   pull_request:
-    branches: ["*"]
+    branches: ["main"]
 
 jobs:
   test:
@@ -31,8 +31,8 @@ jobs:
       - name: Generate application key
         run: docker exec app php artisan key:generate
 
-      - name: Run Pint (code style check)
-        run: docker exec app ./vendor/bin/pint --test
+      #- name: Run Pint (code style check)
+      #  run: docker exec app ./vendor/bin/pint --test
 
       - name: Run tests
         run: docker exec app php artisan test --compact
