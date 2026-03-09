@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'ollama' => [
+        'url' => env('OLLAMA_URL', 'http://localhost:11434'),
+        'model' => env('OLLAMA_MODEL', 'gemma3:4b'),
+    ],
+
+    'qdrant' => [
+        'url' => env('QDRANT_URL', 'http://localhost:6333/collections/exercises/'),
+        'key' => env('QDRANT_KEY'),
+    ],
+
 ];

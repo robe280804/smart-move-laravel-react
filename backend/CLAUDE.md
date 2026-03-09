@@ -105,6 +105,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - Use appropriate PHP type hints for method parameters.
 
 <!-- Explicit Return Types and Method Params -->
+
 ```php
 protected function isAccessible(User $user, ?string $path = null): bool
 {

@@ -8,6 +8,7 @@ use NeuronAI\Agent\Agent;
 use NeuronAI\Agent\SystemPrompt;
 use NeuronAI\Providers\AIProviderInterface;
 use NeuronAI\Providers\Anthropic;
+use NeuronAI\Providers\Ollama\Ollama;
 use NeuronAI\Tools\ToolInterface;
 use NeuronAI\Tools\Toolkits\ToolkitInterface;
 
@@ -17,9 +18,9 @@ class FitnessAgent extends Agent
     {
         // return an instance of Anthropic, OpenAI, Gemini, Ollama, etc...
         // https://docs.neuron-ai.dev/providers/ai-provider
-        return new Anthropic(
-            key: 'ANTHROPIC_KEY',
-            model: 'ANTHROPIC_MODEL',
+        return new Ollama(
+            url: config('services.ollama.url'),
+            model: config('services.ollama.model'),
         );
     }
 
