@@ -66,4 +66,9 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
     {
         return $this->hasMany(TrainingGoal::class);
     }
+
+    public function workoutPlans(): HasMany
+    {
+        return $this->hasMany(WorkoutPlan::class);
+    }
 }

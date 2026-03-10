@@ -43,7 +43,7 @@ class UserController extends Controller
         $dto = new UserDto(...$request->validated());
         $user = $this->userService->create($dto);
 
-        return new UserResource($user)
+        return (new UserResource($user))
             ->response()
             ->setStatusCode(201);
     }

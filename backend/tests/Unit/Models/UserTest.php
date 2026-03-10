@@ -2,9 +2,11 @@
 
 namespace Tests\Unit\Models;
 
+use App\Enums\TrainingGoalType;
 use App\Models\FitnessInfo;
 use App\Models\TrainingGoal;
 use App\Models\User;
+use App\Models\WorkoutPlan;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -76,8 +78,12 @@ class UserTest extends TestCase
         // Arrange
         $user = User::factory()->create();
 
-        // Act
-        TrainingGoal::factory()->count(3)->create(['user_id' => $user->id]);
+        // Act — use sequence to guarantee distinct goals and avoid the unique(user_id, goal) constraint
+        TrainingGoal::factory()->count(3)->sequence(
+            ['goal' => TrainingGoalType::WeightLoss->value],
+            ['goal' => TrainingGoalType::MuscleGain->value],
+            ['goal' => TrainingGoalType::Endurance->value],
+        )->create(['user_id' => $user->id]);
 
         // Assert
         $this->assertCount(3, $user->trainingGoals);
@@ -98,5 +104,25 @@ class UserTest extends TestCase
         $user = User::factory()->unverified()->create();
 
         $this->assertNull($user->email_verified_at);
+    }
+
+    public function test_workout_plans_returns_has_many_relation(): void
+    {
+        $user = new User();
+
+        $this->assertInstanceOf(HasMany::class, $user->workoutPlans());
+    }
+
+    public function test_user_has_many_workout_plans(): void
+    {
+        // Arrange
+        $user = User::factory()->create();
+
+        // Act
+        WorkoutPlan::factory()->count(2)->create(['user_id' => $user->id]);
+
+        // Assert
+        $this->assertCount(2, $user->workoutPlans);
+        $this->assertInstanceOf(WorkoutPlan::class, $user->workoutPlans->first());
     }
 }
