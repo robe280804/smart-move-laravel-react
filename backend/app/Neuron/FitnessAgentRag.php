@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Neuron;
 
+use NeuronAI\Agent\SystemPrompt;
 use NeuronAI\Providers\AIProviderInterface;
 use NeuronAI\Providers\Ollama\Ollama;
 use NeuronAI\RAG\Embeddings\EmbeddingsProviderInterface;
