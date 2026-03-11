@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Console\Commands\Agent;
 
 use App\Neuron\FitnessAgent;
+use App\Neuron\FitnessAgentWorkflow;
 use Illuminate\Console\Command;
 use NeuronAI\Chat\Messages\UserMessage;
+use NeuronAI\Workflow\WorkflowState;
 
 class ChatFitnessAgent extends Command
 {
@@ -16,12 +18,21 @@ class ChatFitnessAgent extends Command
 
     public function handle(): int
     {
-        $message = $this->argument('message');
+        $raw = (string) $this->argument('message');
 
         $this->info('Sending message to FitnessAgent...');
 
+        $state = new WorkflowState();
+        $state->set('user_message', $raw);
+
+        $workflow = FitnessAgentWorkflow::make(state: $state);
+        foreach ($workflow->init()->run() as $_) {
+        }
+
+        $sanitized = $state->get('user_message');
+
         $response = FitnessAgent::make()
-            ->chat(new UserMessage($message))
+            ->chat(new UserMessage($sanitized))
             ->getMessage();
 
         $this->line('');

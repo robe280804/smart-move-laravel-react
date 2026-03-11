@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace App\Neuron;
 
-use NeuronAI\Workflow\Workflow;
+use App\Neuron\Nodes\CollectUserInfosNode;
 use App\Neuron\Nodes\InitialNode;
+use NeuronAI\Workflow\Workflow;
 
 class FitnessAgentWorkflow extends Workflow
 {
-
-    /** My Workflow setup
-     * 
-     * 1. InitialNode (User message + get infos from db + get all the infos)   
+    /**
+     * Workflow setup:
+     * 1. InitialNode       — sanitizes the raw user message
+     * 2. CollectUserInfosNode — loads user profile data from the database
      */
-
-
     protected function nodes(): array
     {
         return [
             new InitialNode(),
+            new CollectUserInfosNode(),
         ];
     }
 }

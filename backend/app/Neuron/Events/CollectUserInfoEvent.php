@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Neuron\Event;
+namespace App\Neuron\Events;
 
 use NeuronAI\Workflow\Events\Event;
 
