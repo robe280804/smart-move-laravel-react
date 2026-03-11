@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\TokenAbility;
+use App\Neuron\Nodes\CollectUserInfosNode;
 use App\Repositories\Contracts\FitnessInfoRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\FitnessInfoRepository;
@@ -19,6 +20,13 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(FitnessInfoRepositoryInterface::class, FitnessInfoRepository::class);
+
+        $this->app->bind(CollectUserInfosNode::class, function ($app) {
+            return new CollectUserInfosNode(
+                $app->make(FitnessInfoRepositoryInterface::class),
+                $app->make(UserRepositoryInterface::class)
+            );
+        });
     }
 
     /**

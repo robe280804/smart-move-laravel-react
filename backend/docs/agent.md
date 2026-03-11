@@ -79,6 +79,7 @@ WorkflowCsvToQdrant::run(string $csvPath)
 ### 2a. Conversation Loop
 
 The user interacts with `FitnessAgent` through `AgentController::call()`.
+During the first interaction, the user will enter all the characteristics they want for their workout plan, including safety considerations, exercises they cannot perform, and other relevant information. The frontend will guide them through this process with alerts such as: “Describe precisely the workout plan you want. Also include any physical issues or other relevant details.”
 The agent is **topic-scoped** to fitness only and will refuse off-topic requests.
 
 ```

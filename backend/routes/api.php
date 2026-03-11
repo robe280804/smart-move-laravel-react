@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TokenAbility;
+use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FitnessInfoController;
 use App\Http\Controllers\Api\UserController;
@@ -33,5 +34,8 @@ Route::prefix('v1')
         Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value])->group(function () {
             Route::apiResource('users', UserController::class);
             Route::apiResource('fitness-info', FitnessInfoController::class);
+
+            Route::post('agent', [AgentController::class, 'call']);
+            Route::post('agent/resume', [AgentController::class, 'resume']);
         });
     });

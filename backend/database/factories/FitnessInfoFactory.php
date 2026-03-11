@@ -28,4 +28,17 @@ class FitnessInfoFactory extends Factory
             'experience_level' => fake()->randomElement(ExperienceLevel::cases())->value,
         ];
     }
+
+    /**
+     * State with only height and weight populated; age, gender and experience_level are null.
+     * Used to test that the agent asks for only the missing fields.
+     */
+    public function partial(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'age' => null,
+            'gender' => null,
+            'experience_level' => null,
+        ]);
+    }
 }

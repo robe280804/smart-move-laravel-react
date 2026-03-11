@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Neuron\Nodes;
 
 use App\Neuron\Events\SanitizeInputEvent;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use NeuronAI\Workflow\Node;
 use NeuronAI\Workflow\Events\StartEvent;
@@ -27,6 +28,8 @@ class InitialNode extends Node
     {
         $raw = (string) $state->get('user_message', '');
 
+        $state = $this->storeUserInfo($state);
+
         $sanitized = strip_tags($raw);        // removes any HTML tags
         $sanitized = str_replace("\0", '', $sanitized); // removes null bytes
         $sanitized = trim($sanitized);        // removes leading/trailing whitespace
@@ -34,14 +37,14 @@ class InitialNode extends Node
         $sanitized = preg_replace("/\r\n|\r|\n/", "\n", $sanitized);
         $sanitized = preg_replace(
             '/(ignore\s+previous\s+instructions|
-       forget\s+previous\s+instructions|
-       reveal\s+(your\s+)?prompt|
-       show\s+(your\s+)?instructions|
-       print\s+(the\s+)?system\s+message|
-       repeat\s+(the\s+)?system\s+message|
-       what\s+are\s+your\s+rules|
-       what\s+were\s+you\s+told|
-       disclose\s+internal)/ix',
+                    forget\s+previous\s+instructions|
+                    reveal\s+(your\s+)?prompt|
+                    show\s+(your\s+)?instructions|
+                    print\s+(the\s+)?system\s+message|
+                    repeat\s+(the\s+)?system\s+message|
+                    what\s+are\s+your\s+rules|
+                    what\s+were\s+you\s+told|
+                    disclose\s+internal)/ix',
             '',
             $sanitized
         );
@@ -49,8 +52,10 @@ class InitialNode extends Node
         // Malicius prompt
         foreach ($this->blocked_patterns as $pattern) {
             if (stripos($sanitized, $pattern) !== false) {
-
-                Log::warning('Prompt extraction attempt', [$sanitized]);
+                Log::warning('Prompt extraction attempt', [
+                    'email' => $state->get('user_email'),
+                    'msg' => $sanitized
+                ]);
 
                 $state->set('user_message', 'PROMPT_EXTRACTION_BLOCKED');
 
@@ -62,8 +67,23 @@ class InitialNode extends Node
 
         $state->set('user_message', $sanitized);
 
-        Log::debug('User sanitize msg', [$sanitized]);
+        Log::debug('User sanitize msg', [
+            'email' => $state->get('user_email'),
+            'msg' => $sanitized
+        ]);
 
         return new SanitizeInputEvent($sanitized);
+    }
+
+
+    private function storeUserInfo(WorkflowState $state): WorkflowState
+    {
+        $user = Auth::user();
+
+        if ($user) {
+            $state->set('user_id', $user->id);
+            $state->set('user_email', $user->email);
+        }
+        return $state;
     }
 }
