@@ -250,6 +250,10 @@ After registration, a `UserRegistration` event is fired which triggers two liste
 
 ---
 
+## CI/ CD Pipeline
+
+---
+
 ## Useful Commands
 
 Run all commands inside the app container:
