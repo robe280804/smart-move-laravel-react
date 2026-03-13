@@ -12,10 +12,10 @@ export const me = async (): Promise<User> => {
     }
 }
 
-export const updatePersonalInfo = async () : Promise<User> => {
+export const updatePersonalInfo = async (id: number, data: { name: string; surname: string; email: string }): Promise<User> => {
     try {
-        const response = await api.post<User>('/user/info', data);
-        return response.data;
+        const response = await api.put<{ data: User }>(`/users/${id}`, data);
+        return response.data.data;
     } catch (error) {
         return handleApiError(error);
     }

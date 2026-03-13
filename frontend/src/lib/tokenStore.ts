@@ -6,10 +6,17 @@
  * On page refresh the token is re-acquired via the HttpOnly refresh-token cookie
  * through the POST /refresh-token endpoint.
  */
+type SessionUpdatedCallback = (token: string, expiresAt: string) => void;
+
 let _accessToken: string | null = null;
+let _onSessionUpdated: SessionUpdatedCallback | null = null;
 
 export const tokenStore = {
     get: (): string | null => _accessToken,
     set: (token: string | null): void => { _accessToken = token; },
     clear: (): void => { _accessToken = null; },
+    onSessionUpdated: (cb: SessionUpdatedCallback): void => { _onSessionUpdated = cb; },
+    notifySessionUpdated: (token: string, expiresAt: string): void => {
+        _onSessionUpdated?.(token, expiresAt);
+    },
 };

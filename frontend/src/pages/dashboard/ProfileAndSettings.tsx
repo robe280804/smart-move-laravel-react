@@ -8,18 +8,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, Camera } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
-import { getFitnessInfo, storeFitnessInfo, updateFitnessInfo } from "@/services/user";
+import { getFitnessInfo, storeFitnessInfo, updateFitnessInfo, updatePersonalInfo } from "@/services/user";
 import type { FitnessInfo } from "@/types/user";
 import { EXPERIENCE_LEVELS, GENDERS } from "@/constants/const";
 import type { ExperienceLevel, Gender } from "@/constants/const";
+import { fitnessInfoSchema, userProfileShcema } from "@/components/forms/user";
+import type { FitnessInfoFormErrors, UserProfileFormErrors } from "@/types/forms";
 import { ApiError } from "@/lib/apiError";
 import { toast } from "sonner";
 
 export function ProfileAndSettings() {
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
+    const [isProfileLoading, setIsProfileLoading] = useState(false);
+    const [profileErrors, setProfileErrors] = useState<UserProfileFormErrors>({});
+    const [profileForm, setProfileForm] = useState({
+        name: user?.name ?? "",
+        surname: user?.surname ?? "",
+        email: user?.email ?? "",
+    });
+
     const [isFitnessInfoLoading, setIsFitnessInfoLoading] = useState(false);
     const [fitnessInfo, setFitnessInfo] = useState<FitnessInfo | null>(null);
-    const [fitnessErrors, setFitnessErrors] = useState<Record<string, string>>({});
+    const [fitnessErrors, setFitnessErrors] = useState<FitnessInfoFormErrors>({});
     const [fitnessForm, setFitnessForm] = useState({
         height: "",
         weight: "",
@@ -28,9 +38,14 @@ export function ProfileAndSettings() {
         experience_level: "" as ExperienceLevel | "",
     });
 
+    /**
+     * Load Fitness Info when page render
+     */
     useEffect(() => {
+        // Load user fitness info 
         getFitnessInfo()
             .then((data) => {
+                // If not present, set null
                 if (!data) {
                     setFitnessInfo(null);
                     return;
@@ -45,46 +60,117 @@ export function ProfileAndSettings() {
                     experience_level: data.experience_level ?? "",
                 });
             })
+            // On error set null
             .catch(() => setFitnessInfo(null));
     }, []);
 
+
+    /**
+     * Personal Info form submit
+     */
+    const handleProfileSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const result = userProfileShcema.safeParse(profileForm);
+        if (!result.success) {
+            const fieldErrors = result.error.flatten().fieldErrors;
+            setProfileErrors(
+                Object.fromEntries(
+                    Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0]])
+                ) as UserProfileFormErrors
+            );
+            return;
+        }
+        setProfileErrors({});
+        setIsProfileLoading(true);
+        try {
+            const updated = await updatePersonalInfo(user!.id, result.data);
+            updateUser(updated);
+            toast.success("Profile updated.", {
+                position: "top-center", duration: 5000,
+                style: {
+                    background: "#22C55E",
+                    color: "#fff",
+                },
+            });
+        } catch (error: unknown) {
+            if (error instanceof ApiError) {
+                if (error.fieldErrors) {
+                    setProfileErrors(
+                        Object.fromEntries(
+                            Object.entries(error.fieldErrors).map(([k, v]) => [k, (v as string[])[0]])
+                        ) as UserProfileFormErrors
+                    );
+                } else {
+                    toast.error(error.message, {
+                        position: "top-center", duration: 5000,
+                        style: { background: "#FF4D4F", color: "#fff" },
+                    });
+                }
+            }
+        } finally {
+            setIsProfileLoading(false);
+        }
+    };
+
+    /**
+     * Fitness Info form submit
+     */
     const handleFitnessSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setFitnessErrors({});
+        const result = fitnessInfoSchema.safeParse(fitnessForm);
+        if (!result.success) {
+            const fieldErrors = result.error.flatten().fieldErrors;
+            setFitnessErrors(
+                Object.fromEntries(
+                    Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0]])
+                ) as FitnessInfoFormErrors
+            );
+            return;
+        }
+        setFitnessErrors({});  // Clean error
         setIsFitnessInfoLoading(true);
-        const payload = {
-            height: Number(fitnessForm.height),
-            weight: Number(fitnessForm.weight),
-            age: Number(fitnessForm.age),
-            gender: fitnessForm.gender as Gender,
-            experience_level: fitnessForm.experience_level as ExperienceLevel,
-        };
         try {
             if (!fitnessInfo?.id) {
-                const created = await storeFitnessInfo(payload);
+                // If fitness info is not present, POST create
+                const created = await storeFitnessInfo(result.data);
                 setFitnessInfo(created);
                 toast.success("Fitness profile created.");
             } else {
-                const updated = await updateFitnessInfo(fitnessInfo.id, payload);
+                // If fitness info is present, POST update
+                const updated = await updateFitnessInfo(fitnessInfo.id, result.data);
                 setFitnessInfo(updated);
-                toast.success("Fitness profile updated.");
+                toast.success("Fitness profile updated.", {
+                    position: "top-center", duration: 5000,
+                    style: {
+                        background: "#22C55E",
+                        color: "#fff",
+                    },
+                });
             }
         } catch (error: unknown) {
             if (error instanceof ApiError) {
                 if (error.fieldErrors) {
+                    // Validation errors
                     setFitnessErrors(
                         Object.fromEntries(
                             Object.entries(error.fieldErrors).map(([k, v]) => [k, (v as string[])[0]])
-                        )
+                        ) as FitnessInfoFormErrors
                     );
                 } else {
-                    toast.error(error.message);
+                    toast.error(error.message, {
+                        position: "top-center", duration: 5000,
+                        style: {
+                            background: "#FF4D4F",
+                            color: "#fff",
+                        },
+                    });
                 }
             }
         } finally {
             setIsFitnessInfoLoading(false);
         }
     };
+
 
     const [notifications, setNotifications] = useState({
         workoutReminders: true,
@@ -141,6 +227,7 @@ export function ProfileAndSettings() {
                     <TabsTrigger value="security">Security</TabsTrigger>
                 </TabsList>
 
+                {/* Personal Information */}
                 <TabsContent value="personal" className="space-y-6 mt-6">
                     <Card>
                         <CardHeader>
@@ -148,26 +235,45 @@ export function ProfileAndSettings() {
                             <CardDescription>Update your personal details</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="firstName">First Name</Label>
-                                    <Input id="firstName" defaultValue={user?.name ?? ""} />
+                            <form onSubmit={handleProfileSubmit} className="space-y-4">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="firstName">First Name</Label>
+                                        <Input
+                                            id="firstName"
+                                            value={profileForm.name}
+                                            onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                                        />
+                                        {profileErrors.name && <p className="text-sm text-red-500">{profileErrors.name}</p>}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="lastName">Last Name</Label>
+                                        <Input
+                                            id="lastName"
+                                            value={profileForm.surname}
+                                            onChange={(e) => setProfileForm({ ...profileForm, surname: e.target.value })}
+                                        />
+                                        {profileErrors.surname && <p className="text-sm text-red-500">{profileErrors.surname}</p>}
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="lastName">Last Name</Label>
-                                    <Input id="lastName" defaultValue={user?.surname ?? ""} />
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={profileForm.email}
+                                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                                    />
+                                    {profileErrors.email && <p className="text-sm text-red-500">{profileErrors.email}</p>}
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email</Label>
-                                <Input id="email" type="email" defaultValue={user?.email ?? ""} />
-                            </div>
-                            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                                Save Changes
-                            </Button>
+                                <Button type="submit" className="bg-gradient-to-r from-blue-600 to-indigo-600 cursor-pointer" disabled={isProfileLoading}>
+                                    Save Changes
+                                </Button>
+                            </form>
                         </CardContent>
                     </Card>
 
+                    {/* Fitness information */}
                     <Card>
                         <CardHeader>
                             <CardTitle>Fitness Profile</CardTitle>

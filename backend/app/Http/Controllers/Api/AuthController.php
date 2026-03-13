@@ -158,7 +158,7 @@ class AuthController extends Controller
             true,
             true,
             false,
-            'Strict'
+            'None'
         );
 
         return (new ApiSuccess(

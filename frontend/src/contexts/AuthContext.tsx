@@ -18,6 +18,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      * If the cookie is missing or expired, the user is simply left unauthenticated.
      */
     useEffect(() => {
+        tokenStore.onSessionUpdated((token, expiresAt) => {
+            setAccessToken({ token, expires_at: expiresAt });
+        });
+    }, []);
+
+    useEffect(() => {
         const restoreSession = async () => {
             try {
                 const response = await refresh();
@@ -47,6 +53,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
+    const updateUser = (updated: import("../types/auth").User) => {
+        setUser(updated);
+    };
+
     const logout = () => {
         tokenStore.clear();
         setAccessToken(null);
@@ -55,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <AuthContext.Provider
-            value={{ user, accessToken, isAuthenticated, isLoading, setSession, logout }}>
+            value={{ user, accessToken, isAuthenticated, isLoading, setSession, updateUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

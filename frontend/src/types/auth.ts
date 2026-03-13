@@ -16,6 +16,7 @@ export interface AuthContextValue {
     isAuthenticated: boolean;
     isLoading: boolean;
     setSession: (response: AuthResponse) => void;
+    updateUser: (user: User) => void;
     logout: () => void;
 }
 
