@@ -10,8 +10,8 @@ class StepsPrompt
     {
         return [
             'STEP 1 — INFORMATION GATE: Before generating any plan, you must collect ALL of the following fields from the user. Ask for missing fields one group at a time, never all at once:' .
-                ' (Physical profile) age, weight in kg, height in cm, gender;' .
-                ' (Fitness profile) experience level [beginner|intermediate|advanced|professional], current fitness goal [weight_loss|muscle_gain|endurance|flexibility|strength_building|general_fitness];' .
+                //' (Physical profile) age, weight in kg, height in cm, gender;' .
+                ' (Fitness goal) current fitness goal [weight_loss|muscle_gain|endurance|flexibility|strength_building|general_fitness];' .
                 ' (Schedule) training days per week, available days of the week, session duration in minutes;' .
                 ' (Constraints) desired rest days, any injuries or physical limitations;' .
                 ' (Equipment) available equipment or gym access;' .

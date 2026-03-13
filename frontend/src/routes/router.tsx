@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AuthLayout } from "../layouts/AuthLayout";
-import { DashboardLayout } from "../layouts/DashboardLayout";
+import { SideBar } from "../components/dashboard/SideBar";
 import { Register } from "../pages/Register";
 import { Login } from "../pages/Login";
 import { WelcomePage } from "../pages/Welcome";
@@ -9,6 +9,7 @@ import { ForgotPassword } from "../pages/ForgotPassword";
 import { ResetPassword } from "../pages/ResetPassword";
 import { EmailVerify } from "../pages/EmailVerify";
 import { ProtectedRoute } from "../layouts/ProtectedRoute";
+import { ProfileAndSettings } from "../pages/dashboard/ProfileAndSettings";
 
 export const router = createBrowserRouter([
     {
@@ -29,9 +30,10 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
             {
-                element: <DashboardLayout />,
+                element: <SideBar />,
                 children: [
                     { path: "/dashboard", element: <Dashboard /> },
+                    { path: "/dashboard/profile", element: <ProfileAndSettings /> }
                 ],
             }
         ]

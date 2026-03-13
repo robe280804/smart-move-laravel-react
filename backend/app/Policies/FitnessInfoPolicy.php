@@ -16,7 +16,7 @@ class FitnessInfoPolicy
 
     public function create(User $user): bool
     {
-        return $user->fitnessInfo === null;
+        return $user->fitnessInfo()->doesntExist();
     }
 
     public function update(User $user, FitnessInfo $fitnessInfo): bool

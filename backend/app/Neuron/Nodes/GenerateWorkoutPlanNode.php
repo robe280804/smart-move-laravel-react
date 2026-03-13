@@ -90,7 +90,8 @@ class GenerateWorkoutPlanNode extends Node
         $profileLines = [];
 
         foreach ($fitnessData as $key => $value) {
-            $profileLines[] = sprintf('  %s: %s', str_replace('_', ' ', (string) $key), (string) $value);
+            $formatted = is_array($value) ? implode(', ', $value) : (string) $value;
+            $profileLines[] = sprintf('  %s: %s', str_replace('_', ' ', (string) $key), $formatted);
         }
 
         $sections = [

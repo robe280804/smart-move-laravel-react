@@ -7,5 +7,5 @@ enum ExperienceLevel: string
     case Beginner = 'beginner';
     case Intermediate = 'intermediate';
     case Advanced = 'advanced';
-    case Professiona = 'professional';
+    case Professional = 'professional';
 }

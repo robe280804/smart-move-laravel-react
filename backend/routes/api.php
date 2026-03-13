@@ -36,6 +36,5 @@ Route::prefix('v1')
             Route::apiResource('fitness-info', FitnessInfoController::class);
 
             Route::post('agent', [AgentController::class, 'call']);
-            Route::post('agent/resume', [AgentController::class, 'resume']);
         });
     });

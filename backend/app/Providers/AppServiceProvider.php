@@ -23,8 +23,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(CollectUserInfosNode::class, function ($app) {
             return new CollectUserInfosNode(
-                $app->make(FitnessInfoRepositoryInterface::class),
-                $app->make(UserRepositoryInterface::class)
+                $app->make(UserRepositoryInterface::class),
             );
         });
     }

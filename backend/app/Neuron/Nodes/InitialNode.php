@@ -28,8 +28,6 @@ class InitialNode extends Node
     {
         $raw = (string) $state->get('user_message', '');
 
-        $state = $this->storeUserInfo($state);
-
         $sanitized = strip_tags($raw);        // removes any HTML tags
         $sanitized = str_replace("\0", '', $sanitized); // removes null bytes
         $sanitized = trim($sanitized);        // removes leading/trailing whitespace
@@ -73,17 +71,5 @@ class InitialNode extends Node
         ]);
 
         return new SanitizeInputEvent($sanitized);
-    }
-
-
-    private function storeUserInfo(WorkflowState $state): WorkflowState
-    {
-        $user = Auth::user();
-
-        if ($user) {
-            $state->set('user_id', $user->id);
-            $state->set('user_email', $user->email);
-        }
-        return $state;
     }
 }
