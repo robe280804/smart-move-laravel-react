@@ -10,6 +10,7 @@ import { ResetPassword } from "../pages/ResetPassword";
 import { EmailVerify } from "../pages/EmailVerify";
 import { ProtectedRoute } from "../layouts/ProtectedRoute";
 import { ProfileAndSettings } from "../pages/dashboard/ProfileAndSettings";
+import { WorkoutPlanGenerator } from "@/pages/dashboard/WorkoutPlanGenerator";
 
 export const router = createBrowserRouter([
     {
@@ -33,7 +34,8 @@ export const router = createBrowserRouter([
                 element: <SideBar />,
                 children: [
                     { path: "/dashboard", element: <Dashboard /> },
-                    { path: "/dashboard/profile", element: <ProfileAndSettings /> }
+                    { path: "/dashboard/profile", element: <ProfileAndSettings /> },
+                    { path: "/dashboard/workout-generate", element: <WorkoutPlanGenerator /> }
                 ],
             }
         ]

@@ -18,7 +18,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Chat", href: "/dashboard/chat", icon: MessageSquare },
+    { name: "Generate Workout", href: "/dashboard/workout-generate", icon: MessageSquare },
     {
         name: "Workouts",
         href: "/dashboard/workouts",
@@ -150,7 +150,7 @@ export function SideBar() {
             {/* Main content */}
             <div className="lg:pl-64 flex flex-col min-h-screen">
                 {/* Top bar */}
-                <header className="sticky top-0 z-40 bg-slate-50 ">
+                <header className="sticky top-0 z-40 bg-white border-2 ">
                     <div className="flex items-center justify-between px-4 py-3">
                         <button
                             onClick={() => setSidebarOpen(true)}

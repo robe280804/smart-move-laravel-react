@@ -1,8 +1,9 @@
 # Form structure
 
-Use always zod;
+All forms must use Zod schemas.
 Structure the form schema into the directory src\components\forms.
 Set the type of the forms in the filesrc\types\forms.ts
+Forms must always use Zod validation.
 
 ## Example good form schema
 
@@ -47,3 +48,8 @@ export type FitnessInfoFormErrors = Partial<
 # API to backend
 
 Always check the file backend/routes/api.php for the routes
+All API responses must be typed.
+All API calls must go through a central API service layer.
+Never hardcode backend routes. Always reference the backend route structure.
+
+#

@@ -7,5 +7,48 @@ export const EXPERIENCE_LEVELS = [
 
 export const GENDERS = ["male", "female"] as const;
 
-export type ExperienceLevel = typeof EXPERIENCE_LEVELS[number]
-export type Gender = typeof GENDERS[number]
+export const DAYS_OF_WEEK = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+] as const;
+
+export const FITNESS_GOALS = [
+    { value: "weight_loss", label: "Weight Loss", icon: "🔥", description: "Burn fat and reduce body weight" },
+    { value: "muscle_gain", label: "Muscle Gain", icon: "💪", description: "Build muscle mass and size" },
+    { value: "strength_building", label: "Strength Building", icon: "⚡", description: "Increase overall strength" },
+    { value: "endurance", label: "Endurance", icon: "🏃", description: "Improve cardiovascular fitness" },
+    { value: "flexibility", label: "Flexibility", icon: "🧘", description: "Enhance mobility and flexibility" },
+    { value: "general_fitness", label: "General Fitness", icon: "✨", description: "Overall health and wellness" },
+    { value: "body_recomposition", label: "Body Recomposition", icon: "⚖️", description: "Lose fat while building muscle" },
+    { value: "athletic_performance", label: "Athletic Performance", icon: "🏅", description: "Improve speed, agility, and power" },
+    { value: "rehabilitation", label: "Injury Recovery", icon: "🩹", description: "Safe training focused on recovery and rehab" },
+    { value: "posture_correction", label: "Posture Correction", icon: "🧍", description: "Strengthen muscles that improve posture" },
+    { value: "functional_fitness", label: "Functional Fitness", icon: "🏋️", description: "Improve everyday movement and stability" }
+] as const;
+
+export const EQUIPMENT_OPTIONS = [
+    "Dumbbells",
+    "Barbells",
+    "Resistance Bands",
+    "Pull-up Bar",
+    "Bench",
+    "Kettlebells",
+    "Cable Machine",
+    "Cardio Equipment",
+    "Bodyweight Only"
+] as const;
+
+export const WORKOUT_TYPES = [
+    { value: "strength", label: "Strength Training", icon: "💪" },
+    { value: "cardio", label: "Cardio", icon: "❤️" },
+    { value: "mobility", label: "Mobility & Flexibility", icon: "🧘" },
+    { value: "conditioning", label: "Conditioning", icon: "⚡" }
+] as const;
+
+export type ExperienceLevel = typeof EXPERIENCE_LEVELS[number];
+export type Gender = typeof GENDERS[number];
