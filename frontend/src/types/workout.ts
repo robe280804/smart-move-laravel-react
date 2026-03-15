@@ -15,4 +15,7 @@ export type WorkoutPlanData = {
     equipment: string[];
     gymAccess: boolean;
     workoutType: string[];
+    sports: string;
+    preferredExercises: string;
+    additionalNotes: string;
 };

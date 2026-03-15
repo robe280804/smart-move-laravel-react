@@ -47,7 +47,12 @@ export const WORKOUT_TYPES = [
     { value: "strength", label: "Strength Training", icon: "💪" },
     { value: "cardio", label: "Cardio", icon: "❤️" },
     { value: "mobility", label: "Mobility & Flexibility", icon: "🧘" },
-    { value: "conditioning", label: "Conditioning", icon: "⚡" }
+    { value: "conditioning", label: "Conditioning", icon: "⚡" },
+    { value: "hiit", label: "HIIT", icon: "🔥" },
+    { value: "bodyweight", label: "Bodyweight / Calisthenics", icon: "🤸" },
+    { value: "functional", label: "Functional Training", icon: "🏋️" },
+    { value: "core", label: "Core Training", icon: "🪨" },
+    { value: "recovery", label: "Recovery / Stretching", icon: "🧎" }
 ] as const;
 
 export type ExperienceLevel = typeof EXPERIENCE_LEVELS[number];
