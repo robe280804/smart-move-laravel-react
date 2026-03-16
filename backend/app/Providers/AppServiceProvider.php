@@ -6,8 +6,10 @@ use App\Enums\TokenAbility;
 use App\Neuron\Nodes\CollectUserInfosNode;
 use App\Repositories\Contracts\FitnessInfoRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Contracts\WorkoutPlanRepositoryInterface;
 use App\Repositories\FitnessInfoRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\WorkoutPlanRepository;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
@@ -20,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(FitnessInfoRepositoryInterface::class, FitnessInfoRepository::class);
+        $this->app->bind(WorkoutPlanRepositoryInterface::class, WorkoutPlanRepository::class);
 
         $this->app->bind(CollectUserInfosNode::class, function ($app) {
             return new CollectUserInfosNode(

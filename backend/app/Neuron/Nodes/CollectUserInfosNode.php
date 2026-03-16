@@ -8,6 +8,7 @@ use App\Neuron\Events\SanitizeInputEvent;
 use App\Neuron\Events\UserInfosCollectedEvent;
 use App\Repositories\Contracts\FitnessInfoRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Support\Facades\Log;
 use NeuronAI\Workflow\Node;
 use NeuronAI\Workflow\WorkflowState;
 
@@ -17,8 +18,6 @@ class CollectUserInfosNode extends Node
 
     public function __invoke(SanitizeInputEvent $event, WorkflowState $state): UserInfosCollectedEvent
     {
-        // Check if is present all the STEPS INFOS for generate the workoutplan
-        // Otherwise return "I need also {information} for continue"
 
         // Get general fitness info about user 
         $fitnessInfo = $this->repository
@@ -35,6 +34,10 @@ class CollectUserInfosNode extends Node
         ];
 
         $state->set('fitness_data', $fitnessInfoPrompt);
+
+        Log::info('prompt Collect user info node', [
+            'prompt' => $fitnessInfoPrompt
+        ]);
 
         return new UserInfosCollectedEvent();
     }

@@ -6,11 +6,12 @@ namespace Tests\Feature;
 
 use App\Enums\TokenAbility;
 use App\Models\User;
-use App\Neuron\FitnessAgent;
+use App\Models\WorkoutPlan;
+use App\Services\WorkoutPlanService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
-use Mockery;
-use NeuronAI\Chat\Messages\AssistantMessage;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Tests\TestCase;
 
 class AgentControllerTest extends TestCase
@@ -18,16 +19,14 @@ class AgentControllerTest extends TestCase
     use RefreshDatabase;
 
     /** @var array<string, mixed> */
-    private array $validFitnessData = [
-        'age'                    => 28,
-        'weight'                 => 75,
-        'height'                 => 180,
-        'gender'                 => 'male',
-        'experience_level'       => 'intermediate',
-        'fitness_goal'           => 'muscle_gain',
+    private array $validRequestData = [
+        'fitness_goals'          => ['muscle_gain'],
         'training_days_per_week' => 4,
         'available_days'         => ['monday', 'tuesday', 'thursday', 'friday'],
         'session_duration'       => 60,
+        'equipment'              => ['barbell', 'dumbbells'],
+        'gym_access'             => true,
+        'workout_type'           => ['strength'],
     ];
 
     private function actingAsUser(User $user): static
@@ -37,182 +36,201 @@ class AgentControllerTest extends TestCase
         return $this;
     }
 
-    private function mockFitnessAgent(string $responseText = 'Here is your personalized workout plan!'): void
-    {
-        $mockMessage = Mockery::mock(AssistantMessage::class);
-        $mockMessage->shouldReceive('getContent')->andReturn($responseText);
-
-        $mockAgent = Mockery::mock('overload:' . FitnessAgent::class);
-        $mockAgent->shouldReceive('make')->andReturnSelf();
-        $mockAgent->shouldReceive('chat')->andReturnSelf();
-        $mockAgent->shouldReceive('getMessage')->andReturn($mockMessage);
-    }
-
     // ==================== AUTHENTICATION ====================
 
-    public function test_unauthenticated_user_cannot_call_agent(): void
+    public function test_unauthenticated_user_cannot_generate_workout(): void
     {
-        $response = $this->postJson('/api/v1/agent', [
-            'fitness_data' => $this->validFitnessData,
-        ]);
+        $response = $this->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
 
         $response->assertUnauthorized();
     }
 
-    // ==================== VALIDATION — fitness_data required ====================
+    // ==================== VALIDATION ====================
 
-    public function test_call_requires_fitness_data(): void
+    public function test_returns_422_when_fitness_goals_is_missing(): void
     {
         $user = User::factory()->create();
+        $data = $this->validRequestData;
+        unset($data['fitness_goals']);
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', []);
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['fitness_data']);
+            ->assertJsonValidationErrors(['fitness_goals']);
     }
 
-    public function test_call_requires_age(): void
+    public function test_returns_422_when_fitness_goals_exceeds_max(): void
     {
         $user = User::factory()->create();
-        $data = $this->validFitnessData;
-        unset($data['age']);
+        $data = array_merge($this->validRequestData, ['fitness_goals' => ['a', 'b', 'c', 'd']]);
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', ['fitness_data' => $data]);
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['fitness_data.age']);
+            ->assertJsonValidationErrors(['fitness_goals']);
     }
 
-    public function test_call_requires_valid_gender(): void
+    public function test_returns_422_when_training_days_per_week_is_missing(): void
     {
         $user = User::factory()->create();
-        $data = array_merge($this->validFitnessData, ['gender' => 'unknown']);
+        $data = $this->validRequestData;
+        unset($data['training_days_per_week']);
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', ['fitness_data' => $data]);
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['fitness_data.gender']);
+            ->assertJsonValidationErrors(['training_days_per_week']);
     }
 
-    public function test_call_requires_valid_experience_level(): void
+    public function test_returns_422_when_training_days_per_week_exceeds_max(): void
     {
         $user = User::factory()->create();
-        $data = array_merge($this->validFitnessData, ['experience_level' => 'expert']);
+        $data = array_merge($this->validRequestData, ['training_days_per_week' => 8]);
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', ['fitness_data' => $data]);
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['fitness_data.experience_level']);
+            ->assertJsonValidationErrors(['training_days_per_week']);
     }
 
-    public function test_call_requires_valid_fitness_goal(): void
+    public function test_returns_422_when_available_days_is_missing(): void
     {
         $user = User::factory()->create();
-        $data = array_merge($this->validFitnessData, ['fitness_goal' => 'invalid_goal']);
+        $data = $this->validRequestData;
+        unset($data['available_days']);
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', ['fitness_data' => $data]);
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['fitness_data.fitness_goal']);
+            ->assertJsonValidationErrors(['available_days']);
     }
 
-    public function test_call_requires_valid_available_days(): void
+    public function test_returns_422_when_session_duration_is_missing(): void
     {
         $user = User::factory()->create();
-        $data = array_merge($this->validFitnessData, ['available_days' => ['funday']]);
+        $data = $this->validRequestData;
+        unset($data['session_duration']);
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', ['fitness_data' => $data]);
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['fitness_data.available_days.0']);
+            ->assertJsonValidationErrors(['session_duration']);
     }
 
-    public function test_call_rejects_age_out_of_range(): void
+    public function test_returns_422_when_session_duration_is_below_minimum(): void
     {
         $user = User::factory()->create();
-        $data = array_merge($this->validFitnessData, ['age' => 5]);
+        $data = array_merge($this->validRequestData, ['session_duration' => 10]);
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', ['fitness_data' => $data]);
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['fitness_data.age']);
+            ->assertJsonValidationErrors(['session_duration']);
     }
 
-    public function test_call_rejects_message_exceeding_2000_characters(): void
+    public function test_returns_422_when_equipment_is_missing(): void
     {
         $user = User::factory()->create();
+        $data = $this->validRequestData;
+        unset($data['equipment']);
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', [
-            'message'      => str_repeat('a', 2001),
-            'fitness_data' => $this->validFitnessData,
-        ]);
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['message']);
+            ->assertJsonValidationErrors(['equipment']);
+    }
+
+    public function test_returns_422_when_gym_access_is_missing(): void
+    {
+        $user = User::factory()->create();
+        $data = $this->validRequestData;
+        unset($data['gym_access']);
+
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['gym_access']);
+    }
+
+    public function test_returns_422_when_workout_type_is_missing(): void
+    {
+        $user = User::factory()->create();
+        $data = $this->validRequestData;
+        unset($data['workout_type']);
+
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['workout_type']);
     }
 
     // ==================== HAPPY PATH ====================
 
-    public function test_call_with_valid_data_returns_agent_response(): void
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function test_returns_201_with_workout_plan_resource_on_success(): void
     {
-        $this->mockFitnessAgent('Here is your personalized workout plan!');
+        $workflowMock = \Mockery::mock('overload:App\Neuron\FitnessAgentWorkflow');
+        $workflowMock->shouldReceive('create')->andReturnSelf();
+        $workflowMock->shouldReceive('init')->andReturnSelf();
+        $workflowMock->shouldReceive('run')->andReturnSelf();
 
         $user = User::factory()->create();
+        $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id]);
+        $plan->setRelation('planDays', collect());
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', [
-            'fitness_data' => $this->validFitnessData,
-        ]);
+        $this->mock(WorkoutPlanService::class)
+            ->shouldReceive('createFromAgentResponse')
+            ->once()
+            ->andReturn($plan);
 
-        $response->assertOk()
-            ->assertJsonPath('meta_data.response', 'Here is your personalized workout plan!');
+        Sanctum::actingAs($user, [TokenAbility::ACCESS_API->value]);
+
+        $response = $this->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
+
+        $response->assertCreated()
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'user_id',
+                    'training_days_per_week',
+                    'goal',
+                    'experience_level',
+                    'workout_type',
+                    'plan_days',
+                ],
+            ]);
     }
 
-    public function test_call_with_optional_message_passes_it_to_agent(): void
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function test_accepts_optional_nullable_fields(): void
     {
-        $this->mockFitnessAgent('Plan generated with your request in mind.');
+        $workflowMock = \Mockery::mock('overload:App\Neuron\FitnessAgentWorkflow');
+        $workflowMock->shouldReceive('create')->andReturnSelf();
+        $workflowMock->shouldReceive('init')->andReturnSelf();
+        $workflowMock->shouldReceive('run')->andReturnSelf();
 
         $user = User::factory()->create();
+        $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id]);
+        $plan->setRelation('planDays', collect());
 
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', [
-            'message'      => 'Focus on upper body please',
-            'fitness_data' => $this->validFitnessData,
+        $this->mock(WorkoutPlanService::class)
+            ->shouldReceive('createFromAgentResponse')
+            ->once()
+            ->andReturn($plan);
+
+        Sanctum::actingAs($user, [TokenAbility::ACCESS_API->value]);
+
+        $data = array_merge($this->validRequestData, [
+            'injuries'            => 'left knee pain',
+            'sports'              => 'cycling',
+            'preferred_exercises' => 'squats, deadlifts',
+            'additional_notes'    => 'prefer morning sessions',
         ]);
 
-        $response->assertOk()
-            ->assertJsonPath('meta_data.response', 'Plan generated with your request in mind.');
-    }
+        $response = $this->postJson('/api/v1/agent/generate-workout', $data);
 
-    public function test_call_with_optional_nullable_fields_succeeds(): void
-    {
-        $this->mockFitnessAgent('Here is your plan!');
-
-        $user = User::factory()->create();
-
-        $data = array_merge($this->validFitnessData, [
-            'rest_days'              => 2,
-            'injuries'               => 'left knee pain',
-            'equipment'              => 'dumbbells, barbell',
-            'preferred_workout_type' => 'strength',
-        ]);
-
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent', [
-            'fitness_data' => $data,
-        ]);
-
-        $response->assertOk();
-    }
-
-    // ==================== RESUME ENDPOINT REMOVED ====================
-
-    public function test_resume_endpoint_no_longer_exists(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/resume', [
-            'resume_token' => 'some-token',
-            'actions'      => [['id' => 'use_saved_profile', 'decision' => 'approved']],
-        ]);
-
-        $response->assertNotFound();
+        $response->assertCreated();
     }
 }

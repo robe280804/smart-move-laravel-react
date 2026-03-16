@@ -7,6 +7,7 @@ namespace App\Neuron\Nodes;
 use App\Neuron\Events\UserInfosCollectedEvent;
 use App\Neuron\FitnessAgent;
 use App\Neuron\FitnessAgentRag;
+use Illuminate\Support\Facades\Log;
 use NeuronAI\Chat\Messages\UserMessage;
 use NeuronAI\RAG\Document;
 use NeuronAI\Workflow\Events\StopEvent;
@@ -26,15 +27,31 @@ class GenerateWorkoutPlanNode extends Node
             ->resolveRetrieval()
             ->retrieve(new UserMessage($this->buildRetrievalQuery($fitnessData)));
 
+        Log::info('documents retrivial', [
+            'doc' => $documents
+        ]);
+
         $prompt = $this->buildPrompt(
             $fitnessData,
             $this->formatExerciseContext($documents),
-            (string) $state->get('user_message', ''),
+            (array) $state->get('fitness_goals', []),
+            (array) $state->get('schedule', []),
+            (array) $state->get('equipment', []),
+            (string) $state->get('constraints', ''),
+            (array) $state->get('preferences', []),
         );
+
+        Log::info('prompt in Generate workout plan node', [
+            'prompt' => $prompt
+        ]);
 
         $response = FitnessAgent::make()
             ->chat(new UserMessage($prompt))
             ->getMessage();
+
+        Log::info('response in Generate workout plan node', [
+            'response' => $response
+        ]);
 
         $state->set('agent_response', $response->getContent());
 
@@ -49,11 +66,11 @@ class GenerateWorkoutPlanNode extends Node
     private function buildRetrievalQuery(array $fitnessData): string
     {
         $parts = array_filter([
-            $fitnessData['experience_level'] ?? null,
-            $fitnessData['gender'] ?? null,
-            $fitnessData['height'] ?? null,
-            $fitnessData['weight'] ?? null,
-            $fitnessData['age'] ?? null,
+            $this->castToString($fitnessData['experience_level'] ?? null),
+            $this->castToString($fitnessData['gender'] ?? null),
+            $this->castToString($fitnessData['height'] ?? null),
+            $this->castToString($fitnessData['weight'] ?? null),
+            $this->castToString($fitnessData['age'] ?? null),
             'fitness workout exercises',
         ]);
 
@@ -83,14 +100,25 @@ class GenerateWorkoutPlanNode extends Node
     /**
      * Assemble the full prompt for FitnessAgent.
      *
-     * @param array<string, mixed> $fitnessData
+     * @param array<string, mixed>  $fitnessData
+     * @param array<int, string>    $fitnessGoals
+     * @param array<string, mixed>  $schedule
+     * @param array<string, mixed>  $equipment
+     * @param array<string, mixed>  $preferences
      */
-    private function buildPrompt(array $fitnessData, string $exerciseContext, string $userMessage): string
-    {
+    private function buildPrompt(
+        array $fitnessData,
+        string $exerciseContext,
+        array $fitnessGoals,
+        array $schedule,
+        array $equipment,
+        string $constraints,
+        array $preferences,
+    ): string {
         $profileLines = [];
 
         foreach ($fitnessData as $key => $value) {
-            $formatted = is_array($value) ? implode(', ', $value) : (string) $value;
+            $formatted = is_array($value) ? implode(', ', array_map($this->castToString(...), $value)) : $this->castToString($value);
             $profileLines[] = sprintf('  %s: %s', str_replace('_', ' ', (string) $key), $formatted);
         }
 
@@ -99,20 +127,74 @@ class GenerateWorkoutPlanNode extends Node
             implode("\n", $profileLines),
         ];
 
+        $requestLines = [];
+
+        if ($fitnessGoals !== []) {
+            $requestLines[] = sprintf('  goals: %s', implode(', ', $fitnessGoals));
+        }
+
+        if (isset($schedule['training_days_per_week'])) {
+            $requestLines[] = sprintf('  training days per week: %d', (int) $schedule['training_days_per_week']);
+        }
+
+        if (! empty($schedule['available_days'])) {
+            $requestLines[] = sprintf('  available days: %s', implode(', ', (array) $schedule['available_days']));
+        }
+
+        if (isset($schedule['session_duration'])) {
+            $requestLines[] = sprintf('  session duration: %d minutes', (int) $schedule['session_duration']);
+        }
+
+        if (! empty($equipment['items'])) {
+            $requestLines[] = sprintf('  equipment: %s', implode(', ', (array) $equipment['items']));
+        }
+
+        if (isset($equipment['gym_access'])) {
+            $requestLines[] = sprintf('  gym access: %s', $equipment['gym_access'] ? 'yes' : 'no');
+        }
+
+        if ($constraints !== '') {
+            $requestLines[] = sprintf('  injuries/limitations: %s', $constraints);
+        }
+
+        if (! empty($preferences['workout_types'])) {
+            $requestLines[] = sprintf('  preferred workout types: %s', implode(', ', (array) $preferences['workout_types']));
+        }
+
+        if (! empty($preferences['sports'])) {
+            $requestLines[] = sprintf('  sports/activities: %s', (string) $preferences['sports']);
+        }
+
+        if (! empty($preferences['preferred_exercises'])) {
+            $requestLines[] = sprintf('  preferred exercises: %s', (string) $preferences['preferred_exercises']);
+        }
+
+        if (! empty($preferences['additional_notes'])) {
+            $requestLines[] = sprintf('  additional notes: %s', (string) $preferences['additional_notes']);
+        }
+
+        if ($requestLines !== []) {
+            $sections[] = '';
+            $sections[] = '=== USER REQUEST ===';
+            $sections[] = implode("\n", $requestLines);
+        }
+
         if ($exerciseContext !== '') {
             $sections[] = '';
             $sections[] = $exerciseContext;
         }
 
-        if ($userMessage !== '') {
-            $sections[] = '';
-            $sections[] = '=== USER REQUEST ===';
-            $sections[] = $userMessage;
+        $sections[] = '';
+        $sections[] = 'If the knowledge base does not contain enough suitable exercises for the user profile, select the most appropriate alternatives ONLY from the knowledge base. Do NOT invent new exercises.';
+        return implode("\n", $sections);
+    }
+
+    private function castToString(mixed $value): string
+    {
+        if ($value instanceof \BackedEnum) {
+            return (string) $value->value;
         }
 
-        $sections[] = '';
-        $sections[] = 'Using the fitness profile above and ONLY the exercises listed in the knowledge base section, generate the complete workout plan as a single JSON object.';
-
-        return implode("\n", $sections);
+        return (string) $value;
     }
 }

@@ -234,6 +234,27 @@
           }
         }
       ]
+    },
+    {
+      "name": "Agent",
+      "item": [
+        {
+          "name": "Generate Workout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/agent/generate-workout",
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"fitness_goals\": [\"weight_loss\", \"muscle_gain\"],\n  \"training_days_per_week\": 3,\n  \"available_days\": [\"monday\", \"wednesday\", \"friday\"],\n  \"session_duration\": 60,\n  \"injuries\": null,\n  \"equipment\": [\"dumbbells\", \"resistance_bands\"],\n  \"gym_access\": false,\n  \"workout_type\": [\"strength\", \"cardio\"],\n  \"sports\": null,\n  \"preferred_exercises\": null,\n  \"additional_notes\": null\n}"
+            }
+          }
+        }
+      ]
     }
   ]
 }

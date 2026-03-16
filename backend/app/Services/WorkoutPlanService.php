@@ -4,4 +4,101 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-class WorkoutPlanService {}
+use App\Models\Exercise;
+use App\Models\User;
+use App\Models\WorkoutPlan;
+use App\Repositories\Contracts\WorkoutPlanRepositoryInterface;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
+
+class WorkoutPlanService
+{
+    public function __construct(
+        private readonly WorkoutPlanRepositoryInterface $workoutPlanRepository,
+    ) {}
+
+    public function createFromAgentResponse(string $jsonResponse, User $user): WorkoutPlan
+    {
+        $data = $this->parseJsonResponse($jsonResponse);
+
+        return DB::transaction(function () use ($data, $user): WorkoutPlan {
+            $planData = $data['workout_plan'];
+
+            $workoutPlan = $this->workoutPlanRepository->create([
+                'user_id'                => $user->id,
+                'training_days_per_week' => $planData['training_days_per_week'],
+                'goal'                   => $planData['goal'],
+                'experience_level'       => $planData['experience_level'],
+                'workout_type'           => $planData['workout_type'],
+            ]);
+
+            foreach ($planData['plan_days'] as $dayData) {
+                $planDay = $workoutPlan->planDays()->create([
+                    'day_of_week'      => $dayData['day_of_week'],
+                    'workout_name'     => $dayData['workout_name'] ?? null,
+                    'duration_minutes' => $dayData['duration_minutes'],
+                ]);
+
+                foreach ($dayData['workout_blocks'] as $blockData) {
+                    $block = $planDay->workoutBlocks()->create([
+                        'name'  => $blockData['name'],
+                        'order' => $blockData['order'],
+                    ]);
+
+                    foreach ($blockData['exercises'] as $exerciseData) {
+                        $exercise = Exercise::query()->create([
+                            'category'           => $exerciseData['category'],
+                            'muscle_group'       => $exerciseData['muscle_group'] ?? null,
+                            'equipment'          => $exerciseData['equipment'] ?? null,
+                            'instructions'       => $exerciseData['instructions'] ?? null,
+                            'infos'              => $exerciseData['infos'] ?? null,
+                            'additional_metrics' => $exerciseData['additional_metrics'] ?? null,
+                        ]);
+
+                        $prescription = $exerciseData['prescription'] ?? [];
+
+                        $block->blockExercises()->create([
+                            'exercise_id'      => $exercise->id,
+                            'order'            => $prescription['order'] ?? null,
+                            'sets'             => $prescription['sets'] ?? null,
+                            'reps'             => $prescription['reps'] ?? null,
+                            'weight'           => $prescription['weight'] ?? null,
+                            'duration_seconds' => $prescription['duration_seconds'] ?? null,
+                            'rest_seconds'     => $prescription['rest_seconds'] ?? null,
+                            'rpe'              => $prescription['rpe'] ?? null,
+                        ]);
+                    }
+                }
+            }
+
+            return $workoutPlan->load('planDays.workoutBlocks.blockExercises.exercise');
+        });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function parseJsonResponse(string $response): array
+    {
+        $cleaned = preg_replace('/^```(?:json)?\s*/m', '', $response);
+        $cleaned = preg_replace('/\s*```\s*$/m', '', (string) $cleaned);
+        $cleaned = trim((string) $cleaned);
+
+        $data = json_decode($cleaned, true);
+
+        Log::info('agent response', [
+            'res' => $data
+        ]);
+
+        if (! is_array($data)) {
+            throw new RuntimeException('Agent response is not valid JSON.');
+        }
+
+        if (! isset($data['workout_plan'])) {
+            throw new RuntimeException('Agent response is missing the "workout_plan" key.');
+        }
+
+        return $data;
+    }
+}

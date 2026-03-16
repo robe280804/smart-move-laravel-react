@@ -8,11 +8,12 @@ use App\Neuron\Prompts\BackgroundPrompt;
 use App\Neuron\Prompts\OutputPrompt;
 use App\Neuron\Prompts\SecurityPrompt;
 use App\Neuron\Prompts\StepsPrompt;
+use GuzzleHttp\HandlerStack;
 use NeuronAI\Agent\Agent;
 use NeuronAI\Agent\SystemPrompt;
 use NeuronAI\HttpClient\GuzzleHttpClient;
 use NeuronAI\Providers\AIProviderInterface;
-use NeuronAI\Providers\Anthropic;
+use NeuronAI\Providers\Anthropic\Anthropic;
 use NeuronAI\Providers\Ollama\Ollama;
 use NeuronAI\Tools\ToolInterface;
 use NeuronAI\Tools\Toolkits\ToolkitInterface;
@@ -21,12 +22,13 @@ class FitnessAgent extends Agent
 {
     protected function provider(): AIProviderInterface
     {
-        // return an instance of Anthropic, OpenAI, Gemini, Ollama, etc...
-        // https://docs.neuron-ai.dev/providers/ai-provider
-        return new Ollama(
-            url: config('services.ollama.url'),
-            model: config('services.ollama.model'),
-            httpClient: (new GuzzleHttpClient())->withTimeout(300.0),
+
+        return new Anthropic(
+            key: config('services.claude.key'),
+            model: config('services.claude.model'),
+            max_tokens: 16000,
+            parameters: [],
+            httpClient: (new GuzzleHttpClient())->withTimeout(600.0),
         );
     }
 

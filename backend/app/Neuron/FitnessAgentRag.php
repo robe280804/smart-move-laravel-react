@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Neuron;
 
+use GuzzleHttp\HandlerStack;
 use NeuronAI\Agent\SystemPrompt;
+use NeuronAI\HttpClient\GuzzleHttpClient;
 use NeuronAI\Providers\AIProviderInterface;
+use NeuronAI\Providers\Anthropic\Anthropic;
 use NeuronAI\Providers\Ollama\Ollama;
 use NeuronAI\RAG\Embeddings\EmbeddingsProviderInterface;
 use NeuronAI\RAG\Embeddings\OllamaEmbeddingsProvider;
@@ -17,9 +20,11 @@ class FitnessAgentRag extends RAG
 {
     protected function provider(): AIProviderInterface
     {
-        return new Ollama(
-            url: config('services.ollama.url'),
-            model: config('services.ollama.model'),
+        return new Anthropic(
+            key: config('services.claude.key'),
+            model: config('services.claude.model'),
+            max_tokens: 16000,
+            httpClient: (new GuzzleHttpClient())->withTimeout(600.0),
         );
     }
 
@@ -43,6 +48,7 @@ class FitnessAgentRag extends RAG
         return new QdrantVectorStore(
             collectionUrl: config('services.qdrant.url'),
             key: config('services.qdrant.key'),
+            topK: 30,
             dimension: 768,
         );
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Services\InputSanitizerService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AgentCallRequest extends FormRequest
@@ -13,23 +14,45 @@ class AgentCallRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $sanitizer = app(InputSanitizerService::class);
+
+        $fields = ['injuries', 'sports', 'preferred_exercises', 'additional_notes'];
+        $merge = [];
+
+        foreach ($fields as $field) {
+            if ($this->has($field) && $this->input($field) !== null) {
+                $merge[$field] = $sanitizer->sanitize((string) $this->input($field));
+            }
+        }
+
+        if (! empty($merge)) {
+            $this->merge($merge);
+        }
+    }
+
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
         return [
-            'message'                              => ['nullable', 'string', 'max:2000'],
-            'fitness_data'                         => ['required', 'array'],
-            'fitness_data.fitness_goal'            => ['required', 'string', 'in:weight_loss,muscle_gain,endurance,flexibility,strength_building,general_fitness'],
-            'fitness_data.training_days_per_week'  => ['required', 'integer', 'min:1', 'max:7'],
-            'fitness_data.available_days'          => ['required', 'array', 'min:1'],
-            'fitness_data.available_days.*'        => ['required', 'string', 'in:monday,tuesday,wednesday,thursday,friday,saturday,sunday'],
-            'fitness_data.session_duration'        => ['required', 'integer', 'min:15', 'max:240'],
-            'fitness_data.rest_days'               => ['nullable', 'integer', 'min:0', 'max:7'],
-            'fitness_data.injuries'                => ['nullable', 'string', 'max:500'],
-            'fitness_data.equipment'               => ['nullable', 'string', 'max:500'],
-            'fitness_data.preferred_workout_type'  => ['nullable', 'string', 'in:strength,cardio,mobility,conditioning'],
+            'fitness_goals'           => ['required', 'array', 'min:1', 'max:3'],
+            'fitness_goals.*'         => ['required', 'string'],
+            'training_days_per_week'  => ['required', 'integer', 'min:1', 'max:7'],
+            'available_days'          => ['required', 'array', 'min:1'],
+            'available_days.*'        => ['required', 'string'],
+            'session_duration'        => ['required', 'integer', 'min:15', 'max:180'],
+            'injuries'                => ['nullable', 'string', 'max:500'],
+            'equipment'               => ['required', 'array', 'min:1'],
+            'equipment.*'             => ['required', 'string'],
+            'gym_access'              => ['required', 'boolean'],
+            'workout_type'            => ['required', 'array', 'min:1', 'max:3'],
+            'workout_type.*'          => ['required', 'string'],
+            'sports'                  => ['nullable', 'string', 'max:500'],
+            'preferred_exercises'     => ['nullable', 'string', 'max:500'],
+            'additional_notes'        => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

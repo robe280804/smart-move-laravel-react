@@ -35,6 +35,6 @@ Route::prefix('v1')
             Route::apiResource('users', UserController::class);
             Route::apiResource('fitness-info', FitnessInfoController::class);
 
-            Route::post('agent', [AgentController::class, 'call']);
+            Route::post('agent/generate-workout', [AgentController::class, 'generateWorkout']);
         });
     });
