@@ -12,27 +12,36 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: backend
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -f backend/docker/Dockerfile -t smart-move-app backend
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, pdo_sqlite, bcmath, zip, intl, pcntl
+          coverage: none
 
-      - name: Start app container
-        run: docker run -d --name app -v ${{ github.workspace }}/backend:/var/www/html smart-move-app
-
-      - name: Copy environment file
-        run: docker exec app cp .env.example .env
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
 
       - name: Install Composer dependencies
-        run: docker exec app composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy environment file
+        run: cp .env.example .env
 
       - name: Generate application key
-        run: docker exec app php artisan key:generate
-
-      #- name: Run Pint (code style check)
-      #  run: docker exec app ./vendor/bin/pint --test
+        run: php artisan key:generate
 
       - name: Run tests
-        run: docker exec app php artisan test --compact
+        run: php artisan test --compact
