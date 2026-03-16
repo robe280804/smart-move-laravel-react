@@ -8,6 +8,7 @@ use App\Models\Exercise;
 use App\Models\User;
 use App\Models\WorkoutPlan;
 use App\Repositories\Contracts\WorkoutPlanRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -17,6 +18,22 @@ class WorkoutPlanService
     public function __construct(
         private readonly WorkoutPlanRepositoryInterface $workoutPlanRepository,
     ) {}
+
+    /** @return Collection<int, WorkoutPlan> */
+    public function getAll(User $user): Collection
+    {
+        return $this->workoutPlanRepository->findByUserWithRelations($user);
+    }
+
+    public function loadRelations(WorkoutPlan $workoutPlan): WorkoutPlan
+    {
+        return $workoutPlan->load('planDays.workoutBlocks.blockExercises.exercise');
+    }
+
+    public function delete(WorkoutPlan $workoutPlan): void
+    {
+        $this->workoutPlanRepository->delete($workoutPlan);
+    }
 
     public function createFromAgentResponse(string $jsonResponse, User $user): WorkoutPlan
     {
@@ -48,6 +65,7 @@ class WorkoutPlanService
 
                     foreach ($blockData['exercises'] as $exerciseData) {
                         $exercise = Exercise::query()->create([
+                            'name'               => $exerciseData['name'] ?? null,
                             'category'           => $exerciseData['category'],
                             'muscle_group'       => $exerciseData['muscle_group'] ?? null,
                             'equipment'          => $exerciseData['equipment'] ?? null,

@@ -19,6 +19,10 @@ class ExerciseFactory extends Factory
     public function definition(): array
     {
         return [
+            'name' => fake()->randomElement([
+                'Barbell Back Squat', 'Romanian Deadlift', 'Bench Press', 'Pull-Up',
+                'Overhead Press', 'Barbell Row', 'Dumbbell Lunge', 'Push-Up', 'Plank',
+            ]),
             'category' => fake()->randomElement(['strength', 'sprint', 'mobility', 'conditioning']),
             'muscle_group' => fake()->optional()->randomElement([
                 'chest', 'back', 'legs', 'shoulders', 'arms', 'core',

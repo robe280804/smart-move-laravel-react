@@ -94,10 +94,22 @@ export function useWorkoutPlanGenerator() {
             return;
         }
 
-        addMessage("user", `I can train ${planData.trainingDaysPerWeek} days per week on ${planData.availableDays.join(", ")} for ${planData.sessionDuration} minutes per session.`);
+        // Convert + clamp between 15 and 180
+        const sessionDuration = Math.min(
+            180,
+            Math.max(15, Number(planData.sessionDuration))
+        );
+
+        addMessage(
+            "user",
+            `I can train ${planData.trainingDaysPerWeek} days per week on ${planData.availableDays.join(", ")} for ${sessionDuration} minutes per session.`
+        );
 
         setTimeout(() => {
-            addMessage("assistant", "Perfect! Do you have any injuries or physical limitations I should be aware of? This helps me create a safe and effective plan.");
+            addMessage(
+                "assistant",
+                "Perfect! Do you have any injuries or physical limitations I should be aware of? This helps me create a safe and effective plan."
+            );
             setStep(2);
         }, 500);
     };
@@ -171,6 +183,8 @@ export function useWorkoutPlanGenerator() {
 
     const generatePlan = () => {
         setIsGenerating(true);
+
+        console.log(planData);
 
         setTimeout(() => {
             const goalLabels = planData.fitnessGoals

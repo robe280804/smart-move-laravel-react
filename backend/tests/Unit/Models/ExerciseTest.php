@@ -19,7 +19,7 @@ class ExerciseTest extends TestCase
         $exercise = new Exercise();
 
         $this->assertSame(
-            ['category', 'muscle_group', 'equipment', 'instructions', 'infos', 'additional_metrics'],
+            ['name', 'category', 'muscle_group', 'equipment', 'instructions', 'infos', 'additional_metrics'],
             $exercise->getFillable()
         );
     }

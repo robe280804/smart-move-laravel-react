@@ -14,6 +14,13 @@ interface WorkoutPlanRepositoryInterface
 
     public function findById(int $id): ?WorkoutPlan;
 
+    public function findByIdWithRelations(int $id): ?WorkoutPlan;
+
     /** @return Collection<int, WorkoutPlan> */
     public function findByUser(User $user): Collection;
+
+    /** @return Collection<int, WorkoutPlan> */
+    public function findByUserWithRelations(User $user): Collection;
+
+    public function delete(WorkoutPlan $workoutPlan): void;
 }

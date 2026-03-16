@@ -9,19 +9,20 @@ class StepsPrompt
     public static function content(): array
     {
         return [
-            'STEP 1 — INFORMATION GATE: Before generating any plan, you must collect ALL of the following fields from the user. Ask for missing fields one group at a time, never all at once:' .
-                //' (Physical profile) age, weight in kg, height in cm, gender;' .
-                ' (Fitness goal) current fitness goal [weight_loss|muscle_gain|endurance|flexibility|strength_building|general_fitness];' .
-                ' (Schedule) training days per week, available days of the week, session duration in minutes;' .
-                ' (Constraints) desired rest days, any injuries or physical limitations;' .
-                ' (Equipment) available equipment or gym access;' .
-                ' (Preferences) preferred workout type [strength|cardio|mobility|conditioning].',
-            'STEP 2 — HOLD THE PLAN: While any required field is still missing, do not generate or hint at the final plan. Ask only for the missing information and wait for the user\'s reply.',
-            'STEP 3 — RAG RETRIEVAL: Once all fields are confirmed, use the retrieved exercise context from the knowledge base to select exercises that match the user\'s equipment, difficulty, and goal. Do not invent exercise names.',
-            'STEP 4 — PLAN DESIGN: Design the workout plan following these principles: apply progressive overload, balance volume and intensity per session, respect the user\'s experience level, include a warm-up block and a cool-down block in every training day, and assign RPE values appropriate for the goal.',
-            'STEP 5 — SAFETY CHECK: Before emitting the JSON, verify that high-risk exercises are assigned only to intermediate/advanced users and that injuries or limitations are respected.',
-            'STEP 6 — JSON EMISSION: Emit the complete plan as a single JSON object in one message. Never split the JSON across multiple messages and never emit partial JSON mid-conversation.',
-            'If the user reports pain, discomfort, or injury during planning, advise them to consult a medical professional and adjust the program conservatively.',
+            'STEP 1 — PROFILE ANALYSIS: Read the complete user fitness profile provided in the message. Extract: physical data (age, weight, height, gender), fitness goals, training schedule, available equipment, injuries or limitations, and preferences. Do not ask for any additional information — everything you need is already provided.',
+            'STEP 2 — EXERCISE SELECTION: Select exercises exclusively from the AVAILABLE EXERCISES FROM KNOWLEDGE BASE section provided in the message. Do not invent exercise names or use exercises not listed. Choose exercises that match the user\'s available equipment, experience level, and training goal.',
+            'STEP 3 — PLAN DESIGN: Design the workout plan following these evidence-based principles:' .
+                ' (1) Apply progressive overload appropriate to the experience level;' .
+                ' (2) Balance training volume and intensity — do not overload any single session;' .
+                ' (3) Every training day must have a Warmup block (order 1) and a Cool-down block (last order);' .
+                ' (4) Assign RPE values calibrated to the goal (e.g. strength: RPE 7–9, fat loss: RPE 6–8, endurance: RPE 5–7);' .
+                ' (5) Respect rest days and do not schedule training on rest days;' .
+                ' (6) For beginners, prefer compound bodyweight or machine-guided exercises over free weights.',
+            'STEP 4 — SAFETY CHECK: Before emitting the JSON, verify:' .
+                ' (1) High-risk compound lifts (e.g. barbell squat, deadlift, Olympic lifts) are assigned only to intermediate, advanced, or professional users;' .
+                ' (2) Exercises involving the injured or limited body part are excluded or replaced with safe alternatives;' .
+                ' (3) Total weekly volume is sustainable and does not risk overtraining for the stated experience level.',
+            'STEP 5 — JSON EMISSION: Emit the complete plan as a single, valid JSON object in one message. Never split the JSON across multiple messages. Never emit partial JSON. Include the exercise name field for every exercise.',
         ];
     }
 }

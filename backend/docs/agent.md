@@ -2,28 +2,37 @@
 
 ## Overview
 
-The Fitness Agent is an AI-powered conversational system that generates personalized
-workout plans. It combines a **RAG pipeline** (Retrieval-Augmented Generation backed
-by Qdrant) with a **stateful conversation loop** to collect user information, then
-produces a structured JSON plan that maps directly to the database models and is
-persisted asynchronously via a queued Job.
+The Fitness Agent is an AI-powered system that generates personalized workout plans through a
+**NeuronAI Workflow** pipeline. It combines a **RAG pipeline** (Retrieval-Augmented Generation
+backed by Qdrant) with a **three-node stateful workflow** to collect user data, retrieve relevant
+exercises, and produce a structured PHP typed output that is persisted synchronously.
+
+The architecture is **single-request, non-conversational**: the frontend sends all user
+preferences in one validated request; the workflow runs to completion within the same HTTP
+request and returns the persisted plan immediately.
 
 ---
 
 ## Components
 
-| Component            | Class                               | Role                                                     |
-| -------------------- | ----------------------------------- | -------------------------------------------------------- |
-| Conversational agent | `FitnessAgent`                      | Drives the chat, enforces topic scope, detects readiness |
-| RAG agent            | `FitnessAgentRag`                   | Embeds queries and retrieves exercises from Qdrant       |
-| Data ingestion       | `WorkflowCsvToQdrant`               | One-time seeding of the exercise vector store            |
-| HTTP entry point     | `AgentController`                   | Receives user messages, returns agent replies            |
-| Async persistence    | `PersistWorkoutPlanJob` _(planned)_ | Maps the JSON plan to Eloquent models and saves          |
+| Component                | Class                                    | Role                                                              |
+| ------------------------ | ---------------------------------------- | ----------------------------------------------------------------- |
+| HTTP entry point         | `AgentController`                        | Validates request, builds WorkflowState, runs workflow, persists  |
+| Workflow orchestrator    | `FitnessAgentWorkflow`                   | Sequences the three nodes; uses EloquentPersistence for resumable state |
+| Node 1 — sanitize        | `InitialNode`                            | Entry point; emits `SanitizeInputEvent`                           |
+| Node 2 — profile         | `CollectUserInfosNode`                   | Reads `FitnessInfo` from DB; sets `fitness_data` on state         |
+| Node 3 — generation      | `GenerateWorkoutPlanNode`                | RAG retrieval + structured LLM call; sets `agent_response` on state |
+| Conversational agent     | `FitnessAgent`                           | Anthropic Claude agent with system prompt; returns structured output |
+| RAG agent                | `FitnessAgentRag`                        | Embeds queries and retrieves exercises from Qdrant                |
+| Data ingestion           | `WorkflowCsvToQdrant`                    | One-time seeding of the exercise vector store                     |
+| Plan persistence         | `WorkoutPlanService::createFromAgentResponse` | Parses agent JSON and creates all DB models synchronously    |
+| Workflow state store     | `WorkflowInterruptRecord`                | Eloquent model backing `EloquentPersistence` for workflow state   |
 
 **Infrastructure:**
 
-- **Ollama** — local LLM + `nomic-embed-text` embedding model (768-dim)
-- **Qdrant** — vector store, collection `exercises`, Cosine distance, HNSW index
+- **Anthropic Claude** — LLM for plan generation (`services.claude.key` / `services.claude.model`, max 16 000 tokens)
+- **Ollama** — `nomic-embed-text` embedding model (768-dim) used by `FitnessAgentRag` only
+- **Qdrant** — vector store, collection `exercises`, Cosine distance, HNSW index, topK: 30
 
 ---
 
@@ -49,7 +58,7 @@ WorkflowCsvToQdrant::run(string $csvPath)
         │                 ├── primary-muscle    (lowercased)
         │                 ├── secondary_muscle
         │                 ├── difficulty        (DIFFICULTY_MAP normalization)
-        │                 └── energy_sistem     (ENERGY_SYSTEM_MAP normalization)
+        │                 └── energy_system     (ENERGY_SYSTEM_MAP normalization)
         │
         └── FitnessAgentRag::addDocuments($chunk, 50)
               │
@@ -59,7 +68,7 @@ WorkflowCsvToQdrant::run(string $csvPath)
 
 **Category normalisation applied at ingestion:**
 
-| CSV `Type`            | Stored `category` | `energy_sistem`   |
+| CSV `Type`            | Stored `category` | `energy_system`   |
 | --------------------- | ----------------- | ----------------- |
 | Strength              | `strength`        | `phosphocreatine` |
 | Cardio                | `cardio`          | `oxidative`       |
@@ -70,229 +79,256 @@ WorkflowCsvToQdrant::run(string $csvPath)
 | Strongman             | `strength`        | `phosphocreatine` |
 
 **Payload schema indexed in Qdrant** (keyword filters available):
-`equipment` · `primary-muscle` · `category` · `difficulty` · `energy_sistem` · `secondary_muscle`
+`equipment` · `primary-muscle` · `category` · `difficulty` · `energy_system` · `secondary_muscle`
 
 ---
 
-## Phase 2 — Conversational Plan Generation
+## Phase 2 — HTTP Request & WorkflowState Population
 
-### 2a. Conversation Loop
-
-The user interacts with `FitnessAgent` through `AgentController::call()`.
-During the first interaction, the user will enter all the characteristics they want for their workout plan, including safety considerations, exercises they cannot perform, and other relevant information. The frontend will guide them through this process with alerts such as: “Describe precisely the workout plan you want. Also include any physical issues or other relevant details.”
-The agent is **topic-scoped** to fitness only and will refuse off-topic requests.
+### 2a. Entry Point
 
 ```
-User (HTTP POST /api/v1/agent/chat)
+User (HTTP POST /api/v1/agent/generate-workout)   [auth:sanctum + ACCESS_API ability]
         │
         ▼
-AgentController::call(Request $request)
+AgentController::generateWorkout(AgentCallRequest $request)
         │
-        └── FitnessAgent::chat(UserMessage)
-              │
-              ├── System prompt enforces:
-              │     - Professional S&C coach persona
-              │     - Evidence-based principles
-              │     - Metric units (kg, cm)
-              │     - Topic restriction to fitness
-              │
-              └── Agent reply → ApiSuccess response
+        ├── AgentCallRequest validates and pre-sanitizes the payload
+        │     Sanitized free-text fields: injuries, sports, preferred_exercises, additional_notes
+        │
+        ├── WorkflowState populated:
+        │     user_id, user_email
+        │     fitness_goals        — string[]  (1-3 items)
+        │     schedule             — { training_days_per_week, available_days, session_duration }
+        │     equipment            — { items: string[], gym_access: bool }
+        │     constraints          — string|null   (injuries/limitations)
+        │     preferences          — { workout_types, sports, preferred_exercises, additional_notes }
+        │
+        └── FitnessAgentWorkflow::create(state: $state)->init()->run()
 ```
 
-### 2b. Required Information Gate
+### 2b. Validated Request Fields (`AgentCallRequest`)
 
-The agent **must not generate a plan** until all of the following information
-has been collected from the conversation. If any field is missing, the agent
-asks the user for it before proceeding.
+| Field                    | Type       | Rules                          |
+| ------------------------ | ---------- | ------------------------------ |
+| `fitness_goals`          | `string[]` | required, 1-3 items            |
+| `training_days_per_week` | `int`      | required, 1-7                  |
+| `available_days`         | `string[]` | required, min 1                |
+| `session_duration`       | `int`      | required, 15-180 minutes       |
+| `injuries`               | `string`   | nullable, max 500 chars        |
+| `equipment`              | `string[]` | required, min 1                |
+| `gym_access`             | `bool`     | required                       |
+| `workout_type`           | `string[]` | required, 1-3 items            |
+| `sports`                 | `string`   | nullable, max 500 chars        |
+| `preferred_exercises`    | `string`   | nullable, max 500 chars        |
+| `additional_notes`       | `string`   | nullable, max 1 000 chars      |
 
-| Category             | Required fields                                                                |
-| -------------------- | ------------------------------------------------------------------------------ |
-| **Physical profile** | Age, weight (kg), height (cm), gender                                          |
-| **Fitness profile**  | Experience level, current fitness goal                                         |
-| **Schedule**         | Training days per week, available days of the week, session duration (minutes) |
-| **Constraints**      | Rest days, any injuries or physical limitations                                |
-| **Equipment**        | Available equipment or gym access                                              |
-| **Preferences**      | Preferred workout type (strength / cardio / mobility / conditioning)           |
+---
 
-If any field from the table above is absent from the conversation context,
-the agent responds with a clarifying question and waits. **The JSON plan is
-never emitted mid-conversation.**
+## Phase 3 — NeuronAI Workflow Execution
 
-### 2c. RAG Retrieval for Exercise Selection
-
-Once all required information is collected, the agent uses `FitnessAgentRag`
-to retrieve relevant exercises from Qdrant before composing the plan.
+The workflow is managed by `FitnessAgentWorkflow`, which uses `EloquentPersistence`
+backed by `WorkflowInterruptRecord` to support interruptible/resumable execution.
 
 ```
-Agent (plan generation phase)
+FitnessAgentWorkflow::nodes()
+    ├── InitialNode            (listens on StartEvent)
+    ├── CollectUserInfosNode   (listens on SanitizeInputEvent)
+    └── GenerateWorkoutPlanNode (listens on UserInfosCollectedEvent)
+```
+
+### Node 1 — InitialNode
+
+Receives the `StartEvent`, emits `SanitizeInputEvent` (no-op placeholder for future input
+sanitization).
+
+### Node 2 — CollectUserInfosNode
+
+```
+SanitizeInputEvent received
         │
-        ├── Embeds a retrieval query per block type
-        │     e.g. "strength barbell chest intermediate"
-        │               │
-        │               ▼
-        │     OllamaEmbeddingsProvider (nomic-embed-text, 768-dim)
-        │               │
-        │               ▼
-        │     QdrantVectorStore.search(vector, filters)
-        │         filters: category, equipment, difficulty, primary-muscle
-        │               │
-        │               ▼
-        │     Top-K matching exercises returned as context
+        └── UserRepositoryInterface::findById(state.user_id)
+              └── ->fitnessInfo()->firstOrFail()
+                    │
+                    └── sets state.fitness_data = {
+                          age, height, weight, gender, experience_level
+                        }
         │
-        └── LLM composes the JSON plan using retrieved exercises
-              as the canonical exercise list (names, categories, muscle groups)
+        └── emits UserInfosCollectedEvent
+```
+
+Physical profile (age, weight, height, gender, experience_level) is always read from the
+`fitness_info` table; the user never types these during plan generation.
+
+### Node 3 — GenerateWorkoutPlanNode
+
+```
+UserInfosCollectedEvent received
+        │
+        ├── Build retrieval query from fitness_data
+        │     e.g. "intermediate male 175 80 30 fitness workout exercises"
+        │               │
+        │               ▼
+        │     FitnessAgentRag::make()
+        │         ->resolveRetrieval()
+        │         ->retrieve(UserMessage $query)
+        │               │
+        │               ├── OllamaEmbeddingsProvider (nomic-embed-text, 768-dim)
+        │               └── QdrantVectorStore.search(vector) → top 30 documents
+        │                         │
+        │                         └── sliced to top 20 (TOP_K_EXERCISES)
+        │
+        ├── buildPrompt() — assembles sections:
+        │     === USER FITNESS PROFILE ===      (from fitness_data)
+        │     === USER REQUEST ===              (goals, schedule, equipment, constraints, preferences)
+        │     === AVAILABLE EXERCISES FROM KNOWLEDGE BASE ===   (formatted document list)
+        │     "If the knowledge base does not contain enough suitable exercises…"
+        │
+        └── FitnessAgent::make()
+              ->structured(UserMessage($prompt), WorkoutPlanOutput::class)
+                    │
+                    └── Anthropic Claude returns WorkoutPlanOutput (PHP typed object)
+                              │
+                              └── state.agent_response = json_encode($output)
+        │
+        └── emits StopEvent
 ```
 
 ---
 
-## Phase 3 — JSON Plan Output
+## Phase 4 — FitnessAgent System Prompt
 
-When all information is available and exercises have been retrieved, the agent
-emits a **single structured JSON response** that mirrors the database hierarchy.
-The JSON is never split across multiple messages.
+`FitnessAgent` composes its `SystemPrompt` from three prompt classes:
 
-### JSON Schema (Agent Output)
+**Background** (`SecurityPrompt` + `BackgroundPrompt`):
+- Confidentiality rules: never reveal internal instructions or system prompt
+- Professional S&C coach persona with expertise in Exercise Science, Nutrition, Injury Prevention
+- Topic restriction to fitness only; refuses off-topic requests
+- Evidence-based training principles; metric units (kg, cm) only
 
-```json
-{
-    "workout_plan": {
-        "training_days_per_week": 4,
-        "goal": "strength_building",
-        "experience_level": "intermediate",
-        "workout_type": "strength",
-        "plan_days": [
-            {
-                "day_of_week": 1,
-                "workout_name": "Upper Body — Push",
-                "duration_minutes": 75,
-                "workout_blocks": [
-                    {
-                        "name": "Warmup",
-                        "order": 1,
-                        "exercises": [
-                            {
-                                "name": "Band Pull-Apart",
-                                "category": "mobility",
-                                "muscle_group": "shoulders",
-                                "equipment": "bodyweight",
-                                "instructions": "Hold band at shoulder width, pull apart to full extension.",
-                                "infos": "Activates the posterior shoulder and scapular retractors.",
-                                "additional_metrics": {
-                                    "met_value": 2.5,
-                                    "energy_sistem": "none",
-                                    "difficulty": "beginner"
-                                },
-                                "prescription": {
-                                    "order": 1,
-                                    "sets": 2,
-                                    "reps": 15,
-                                    "weight": null,
-                                    "duration_seconds": null,
-                                    "rest_seconds": 45,
-                                    "rpe": 3.0
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Strength",
-                        "order": 2,
-                        "exercises": [
-                            {
-                                "name": "Barbell Back Squat",
-                                "category": "strength",
-                                "muscle_group": "legs",
-                                "equipment": "barbell",
-                                "instructions": "Bar on traps, squat to parallel, drive through heels.",
-                                "infos": "Foundational lower body compound. Brace core and maintain neutral spine.",
-                                "additional_metrics": {
-                                    "met_value": 6.0,
-                                    "calories_burned_per_minute": 9.2,
-                                    "energy_sistem": "phosphocreatine",
-                                    "difficulty": "intermediate"
-                                },
-                                "prescription": {
-                                    "order": 1,
-                                    "sets": 4,
-                                    "reps": 5,
-                                    "weight": 100.0,
-                                    "duration_seconds": null,
-                                    "rest_seconds": 240,
-                                    "rpe": 8.5
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
-}
-```
+**Steps** (`StepsPrompt`):
+1. Profile analysis — extract all user data from the provided message (no follow-up questions)
+2. Exercise selection — use **only** exercises listed in the knowledge base section
+3. Plan design — progressive overload, volume/intensity balance, mandatory Warmup + Cool-down blocks, RPE calibration, rest day respect
+4. Safety check — restrict high-risk compound lifts to intermediate+, exclude exercises involving injured body parts, verify weekly volume
+5. JSON emission — single complete JSON object, never split, never partial
 
-### Mapping: Agent JSON → Database Models
-
-The agent's `exercises[].prescription` object maps to `BlockExercise`.
-The agent's `exercises[]` object (minus `prescription`) maps to `Exercise`.
-Extra fields in `additional_metrics` (e.g. `energy_sistem`, `difficulty`) are
-stored as-is in `Exercise.additional_metrics` (JSON column, cast to `array`).
-
-| Agent JSON field                      | Target model    | Target column                                                                |
-| ------------------------------------- | --------------- | ---------------------------------------------------------------------------- |
-| `workout_plan.training_days_per_week` | `WorkoutPlan`   | `training_days_per_week`                                                     |
-| `workout_plan.goal`                   | `WorkoutPlan`   | `goal` (enum `TrainingGoalType`)                                             |
-| `workout_plan.experience_level`       | `WorkoutPlan`   | `experience_level` (enum `ExperienceLevel`)                                  |
-| `workout_plan.workout_type`           | `WorkoutPlan`   | `workout_type`                                                               |
-| `plan_days[].day_of_week`             | `PlanDay`       | `day_of_week`                                                                |
-| `plan_days[].workout_name`            | `PlanDay`       | `workout_name`                                                               |
-| `plan_days[].duration_minutes`        | `PlanDay`       | `duration_minutes`                                                           |
-| `workout_blocks[].name`               | `WorkoutBlock`  | `name`                                                                       |
-| `workout_blocks[].order`              | `WorkoutBlock`  | `order`                                                                      |
-| `exercises[].name`                    | `Exercise`      | resolved by name or created                                                  |
-| `exercises[].category`                | `Exercise`      | `category`                                                                   |
-| `exercises[].muscle_group`            | `Exercise`      | `muscle_group`                                                               |
-| `exercises[].equipment`               | `Exercise`      | `equipment`                                                                  |
-| `exercises[].instructions`            | `Exercise`      | `instructions`                                                               |
-| `exercises[].infos`                   | `Exercise`      | `infos`                                                                      |
-| `exercises[].additional_metrics`      | `Exercise`      | `additional_metrics` (JSON)                                                  |
-| `exercises[].prescription.*`          | `BlockExercise` | `order`, `sets`, `reps`, `weight`, `duration_seconds`, `rest_seconds`, `rpe` |
+**Output** (`OutputPrompt`):
+- Respond with **only** a valid JSON object (no prose, no markdown fences)
+- Enumerations for `goal`, `experience_level`, `workout_type`, `energy_system`, `difficulty`
 
 ---
 
-## Phase 4 — Async Persistence (Job)
+## Phase 5 — Structured Output (PHP Typed Classes)
 
-The plan is **never persisted synchronously** inside the HTTP request.
-Once the agent emits the final JSON, the controller dispatches a queued Job.
+The agent uses NeuronAI's structured output feature. The LLM response is deserialized
+directly into typed PHP objects annotated with `#[SchemaProperty]`.
+
+```
+WorkoutPlanOutput
+└── WorkoutPlanData                    workout_plan
+      ├── int    $training_days_per_week
+      ├── string $goal
+      ├── string $experience_level
+      ├── string $workout_type
+      └── PlanDayData[]  $plan_days
+            ├── int     $day_of_week    (1=Monday … 7=Sunday)
+            ├── ?string $workout_name
+            ├── int     $duration_minutes
+            └── WorkoutBlockData[]  $workout_blocks
+                  ├── string $name
+                  ├── int    $order
+                  └── ExerciseData[]  $exercises
+                        ├── string  $name           (exact name from knowledge base)
+                        ├── string  $category
+                        ├── ?string $muscle_group
+                        ├── ?string $equipment
+                        ├── ?string $instructions
+                        ├── ?string $infos
+                        ├── ?AdditionalMetricsData $additional_metrics
+                        │     ├── ?string $description
+                        │     ├── ?float  $met_value
+                        │     ├── ?string $energy_system   (aerobic | anaerobic_lactic | anaerobic_alactic | mixed)
+                        │     └── ?string $difficulty      (beginner | intermediate | advanced | professional)
+                        └── PrescriptionData $prescription
+                              ├── int    $order
+                              ├── ?int   $sets
+                              ├── ?int   $reps
+                              ├── ?float $weight            (kg; null for bodyweight)
+                              ├── ?int   $duration_seconds  (null for rep-based)
+                              ├── int    $rest_seconds
+                              └── float  $rpe               (1.0–10.0)
+```
+
+After workflow completion the output is serialized:
+```php
+$state->set('agent_response', json_encode($output));   // WorkoutPlanOutput → JSON string
+```
+
+---
+
+## Phase 6 — Synchronous Persistence
+
+Persistence happens **synchronously** in the controller, immediately after workflow completion.
+There is no queued job.
 
 ```
 AgentController
         │
-        ├── Detects JSON plan in agent response
+        ├── $state->get('agent_response')  — JSON string from workflow
         │
-        └── PersistWorkoutPlanJob::dispatch(userId, planJson)
+        └── WorkoutPlanService::createFromAgentResponse(string $jsonResponse, User $user)
                 │
-                └── (async, queued worker)
+                ├── parseJsonResponse()
+                │     ├── strips markdown fences if present (```json … ```)
+                │     ├── json_decode() → array
+                │     └── asserts 'workout_plan' key exists
+                │
+                └── DB::transaction()
                       │
-                      ├── WorkoutPlanService::createFromAgentJson(User, array)
-                      │     │
-                      │     ├── Create WorkoutPlan
-                      │     ├── foreach plan_day → Create PlanDay
-                      │     │     └── foreach workout_block → Create WorkoutBlock
-                      │     │           └── foreach exercise
-                      │     │                 ├── Resolve or create Exercise
-                      │     │                 │     (firstOrCreate by name + category)
-                      │     │                 └── Create BlockExercise (prescription)
-                      │     └── return WorkoutPlan (with relations loaded)
+                      ├── WorkoutPlanRepository::create()   → WorkoutPlan
                       │
-                      └── (optional) Notify user via broadcast / push
+                      ├── foreach plan_days
+                      │     └── $workoutPlan->planDays()->create()   → PlanDay
+                      │
+                      ├── foreach workout_blocks
+                      │     └── $planDay->workoutBlocks()->create()  → WorkoutBlock
+                      │
+                      └── foreach exercises
+                            ├── Exercise::query()->create()          → Exercise  (always new)
+                            └── $block->blockExercises()->create()   → BlockExercise
+                │
+                └── return WorkoutPlan::load('planDays.workoutBlocks.blockExercises.exercise')
+        │
+        └── return ApiSuccess(WorkoutPlanResource, HTTP 201)
 ```
 
-**Why async?**
+> **Note:** Exercises are always created fresh per plan (`create()`, not `firstOrCreate()`).
+> Deduplication across plans is not currently applied.
 
-- LLM inference may generate a plan with 50–100+ exercises.
-- Each `Exercise` requires a `firstOrCreate` DB lookup.
-- Nested inserts across 5 tables can exceed a typical HTTP timeout.
-- A failed persistence does not abort the agent's HTTP response; it can be retried independently.
+---
+
+## Mapping: Structured Output → Database Models
+
+| Structured Output field                    | Target model    | Target column                                                                |
+| ------------------------------------------ | --------------- | ---------------------------------------------------------------------------- |
+| `workout_plan.training_days_per_week`      | `WorkoutPlan`   | `training_days_per_week`                                                     |
+| `workout_plan.goal`                        | `WorkoutPlan`   | `goal` (enum `TrainingGoalType`)                                             |
+| `workout_plan.experience_level`            | `WorkoutPlan`   | `experience_level` (enum `ExperienceLevel`)                                  |
+| `workout_plan.workout_type`                | `WorkoutPlan`   | `workout_type`                                                               |
+| `plan_days[].day_of_week`                  | `PlanDay`       | `day_of_week`                                                                |
+| `plan_days[].workout_name`                 | `PlanDay`       | `workout_name`                                                               |
+| `plan_days[].duration_minutes`             | `PlanDay`       | `duration_minutes`                                                           |
+| `workout_blocks[].name`                    | `WorkoutBlock`  | `name`                                                                       |
+| `workout_blocks[].order`                   | `WorkoutBlock`  | `order`                                                                      |
+| `exercises[].name`                         | `Exercise`      | `name`                                                                       |
+| `exercises[].category`                     | `Exercise`      | `category`                                                                   |
+| `exercises[].muscle_group`                 | `Exercise`      | `muscle_group`                                                               |
+| `exercises[].equipment`                    | `Exercise`      | `equipment`                                                                  |
+| `exercises[].instructions`                 | `Exercise`      | `instructions`                                                               |
+| `exercises[].infos`                        | `Exercise`      | `infos`                                                                      |
+| `exercises[].additional_metrics`           | `Exercise`      | `additional_metrics` (JSON cast to array)                                    |
+| `exercises[].prescription.*`               | `BlockExercise` | `order`, `sets`, `reps`, `weight`, `duration_seconds`, `rest_seconds`, `rpe` |
 
 ---
 
@@ -302,44 +338,42 @@ AgentController
 [One-time]
 CSV dataset ──► WorkflowCsvToQdrant ──► Qdrant vector store
 
-[Per user session]
-User message
+[Per user request]
+POST /api/v1/agent/generate-workout
     │
     ▼
-AgentController::call()
+AgentCallRequest (validate + sanitize free-text fields)
     │
     ▼
-FitnessAgent (chat loop)
+AgentController::generateWorkout()
     │
-    ├── Missing info? ──► Ask user ──► wait for next message
+    ├── Build WorkflowState (user_id, fitness_goals, schedule, equipment, constraints, preferences)
     │
-    └── All info collected?
-            │
-            ▼
-        FitnessAgentRag (retrieval)
-            │
-            ├── Embed query (Ollama nomic-embed-text)
-            └── Search Qdrant (cosine similarity + keyword filters)
-                    │
-                    ▼
-                Top-K exercises injected as context
-                    │
-                    ▼
-                LLM generates JSON plan
-                    │
-                    ▼
-            AgentController returns JSON to client
-                    │
-                    ▼
-            PersistWorkoutPlanJob::dispatch()
-                    │
-                    ▼ (async queue worker)
-            WorkoutPlanService::createFromAgentJson()
-                    │
-                    ▼
-            WorkoutPlan + PlanDay + WorkoutBlock
-                + Exercise (firstOrCreate) + BlockExercise
-                    │
-                    ▼
-            (optional) Notify user
+    ▼
+FitnessAgentWorkflow::create(state)->init()->run()
+    │
+    ├── InitialNode
+    │     └── emits SanitizeInputEvent
+    │
+    ├── CollectUserInfosNode
+    │     ├── Reads FitnessInfo from DB (age, height, weight, gender, experience_level)
+    │     ├── Sets state.fitness_data
+    │     └── emits UserInfosCollectedEvent
+    │
+    └── GenerateWorkoutPlanNode
+          ├── Build retrieval query from fitness_data
+          ├── FitnessAgentRag → Qdrant (top 30) → slice to top 20
+          ├── buildPrompt() → USER FITNESS PROFILE + USER REQUEST + KNOWLEDGE BASE exercises
+          ├── FitnessAgent::structured(prompt, WorkoutPlanOutput::class)   [Anthropic Claude]
+          └── state.agent_response = json_encode(WorkoutPlanOutput)
+    │
+    ▼
+WorkoutPlanService::createFromAgentResponse(state.agent_response, $user)
+    │
+    ├── Parse JSON → array
+    └── DB::transaction()
+          WorkoutPlan → PlanDay → WorkoutBlock → Exercise (create) + BlockExercise
+    │
+    ▼
+ApiSuccess(WorkoutPlanResource, HTTP 201)
 ```

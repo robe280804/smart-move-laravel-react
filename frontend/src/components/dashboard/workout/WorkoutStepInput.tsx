@@ -104,13 +104,19 @@ export function WorkoutStepInput({
                             max="7"
                             value={planData.trainingDaysPerWeek}
                             onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                if (!isNaN(val)) {
+                                    setPlanData({ ...planData, trainingDaysPerWeek: val });
+                                }
+                            }}
+                            onBlur={(e) => {
                                 const val = Math.max(1, Math.min(7, parseInt(e.target.value) || 1));
                                 setPlanData({ ...planData, trainingDaysPerWeek: val });
                             }}
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="sessionDuration">Session duration (minutes)</Label>
+                        <Label htmlFor="sessionDuration">Avarage session duration (minutes)</Label>
                         <Input
                             id="sessionDuration"
                             type="number"
@@ -118,8 +124,10 @@ export function WorkoutStepInput({
                             max="180"
                             value={planData.sessionDuration}
                             onChange={(e) => {
-                                const val = Math.max(15, Math.min(180, parseInt(e.target.value) || 15));
-                                setPlanData({ ...planData, sessionDuration: val });
+                                setPlanData({
+                                    ...planData,
+                                    sessionDuration: e.target.value
+                                })
                             }}
                         />
                     </div>
@@ -184,29 +192,65 @@ export function WorkoutStepInput({
     }
 
     if (step === 3) {
+        const allEquipmentValues = EQUIPMENT_OPTIONS.map(e => e);
+        const hasEverything = planData.equipment.includes("everything");
+        const equipmentDisabled = planData.gymAccess || hasEverything;
+
+        const handleGymAccessChange = (checked: boolean) => {
+            if (checked) {
+                setPlanData({ ...planData, gymAccess: true, equipment: [...allEquipmentValues, "everything"] });
+            } else {
+                setPlanData({ ...planData, gymAccess: false, equipment: [] });
+            }
+        };
+
+        const handleEverythingToggle = (checked: boolean) => {
+            if (checked) {
+                setPlanData({ ...planData, equipment: [...allEquipmentValues, "everything"] });
+            } else {
+                setPlanData({ ...planData, equipment: [] });
+            }
+        };
+
         return (
             <div className="space-y-4">
                 <div className="flex items-center gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <Checkbox
                         id="gymAccess"
                         checked={planData.gymAccess}
-                        onCheckedChange={(checked) => setPlanData({ ...planData, gymAccess: checked as boolean })}
+                        onCheckedChange={(checked) => handleGymAccessChange(checked as boolean)}
                     />
                     <Label htmlFor="gymAccess" className="cursor-pointer">I have gym access</Label>
                 </div>
                 <div className="space-y-2">
                     <Label>Available equipment (select all that apply)</Label>
                     <div className="grid md:grid-cols-2 gap-2">
+                        <label
+                            className={`flex items-center gap-2 p-3 border-2 rounded-lg transition-all md:col-span-2 ${hasEverything || planData.gymAccess
+                                    ? "border-blue-600 bg-blue-50 cursor-not-allowed"
+                                    : "border-blue-300 bg-blue-50/50 hover:border-blue-500 cursor-pointer"
+                                }`}
+                        >
+                            <Checkbox
+                                checked={hasEverything || planData.gymAccess}
+                                disabled={planData.gymAccess}
+                                onCheckedChange={(checked) => handleEverythingToggle(checked as boolean)}
+                            />
+                            <span className="text-sm font-semibold text-blue-700">Everything (all equipment available)</span>
+                        </label>
                         {EQUIPMENT_OPTIONS.map((equipment) => (
                             <label
                                 key={equipment}
-                                className={`flex items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${planData.equipment.includes(equipment)
-                                    ? "border-blue-600 bg-blue-50"
-                                    : "border-slate-200 hover:border-slate-300"
+                                className={`flex items-center gap-2 p-3 border-2 rounded-lg transition-all ${equipmentDisabled
+                                        ? "border-blue-600 bg-blue-50 cursor-not-allowed opacity-70"
+                                        : planData.equipment.includes(equipment)
+                                            ? "border-blue-600 bg-blue-50 cursor-pointer"
+                                            : "border-slate-200 hover:border-slate-300 cursor-pointer"
                                     }`}
                             >
                                 <Checkbox
-                                    checked={planData.equipment.includes(equipment)}
+                                    checked={equipmentDisabled || planData.equipment.includes(equipment)}
+                                    disabled={equipmentDisabled}
                                     onCheckedChange={(checked) => {
                                         if (checked) {
                                             setPlanData({ ...planData, equipment: [...planData.equipment, equipment] });

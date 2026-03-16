@@ -9,7 +9,7 @@ export type WorkoutPlanData = {
     fitnessGoals: string[];
     trainingDaysPerWeek: number;
     availableDays: string[];
-    sessionDuration: number;
+    sessionDuration: number|string;   // string for the form
     restDays: number;
     injuries: string;
     equipment: string[];

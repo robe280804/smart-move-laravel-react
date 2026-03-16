@@ -41,7 +41,7 @@ class WorkoutBlock extends Model
     public function exercises(): BelongsToMany
     {
         return $this->belongsToMany(Exercise::class, 'block_exercises')
-            ->withPivot(['order', 'sets', 'reps', 'weight', 'duration_seconds', 'rest_seconds', 'rpe', 'info', 'additional_metrics'])
+            ->withPivot(['order', 'sets', 'reps', 'weight', 'duration_seconds', 'rest_seconds', 'rpe'])
             ->withTimestamps();
     }
 }

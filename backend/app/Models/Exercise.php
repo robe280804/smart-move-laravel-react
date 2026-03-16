@@ -15,6 +15,7 @@ class Exercise extends Model
     use HasFactory;
 
     protected $fillable = [
+        'name',
         'category',
         'muscle_group',
         'equipment',

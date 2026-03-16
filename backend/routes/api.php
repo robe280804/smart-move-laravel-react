@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FitnessInfoController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\WorkoutPlanController;
 use App\Http\Middleware\SetBearerTokenFromCookie;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,10 @@ Route::prefix('v1')
         Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value])->group(function () {
             Route::apiResource('users', UserController::class);
             Route::apiResource('fitness-info', FitnessInfoController::class);
+
+            Route::get('workout-plans', [WorkoutPlanController::class, 'index']);
+            Route::get('workout-plans/{workoutPlan}', [WorkoutPlanController::class, 'show']);
+            Route::delete('workout-plans/{workoutPlan}', [WorkoutPlanController::class, 'destroy']);
 
             Route::post('agent/generate-workout', [AgentController::class, 'generateWorkout']);
         });

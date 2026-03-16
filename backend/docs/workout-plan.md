@@ -46,9 +46,11 @@ parameters the AI agent used to generate it.
 
 **Enums:**
 
-`TrainingGoalType`: `weight_loss` · `muscle_gain` · `endurance` · `flexibility` · `strength_building` · `general_fitness`
+`TrainingGoalType`: `weight_loss` · `muscle_gain` · `strength_building` · `endurance` · `flexibility` · `general_fitness` · `body_recomposition` · `athletic_performance` · `rehabilitation` · `posture_correction` · `functional_fitness`
 
 `ExperienceLevel`: `beginner` · `intermediate` · `advanced` · `professional`
+
+`WorkoutType` (stored as `string`, enum available as `App\Enums\WorkoutType`): `strength` · `cardio` · `mobility` · `conditioning` · `hiit` · `bodyweight` · `functional` · `core` · `recovery`
 
 **Relations:**
 
@@ -213,18 +215,30 @@ use different parameters (e.g. a sprint uses `duration_seconds`, not `reps`).
 A reusable catalogue entry that describes a movement. It is not tied to any
 specific plan — many blocks across many plans can reference the same exercise.
 
-| Column                      | Type       | Nullable | Notes                                                              |
-| --------------------------- | ---------- | -------- | ------------------------------------------------------------------ |
-| `id`                        | bigint PK  | —        |                                                                    |
-| `category`                  | string     | —        | `strength` · `sprint` · `mobility` · `conditioning`                |
-| `muscle_group`              | string     | ✓        | Primary muscle target (e.g. `chest`, `back`, `legs`, `core`)       |
-| `equipment`                 | string     | ✓        | `barbell` · `dumbbell` · `kettlebell` · `bodyweight` · `machine`   |
-| `instructions`              | text       | ✓        | Step-by-step execution cues                                        |
-| `infos`                     | text       | ✓        | General descriptive information, coaching notes, contraindications |
-| `additional_metrics`        | json       | ✓        | Structured performance data (e.g. MET value, calories/min)         |
-| `created_at` / `updated_at` | timestamps | —        |                                                                    |
+| Column                      | Type       | Nullable | Notes                                                                                    |
+| --------------------------- | ---------- | -------- | ---------------------------------------------------------------------------------------- |
+| `id`                        | bigint PK  | —        |                                                                                          |
+| `name`                      | string     | ✓        | Exercise name exactly as retrieved from the knowledge base (added 2026-03-16)            |
+| `category`                  | string     | —        | `strength` · `cardio` · `mobility` · `conditioning` · `plyometric` · `calisthenics` etc. |
+| `muscle_group`              | string     | ✓        | Primary muscle target (e.g. `chest`, `back`, `legs`, `core`)                             |
+| `equipment`                 | string     | ✓        | `barbell` · `dumbbell` · `kettlebell` · `bodyweight` · `cable_machine` · `machine`       |
+| `instructions`              | text       | ✓        | Step-by-step execution cues                                                              |
+| `infos`                     | text       | ✓        | Coaching cues, common mistakes to avoid, performance tips                                |
+| `additional_metrics`        | json       | ✓        | Structured performance data — see shape below                                            |
+| `created_at` / `updated_at` | timestamps | —        |                                                                                          |
 
 **Casts:** `additional_metrics` → `array`
+
+**`additional_metrics` JSON shape** (all fields nullable, populated by the AI agent):
+
+```json
+{
+    "description": "<string>  — why this exercise is included for this user",
+    "met_value": "<float>   — Metabolic Equivalent of Task (1.0 rest … 20.0 sprint)",
+    "energy_system": "<string>  — aerobic | anaerobic_lactic | anaerobic_alactic | mixed",
+    "difficulty": "<string>  — beginner | intermediate | advanced | professional"
+}
+```
 
 **Relations:**
 
@@ -236,15 +250,91 @@ specific plan — many blocks across many plans can reference the same exercise.
 ```json
 {
     "id": 7,
+    "name": "Barbell Bench Press",
     "category": "strength",
     "muscle_group": "chest",
     "equipment": "barbell",
     "instructions": "Lie supine on bench. Grip bar slightly wider than shoulder-width. Lower to chest under control, then press to lockout.",
     "infos": "The barbell bench press is a foundational horizontal push pattern. Keep shoulder blades retracted and depressed throughout the lift to protect the shoulder joint.",
     "additional_metrics": {
+        "description": "Primary horizontal push compound. Included to build chest and shoulder strength for this intermediate user.",
         "met_value": 6.0,
-        "calories_burned_per_minute": 8.5
+        "energy_system": "anaerobic_alactic",
+        "difficulty": "intermediate"
     }
+}
+```
+
+---
+
+### 6. `FitnessInfo`
+
+**Table:** `fitness_infos`
+
+Stores the physical profile of a user. It is read by `CollectUserInfosNode` during workout plan
+generation to feed the AI agent with physical context (age, weight, height, gender, experience).
+One user has at most one `FitnessInfo` record (`HasOne`).
+
+| Column                      | Type         | Nullable | Notes                                              |
+| --------------------------- | ------------ | -------- | -------------------------------------------------- |
+| `id`                        | bigint PK    | —        |                                                    |
+| `user_id`                   | FK → `users` | —        | Cascade delete                                     |
+| `height`                    | decimal(5,2) | —        | In centimetres                                     |
+| `weight`                    | decimal(5,2) | —        | In kilograms                                       |
+| `age`                       | tinyint      | ✓        | Made nullable (migration 2026-03-11)               |
+| `gender`                    | enum         | ✓        | `male` · `female` — see `Gender`                   |
+| `experience_level`          | enum         | ✓        | See `ExperienceLevel` — made nullable (2026-03-11) |
+| `created_at` / `updated_at` | timestamps   | —        |                                                    |
+
+**Casts:** `height` → `decimal:2` · `weight` → `decimal:2` · `age` → `integer` · `gender` → `Gender` · `experience_level` → `ExperienceLevel`
+
+**Relations:**
+
+- `user()` → `BelongsTo User`
+
+**Example:**
+
+```json
+{
+    "id": 5,
+    "user_id": 42,
+    "height": 178.0,
+    "weight": 82.5,
+    "age": 30,
+    "gender": "male",
+    "experience_level": "intermediate"
+}
+```
+
+---
+
+### 7. `TrainingGoal`
+
+**Table:** `training_goals`
+
+Stores one or more explicit training goals for a user, independently from a specific workout plan.
+Used to record long-term user intent.
+
+| Column                      | Type         | Nullable | Notes                  |
+| --------------------------- | ------------ | -------- | ---------------------- |
+| `id`                        | bigint PK    | —        |                        |
+| `user_id`                   | FK → `users` | —        | Cascade delete         |
+| `goal`                      | enum         | —        | See `TrainingGoalType` |
+| `created_at` / `updated_at` | timestamps   | —        |                        |
+
+**Casts:** `goal` → `TrainingGoalType`
+
+**Relations:**
+
+- `user()` → `BelongsTo User`
+
+**Example:**
+
+```json
+{
+    "id": 3,
+    "user_id": 42,
+    "goal": "strength_building"
 }
 ```
 
@@ -255,9 +345,13 @@ specific plan — many blocks across many plans can reference the same exercise.
 ```
 users
   │
-  └─< workout_plans          (user_id FK)
+  ├── fitness_infos        (user_id FK, 1-to-1)
+  │
+  ├─< training_goals       (user_id FK)
+  │
+  └─< workout_plans        (user_id FK)
         │
-        └─< plan_days         (workout_plan_id FK)
+        └─< plan_days       (workout_plan_id FK)
               │
               └─< workout_blocks  (plan_day_id FK)
                     │
@@ -303,12 +397,18 @@ training 4 days per week. Only **Monday (day 1)** is expanded to show the full h
                             "rpe": 4.0,
                             "exercise": {
                                 "id": 1,
+                                "name": "Band Pull-Apart",
                                 "category": "mobility",
                                 "muscle_group": "shoulders",
                                 "equipment": "bodyweight",
                                 "instructions": "Arm circles, band pull-aparts.",
                                 "infos": "Activates the rotator cuff and scapular stabilisers before heavy pressing.",
-                                "additional_metrics": null
+                                "additional_metrics": {
+                                    "description": "Shoulder activation drill to prime the rotator cuff before pressing.",
+                                    "met_value": 2.5,
+                                    "energy_system": "aerobic",
+                                    "difficulty": "beginner"
+                                }
                             }
                         }
                     ]
@@ -328,14 +428,17 @@ training 4 days per week. Only **Monday (day 1)** is expanded to show the full h
                             "rpe": 8.0,
                             "exercise": {
                                 "id": 7,
+                                "name": "Barbell Bench Press",
                                 "category": "strength",
                                 "muscle_group": "chest",
                                 "equipment": "barbell",
                                 "instructions": "Lie supine on bench. Lower bar to chest under control, press to lockout.",
                                 "infos": "Primary horizontal push. Keep shoulder blades retracted throughout.",
                                 "additional_metrics": {
+                                    "description": "Foundational horizontal push compound for chest and shoulder hypertrophy.",
                                     "met_value": 6.0,
-                                    "calories_burned_per_minute": 8.5
+                                    "energy_system": "anaerobic_alactic",
+                                    "difficulty": "intermediate"
                                 }
                             }
                         },
@@ -349,14 +452,17 @@ training 4 days per week. Only **Monday (day 1)** is expanded to show the full h
                             "rpe": 7.5,
                             "exercise": {
                                 "id": 8,
+                                "name": "Barbell Overhead Press",
                                 "category": "strength",
                                 "muscle_group": "shoulders",
                                 "equipment": "barbell",
                                 "instructions": "Standing overhead press. Brace core, press bar from collar bone to lockout.",
                                 "infos": "Vertical push pattern. Avoid hyperextending the lumbar spine.",
                                 "additional_metrics": {
+                                    "description": "Vertical push compound targeting deltoids and triceps.",
                                     "met_value": 5.5,
-                                    "calories_burned_per_minute": 7.8
+                                    "energy_system": "anaerobic_alactic",
+                                    "difficulty": "intermediate"
                                 }
                             }
                         }
@@ -377,12 +483,18 @@ training 4 days per week. Only **Monday (day 1)** is expanded to show the full h
                             "rpe": 7.0,
                             "exercise": {
                                 "id": 15,
+                                "name": "Incline Dumbbell Curl",
                                 "category": "strength",
                                 "muscle_group": "arms",
                                 "equipment": "dumbbell",
                                 "instructions": "Seated incline dumbbell curl. Full range of motion at the elbow.",
                                 "infos": "Isolates the long head of the biceps due to the incline angle.",
-                                "additional_metrics": null
+                                "additional_metrics": {
+                                    "description": "Biceps isolation accessory. Incline angle stretches the long head under load.",
+                                    "met_value": 3.5,
+                                    "energy_system": "anaerobic_lactic",
+                                    "difficulty": "beginner"
+                                }
                             }
                         }
                     ]
@@ -402,14 +514,17 @@ training 4 days per week. Only **Monday (day 1)** is expanded to show the full h
                             "rpe": 6.5,
                             "exercise": {
                                 "id": 30,
+                                "name": "Forearm Plank",
                                 "category": "conditioning",
                                 "muscle_group": "core",
                                 "equipment": "bodyweight",
                                 "instructions": "Forearm plank. Neutral spine, posterior pelvic tilt, brace 360°.",
                                 "infos": "Isometric anti-extension drill. Focus on breath control.",
                                 "additional_metrics": {
+                                    "description": "Core anti-extension isometric. Builds lumbar stability and intra-abdominal pressure.",
                                     "met_value": 3.5,
-                                    "calories_burned_per_minute": 4.2
+                                    "energy_system": "aerobic",
+                                    "difficulty": "beginner"
                                 }
                             }
                         }

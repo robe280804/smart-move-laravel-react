@@ -7,6 +7,7 @@ namespace App\Neuron\Nodes;
 use App\Neuron\Events\UserInfosCollectedEvent;
 use App\Neuron\FitnessAgent;
 use App\Neuron\FitnessAgentRag;
+use App\Neuron\StructuredOutput\WorkoutPlanOutput;
 use Illuminate\Support\Facades\Log;
 use NeuronAI\Chat\Messages\UserMessage;
 use NeuronAI\RAG\Document;
@@ -45,15 +46,15 @@ class GenerateWorkoutPlanNode extends Node
             'prompt' => $prompt
         ]);
 
-        $response = FitnessAgent::make()
-            ->chat(new UserMessage($prompt))
-            ->getMessage();
+        /** @var WorkoutPlanOutput $output */
+        $output = FitnessAgent::make()
+            ->structured(new UserMessage($prompt), WorkoutPlanOutput::class);
 
         Log::info('response in Generate workout plan node', [
-            'response' => $response
+            'response' => $output
         ]);
 
-        $state->set('agent_response', $response->getContent());
+        $state->set('agent_response', json_encode($output));
 
         return new StopEvent();
     }

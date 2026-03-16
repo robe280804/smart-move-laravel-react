@@ -21,9 +21,30 @@ class WorkoutPlanRepository implements WorkoutPlanRepositoryInterface
         return WorkoutPlan::query()->find($id);
     }
 
+    public function findByIdWithRelations(int $id): ?WorkoutPlan
+    {
+        return WorkoutPlan::query()
+            ->with('planDays.workoutBlocks.blockExercises.exercise')
+            ->find($id);
+    }
+
     /** @return Collection<int, WorkoutPlan> */
     public function findByUser(User $user): Collection
     {
         return WorkoutPlan::query()->where('user_id', $user->id)->get();
+    }
+
+    /** @return Collection<int, WorkoutPlan> */
+    public function findByUserWithRelations(User $user): Collection
+    {
+        return WorkoutPlan::query()
+            ->where('user_id', $user->id)
+            ->with('planDays.workoutBlocks.blockExercises.exercise')
+            ->get();
+    }
+
+    public function delete(WorkoutPlan $workoutPlan): void
+    {
+        $workoutPlan->delete();
     }
 }
