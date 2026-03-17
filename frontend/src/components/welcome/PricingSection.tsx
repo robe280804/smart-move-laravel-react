@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Check, X, PRICING_TIERS } from "@/constants/welcome";
+import type { PlanKey } from "@/constants/welcome";
 
 interface PricingSectionProps {
     onGetStarted: () => void;
+    onSelectPlan: (planKey: Exclude<PlanKey, "free">) => void;
 }
 
-export function PricingSection({ onGetStarted }: PricingSectionProps) {
+export function PricingSection({ onGetStarted, onSelectPlan }: PricingSectionProps) {
     return (
         <div className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -83,7 +85,11 @@ export function PricingSection({ onGetStarted }: PricingSectionProps) {
 
                                 {/* CTA */}
                                 <Button
-                                    onClick={onGetStarted}
+                                    onClick={() =>
+                                        tier.planKey === "free"
+                                            ? onGetStarted()
+                                            : onSelectPlan(tier.planKey)
+                                    }
                                     className={`w-full py-5 font-semibold transition-all ${tier.ctaStyle}`}
                                     variant="outline"
                                 >

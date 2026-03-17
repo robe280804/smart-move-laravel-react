@@ -101,8 +101,11 @@ export type PricingFeature = {
     highlight?: string; // replaces boolean with a specific value like "3 total"
 };
 
+export type PlanKey = "free" | "advanced" | "pro";
+
 export type PricingTier = {
     name: string;
+    planKey: PlanKey;
     price: string;
     period: string;
     description: string;
@@ -117,6 +120,7 @@ export type PricingTier = {
 export const PRICING_TIERS: PricingTier[] = [
     {
         name: "Free",
+        planKey: "free",
         price: "€0",
         period: "forever",
         description: "Perfect to discover the app and try what AI can do for your training.",
@@ -135,6 +139,7 @@ export const PRICING_TIERS: PricingTier[] = [
     },
     {
         name: "Advanced",
+        planKey: "advanced",
         price: "€9.99",
         period: "per month",
         description: "For the serious athlete who trains consistently and wants full control.",
@@ -154,6 +159,7 @@ export const PRICING_TIERS: PricingTier[] = [
     },
     {
         name: "Pro",
+        planKey: "pro",
         price: "€19.99",
         period: "per month",
         description: "Unlimited power for coaches, enthusiasts, and people who never stop improving.",
