@@ -30,7 +30,7 @@ class FitnessAgentWorkflow extends Workflow
 
     /**
      * Workflow setup:
-     * 1. InitialNode              — sanitizes the raw user message
+     * 1. InitialNode              
      * 2. CollectUserInfosNode     — collects user fitness profile via database
      * 3. GenerateWorkoutPlanNode  — retrieves exercises from Qdrant and calls FitnessAgent
      */

@@ -11,8 +11,17 @@ use NeuronAI\Workflow\WorkflowState;
 
 class InitialNode extends Node
 {
+    /** @var string[] */
+    private const REQUIRED_KEYS = ['user_id', 'fitness_goals', 'schedule', 'equipment'];
+
     public function __invoke(StartEvent $event, WorkflowState $state): SanitizeInputEvent
     {
-        return new SanitizeInputEvent('');
+        foreach (self::REQUIRED_KEYS as $key) {
+            if ($state->get($key) === null) {
+                throw new \InvalidArgumentException("Missing required workflow state key: [{$key}]");
+            }
+        }
+
+        return new SanitizeInputEvent((string) $state->get('user_id'));
     }
 }

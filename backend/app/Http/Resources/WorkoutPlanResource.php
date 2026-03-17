@@ -15,6 +15,7 @@ class WorkoutPlanResource extends JsonResource
         return [
             'id'                     => $this->id,
             'user_id'                => $this->user_id,
+            'status'                 => $this->status,
             'training_days_per_week' => $this->training_days_per_week,
             'goal'                   => $this->goal,
             'experience_level'       => $this->experience_level,
