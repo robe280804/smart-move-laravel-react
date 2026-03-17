@@ -6,6 +6,7 @@ namespace Database\Factories;
 
 use App\Enums\ExperienceLevel;
 use App\Enums\TrainingGoalType;
+use App\Enums\WorkoutPlanStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -22,11 +23,12 @@ class WorkoutPlanFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'user_id'                => User::factory(),
+            'status'                 => WorkoutPlanStatus::Completed,
             'training_days_per_week' => fake()->numberBetween(2, 6),
-            'goal' => fake()->randomElement(TrainingGoalType::cases())->value,
-            'experience_level' => fake()->randomElement(ExperienceLevel::cases())->value,
-            'workout_type' => fake()->randomElement(['strength', 'sprint', 'mobility', 'conditioning', 'rest']),
+            'goal'                   => fake()->randomElement(TrainingGoalType::cases())->value,
+            'experience_level'       => fake()->randomElement(ExperienceLevel::cases())->value,
+            'workout_type'           => fake()->randomElement(['strength', 'sprint', 'mobility', 'conditioning', 'rest']),
         ];
     }
 }

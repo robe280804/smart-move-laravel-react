@@ -8,6 +8,7 @@ use App\Neuron\Events\UserInfosCollectedEvent;
 use App\Neuron\FitnessAgent;
 use App\Neuron\FitnessAgentRag;
 use App\Neuron\StructuredOutput\WorkoutPlanOutput;
+use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\Log;
 use NeuronAI\Chat\Messages\UserMessage;
 use NeuronAI\RAG\Document;
@@ -17,42 +18,39 @@ use NeuronAI\Workflow\WorkflowState;
 
 class GenerateWorkoutPlanNode extends Node
 {
-    private const TOP_K_EXERCISES = 20;
+    private const MAX_EXERCISES_IN_CONTEXT = 30;
 
     public function __invoke(UserInfosCollectedEvent $event, WorkflowState $state): StopEvent
     {
-        /** @var array<string, mixed> $fitnessData */
+        // Set the state 
         $fitnessData = (array) $state->get('fitness_data', []);
+        $fitnessGoals = (array) $state->get('fitness_goals', []);
+        $equipment = (array) $state->get('equipment', []);
+        $preferences = (array) $state->get('preferences', []);
 
-        $documents = FitnessAgentRag::make()
-            ->resolveRetrieval()
-            ->retrieve(new UserMessage($this->buildRetrievalQuery($fitnessData)));
+        // Load the relevant document 
+        $documents = $this->retrieveExercises($fitnessData, $fitnessGoals, $equipment, $preferences);
 
-        Log::info('documents retrivial', [
-            'doc' => $documents
-        ]);
+        Log::info('documents retrieval', ['count' => count($documents)]);
 
+        // Build prompt
         $prompt = $this->buildPrompt(
             $fitnessData,
             $this->formatExerciseContext($documents),
-            (array) $state->get('fitness_goals', []),
+            $fitnessGoals,
             (array) $state->get('schedule', []),
-            (array) $state->get('equipment', []),
+            $equipment,
             (string) $state->get('constraints', ''),
-            (array) $state->get('preferences', []),
+            $preferences,
         );
 
-        Log::info('prompt in Generate workout plan node', [
-            'prompt' => $prompt
-        ]);
+        Log::info('prompt in Generate workout plan node', ['prompt' => $prompt]);
 
         /** @var WorkoutPlanOutput $output */
         $output = FitnessAgent::make()
             ->structured(new UserMessage($prompt), WorkoutPlanOutput::class);
 
-        Log::info('response in Generate workout plan node', [
-            'response' => $output
-        ]);
+        Log::info('response in Generate workout plan node', ['response' => $output]);
 
         $state->set('agent_response', json_encode($output));
 
@@ -60,22 +58,89 @@ class GenerateWorkoutPlanNode extends Node
     }
 
     /**
-     * Build a retrieval query from the collected fitness profile.
+     * Execute multiple targeted RAG queries and return deduplicated documents.
+     * Using three queries with distinct semantic angles (goal, equipment, gym context)
+     * ensures the retrieved set covers all workout plan needs rather than clustering
+     * around a single topic.
      *
      * @param array<string, mixed> $fitnessData
+     * @param array<int, string>   $fitnessGoals
+     * @param array<string, mixed> $equipment
+     * @param array<string, mixed> $preferences
+     * @return Document[]
      */
-    private function buildRetrievalQuery(array $fitnessData): string
-    {
-        $parts = array_filter([
-            $this->castToString($fitnessData['experience_level'] ?? null),
-            $this->castToString($fitnessData['gender'] ?? null),
-            $this->castToString($fitnessData['height'] ?? null),
-            $this->castToString($fitnessData['weight'] ?? null),
-            $this->castToString($fitnessData['age'] ?? null),
-            'fitness workout exercises',
-        ]);
+    private function retrieveExercises(
+        array $fitnessData,
+        array $fitnessGoals,
+        array $equipment,
+        array $preferences,
+    ): array {
+        // Build 3 queries
+        $queries = $this->buildRetrievalQueries($fitnessData, $fitnessGoals, $equipment, $preferences);
 
-        return implode(' ', $parts);
+        // Run each query separated on concurrency
+        /** @var array<int, Document[]> $batchResults */
+        $batchResults = Concurrency::run(
+            array_map(
+                fn(string $query) => fn(): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query)),
+                $queries,
+            ),
+        );
+
+        $seen = [];
+        $documents = [];
+
+        foreach ($batchResults as $results) {
+            foreach ($results as $document) {
+                $key = md5($document->getContent());
+                if (! isset($seen[$key])) {
+                    $seen[$key] = true;
+                    $documents[] = $document;
+                }
+            }
+        }
+
+        return array_slice($documents, 0, self::MAX_EXERCISES_IN_CONTEXT);
+    }
+
+    /**
+     * Build three focused retrieval queries to maximise semantic coverage.
+     *
+     * Query 1 — goal + experience: highest semantic relevance for exercise selection.
+     * Query 2 — equipment + workout type: ensures only equipment-appropriate exercises are included.
+     * Query 3 — gym/bodyweight context: fills compound/isolation or calisthenics gaps.
+     *
+     * @param array<string, mixed> $fitnessData
+     * @param array<int, string>   $fitnessGoals
+     * @param array<string, mixed> $equipment
+     * @param array<string, mixed> $preferences
+     * @return string[]
+     */
+    private function buildRetrievalQueries(
+        array $fitnessData,
+        array $fitnessGoals,
+        array $equipment,
+        array $preferences,
+    ): array {
+        $experienceLevel = $this->castToString($fitnessData['experience_level'] ?? '');
+        $goals = array_map(fn(string $g) => str_replace('_', ' ', $g), $fitnessGoals);
+        $equipmentItems = (array) ($equipment['items'] ?? []);
+        $workoutTypes = (array) ($preferences['workout_types'] ?? []);
+        $hasGymAccess = (bool) ($equipment['gym_access'] ?? false);
+
+        $queries = [];
+
+        $queries[] = implode(' ', array_filter([...$goals, $experienceLevel, 'workout exercises training']));
+
+        if ($equipmentItems !== [] || $workoutTypes !== []) {
+            $queries[] = implode(' ', array_filter([...$equipmentItems, ...$workoutTypes, 'exercises']));
+        }
+
+        $queries[] = $hasGymAccess
+            ? sprintf('%s gym compound isolation exercises resistance training', $experienceLevel)
+            : sprintf('%s bodyweight calisthenics home exercises no equipment', $experienceLevel);
+
+        return array_values(array_filter($queries));
     }
 
     /**
@@ -91,7 +156,7 @@ class GenerateWorkoutPlanNode extends Node
 
         $lines = ['=== AVAILABLE EXERCISES FROM KNOWLEDGE BASE ==='];
 
-        foreach (array_slice($documents, 0, self::TOP_K_EXERCISES) as $document) {
+        foreach ($documents as $document) {
             $lines[] = '- ' . $document->getContent();
         }
 

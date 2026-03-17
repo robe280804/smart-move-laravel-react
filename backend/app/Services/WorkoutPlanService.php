@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\WorkoutPlanStatus;
 use App\Models\Exercise;
 use App\Models\User;
 use App\Models\WorkoutPlan;
@@ -35,23 +36,38 @@ class WorkoutPlanService
         $this->workoutPlanRepository->delete($workoutPlan);
     }
 
-    public function createFromAgentResponse(string $jsonResponse, User $user): WorkoutPlan
+    /**
+     * Create a placeholder plan that the async job will populate once the agent finishes.
+     */
+    public function createPending(User $user): WorkoutPlan
+    {
+        return $this->workoutPlanRepository->create([
+            'user_id' => $user->id,
+            'status'  => WorkoutPlanStatus::Pending,
+        ]);
+    }
+
+    /**
+     * Populate an existing plan with the agent JSON response and mark it as completed.
+     * Called from GenerateWorkoutPlanJob after the workflow finishes.
+     */
+    public function fillFromAgentResponse(WorkoutPlan $plan, string $jsonResponse): WorkoutPlan
     {
         $data = $this->parseJsonResponse($jsonResponse);
 
-        return DB::transaction(function () use ($data, $user): WorkoutPlan {
+        return DB::transaction(function () use ($data, $plan): WorkoutPlan {
             $planData = $data['workout_plan'];
 
-            $workoutPlan = $this->workoutPlanRepository->create([
-                'user_id'                => $user->id,
+            $plan->update([
                 'training_days_per_week' => $planData['training_days_per_week'],
                 'goal'                   => $planData['goal'],
                 'experience_level'       => $planData['experience_level'],
                 'workout_type'           => $planData['workout_type'],
+                'status'                 => WorkoutPlanStatus::Completed,
             ]);
 
             foreach ($planData['plan_days'] as $dayData) {
-                $planDay = $workoutPlan->planDays()->create([
+                $planDay = $plan->planDays()->create([
                     'day_of_week'      => $dayData['day_of_week'],
                     'workout_name'     => $dayData['workout_name'] ?? null,
                     'duration_minutes' => $dayData['duration_minutes'],
@@ -90,7 +106,7 @@ class WorkoutPlanService
                 }
             }
 
-            return $workoutPlan->load('planDays.workoutBlocks.blockExercises.exercise');
+            return $plan->load('planDays.workoutBlocks.blockExercises.exercise');
         });
     }
 
@@ -105,9 +121,7 @@ class WorkoutPlanService
 
         $data = json_decode($cleaned, true);
 
-        Log::info('agent response', [
-            'res' => $data
-        ]);
+        Log::info('agent response', ['res' => $data]);
 
         if (! is_array($data)) {
             throw new RuntimeException('Agent response is not valid JSON.');

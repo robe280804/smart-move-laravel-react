@@ -17,14 +17,22 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { useAuth } from "../../contexts/AuthContext";
 
 const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Generate Workout", href: "/dashboard/workout-generate", icon: MessageSquare },
+    {
+        name: "Dashboard",
+        href: "/dashboard",
+        icon: Home
+    },
+    {
+        name: "Generate Workout",
+        href: "/dashboard/workout-generate",
+        icon: MessageSquare
+    },
     {
         name: "Workouts",
         href: "/dashboard/workouts",
         icon: Dumbbell,
     },
-    {
+    /*{
         name: "Progress",
         href: "/dashboard/progress",
         icon: TrendingUp,
@@ -44,7 +52,7 @@ const navigation = [
         name: "Achievements",
         href: "/dashboard/achievements",
         icon: Trophy,
-    },
+    },*/
 ];
 
 export function SideBar() {

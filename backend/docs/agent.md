@@ -5,34 +5,35 @@
 The Fitness Agent is an AI-powered system that generates personalized workout plans through a
 **NeuronAI Workflow** pipeline. It combines a **RAG pipeline** (Retrieval-Augmented Generation
 backed by Qdrant) with a **three-node stateful workflow** to collect user data, retrieve relevant
-exercises, and produce a structured PHP typed output that is persisted synchronously.
+exercises, and produce a structured PHP typed output that is persisted asynchronously.
 
 The architecture is **single-request, non-conversational**: the frontend sends all user
-preferences in one validated request; the workflow runs to completion within the same HTTP
-request and returns the persisted plan immediately.
+preferences in one validated request; the controller immediately returns `HTTP 202 Accepted`
+with a pending plan, while a **queued job** runs the workflow in the background and populates
+the plan when complete. The client polls `GET /api/v1/workout-plans/{id}` to check the status.
 
 ---
 
 ## Components
 
-| Component                | Class                                    | Role                                                              |
-| ------------------------ | ---------------------------------------- | ----------------------------------------------------------------- |
-| HTTP entry point         | `AgentController`                        | Validates request, builds WorkflowState, runs workflow, persists  |
-| Workflow orchestrator    | `FitnessAgentWorkflow`                   | Sequences the three nodes; uses EloquentPersistence for resumable state |
-| Node 1 — sanitize        | `InitialNode`                            | Entry point; emits `SanitizeInputEvent`                           |
-| Node 2 — profile         | `CollectUserInfosNode`                   | Reads `FitnessInfo` from DB; sets `fitness_data` on state         |
-| Node 3 — generation      | `GenerateWorkoutPlanNode`                | RAG retrieval + structured LLM call; sets `agent_response` on state |
-| Conversational agent     | `FitnessAgent`                           | Anthropic Claude agent with system prompt; returns structured output |
-| RAG agent                | `FitnessAgentRag`                        | Embeds queries and retrieves exercises from Qdrant                |
-| Data ingestion           | `WorkflowCsvToQdrant`                    | One-time seeding of the exercise vector store                     |
-| Plan persistence         | `WorkoutPlanService::createFromAgentResponse` | Parses agent JSON and creates all DB models synchronously    |
-| Workflow state store     | `WorkflowInterruptRecord`                | Eloquent model backing `EloquentPersistence` for workflow state   |
+| Component                | Class                                      | Role                                                                        |
+| ------------------------ | ------------------------------------------ | --------------------------------------------------------------------------- |
+| HTTP entry point         | `AgentController`                          | Validates request, creates pending plan, dispatches job, returns 202        |
+| Async job                | `GenerateWorkoutPlanJob`                   | Runs workflow in background; marks plan processing → completed / failed     |
+| Workflow orchestrator    | `FitnessAgentWorkflow`                     | Sequences the three nodes; uses EloquentPersistence for resumable state     |
+| Node 1 — validate        | `InitialNode`                              | Validates required state keys; emits `SanitizeInputEvent`                   |
+| Node 2 — profile         | `CollectUserInfosNode`                     | Reads `FitnessInfo` from DB (cached 10 min); sets `fitness_data` on state   |
+| Node 3 — generation      | `GenerateWorkoutPlanNode`                  | Parallel RAG retrieval + structured LLM call; sets `agent_response` on state|
+| Conversational agent     | `FitnessAgent`                             | Anthropic Claude (temperature 0.3); returns structured output               |
+| RAG agent                | `FitnessAgentRag`                          | Embeds queries and retrieves exercises from Qdrant (topK 15 per query)      |
+| Plan persistence         | `WorkoutPlanService::fillFromAgentResponse`| Parses agent JSON, updates plan fields, creates all related DB models       |
+| Workflow state store     | `WorkflowInterruptRecord`                  | Eloquent model backing `EloquentPersistence` for workflow state             |
 
 **Infrastructure:**
 
-- **Anthropic Claude** — LLM for plan generation (`services.claude.key` / `services.claude.model`, max 16 000 tokens)
+- **Anthropic Claude** — LLM for plan generation (`services.claude.key` / `services.claude.model`, max 16 000 tokens, temperature 0.3)
 - **Ollama** — `nomic-embed-text` embedding model (768-dim) used by `FitnessAgentRag` only
-- **Qdrant** — vector store, collection `exercises`, Cosine distance, HNSW index, topK: 30
+- **Qdrant** — vector store, collection `exercises`, Cosine distance, HNSW index, topK: 15 per query
 
 ---
 
@@ -83,7 +84,7 @@ WorkflowCsvToQdrant::run(string $csvPath)
 
 ---
 
-## Phase 2 — HTTP Request & WorkflowState Population
+## Phase 2 — HTTP Request & Async Dispatch
 
 ### 2a. Entry Point
 
@@ -91,20 +92,23 @@ WorkflowCsvToQdrant::run(string $csvPath)
 User (HTTP POST /api/v1/agent/generate-workout)   [auth:sanctum + ACCESS_API ability]
         │
         ▼
-AgentController::generateWorkout(AgentCallRequest $request)
+AgentCallRequest (validate + pre-sanitize free-text fields)
         │
-        ├── AgentCallRequest validates and pre-sanitizes the payload
-        │     Sanitized free-text fields: injuries, sports, preferred_exercises, additional_notes
+        ▼
+AgentController::generateWorkout()
         │
-        ├── WorkflowState populated:
-        │     user_id, user_email
-        │     fitness_goals        — string[]  (1-3 items)
-        │     schedule             — { training_days_per_week, available_days, session_duration }
-        │     equipment            — { items: string[], gym_access: bool }
-        │     constraints          — string|null   (injuries/limitations)
-        │     preferences          — { workout_types, sports, preferred_exercises, additional_notes }
+        ├── WorkoutPlanService::createPending($user)
+        │     └── INSERT workout_plans (user_id, status='pending')
+        │           → WorkoutPlan { id, status: pending }
         │
-        └── FitnessAgentWorkflow::create(state: $state)->init()->run()
+        ├── GenerateWorkoutPlanJob::dispatch($plan, $user, $workflowState)
+        │     workflowState = {
+        │       user_id, user_email,
+        │       fitness_goals, schedule, equipment, constraints, preferences
+        │     }
+        │
+        └── return ApiSuccess(WorkoutPlanResource, HTTP 202 Accepted)
+              → { data: { id, status: "pending", plan_days: [] } }
 ```
 
 ### 2b. Validated Request Fields (`AgentCallRequest`)
@@ -123,9 +127,51 @@ AgentController::generateWorkout(AgentCallRequest $request)
 | `preferred_exercises`    | `string`   | nullable, max 500 chars        |
 | `additional_notes`       | `string`   | nullable, max 1 000 chars      |
 
+### 2c. Plan Status Lifecycle
+
+```
+pending  ──►  processing  ──►  completed
+                  │
+                  └──►  failed
+```
+
+| Status       | Set by                                          | Meaning                                     |
+| ------------ | ----------------------------------------------- | ------------------------------------------- |
+| `pending`    | `WorkoutPlanService::createPending()`           | Plan created, job not yet picked up         |
+| `processing` | `GenerateWorkoutPlanJob::handle()` (start)      | Workflow is running                         |
+| `completed`  | `WorkoutPlanService::fillFromAgentResponse()`   | Plan fully populated with exercises         |
+| `failed`     | `GenerateWorkoutPlanJob::failed(\Throwable $e)` | Workflow or persistence threw an exception  |
+
+The client polls `GET /api/v1/workout-plans/{id}` and checks `data.status` until it is
+`completed` or `failed`.
+
 ---
 
-## Phase 3 — NeuronAI Workflow Execution
+## Phase 3 — Async Job Execution
+
+`GenerateWorkoutPlanJob` implements `ShouldQueue` with:
+- `$timeout = 600` seconds (Anthropic calls can take up to 10 minutes for complex plans)
+- `$tries = 1` (no automatic retries — AI generation is expensive and failures are not transient)
+
+```
+GenerateWorkoutPlanJob::handle(WorkoutPlanService $service)
+        │
+        ├── $plan->update(['status' => processing])
+        │
+        ├── Reconstruct WorkflowState from $workflowState array
+        │
+        ├── FitnessAgentWorkflow::create(state: $state)->init()->run()
+        │     (see Phase 4 for workflow internals)
+        │
+        └── WorkoutPlanService::fillFromAgentResponse($plan, $state->get('agent_response'))
+
+GenerateWorkoutPlanJob::failed(\Throwable $e)
+        └── $plan->update(['status' => failed])
+```
+
+---
+
+## Phase 4 — NeuronAI Workflow Execution
 
 The workflow is managed by `FitnessAgentWorkflow`, which uses `EloquentPersistence`
 backed by `WorkflowInterruptRecord` to support interruptible/resumable execution.
@@ -139,55 +185,52 @@ FitnessAgentWorkflow::nodes()
 
 ### Node 1 — InitialNode
 
-Receives the `StartEvent`, emits `SanitizeInputEvent` (no-op placeholder for future input
-sanitization).
+Validates that all required state keys are present before the workflow proceeds.
+Throws `\InvalidArgumentException` if any key is missing.
+Required keys: `user_id`, `fitness_goals`, `schedule`, `equipment`.
 
 ### Node 2 — CollectUserInfosNode
 
 ```
 SanitizeInputEvent received
         │
-        └── UserRepositoryInterface::findById(state.user_id)
-              └── ->fitnessInfo()->firstOrFail()
-                    │
-                    └── sets state.fitness_data = {
-                          age, height, weight, gender, experience_level
-                        }
+        └── Cache::remember("fitness_profile:{user_id}", 10 min)
+              └── UserRepositoryInterface::findById(state.user_id)
+                    └── ->fitnessInfo()->firstOrFail()
+                          │
+                          └── sets state.fitness_data = {
+                                age, height, weight, gender, experience_level
+                              }
         │
         └── emits UserInfosCollectedEvent
 ```
 
 Physical profile (age, weight, height, gender, experience_level) is always read from the
-`fitness_info` table; the user never types these during plan generation.
+`fitness_info` table; the user never types these during plan generation. The result is cached
+for 10 minutes so that repeated generations within the same session skip the DB query.
 
 ### Node 3 — GenerateWorkoutPlanNode
+
+See `docs/rag-retrieval.md` for the full retrieval strategy. Summary:
 
 ```
 UserInfosCollectedEvent received
         │
-        ├── Build retrieval query from fitness_data
-        │     e.g. "intermediate male 175 80 30 fitness workout exercises"
-        │               │
-        │               ▼
-        │     FitnessAgentRag::make()
-        │         ->resolveRetrieval()
-        │         ->retrieve(UserMessage $query)
-        │               │
-        │               ├── OllamaEmbeddingsProvider (nomic-embed-text, 768-dim)
-        │               └── QdrantVectorStore.search(vector) → top 30 documents
-        │                         │
-        │                         └── sliced to top 20 (TOP_K_EXERCISES)
+        ├── buildRetrievalQueries()  →  3 focused queries (goal, equipment, gym context)
         │
-        ├── buildPrompt() — assembles sections:
+        ├── Concurrency::run()  →  3 parallel Qdrant searches (15 results each)
+        │     └── deduplicate by md5(content) → up to 45 unique documents → slice to 30
+        │
+        ├── buildPrompt()
         │     === USER FITNESS PROFILE ===      (from fitness_data)
         │     === USER REQUEST ===              (goals, schedule, equipment, constraints, preferences)
-        │     === AVAILABLE EXERCISES FROM KNOWLEDGE BASE ===   (formatted document list)
-        │     "If the knowledge base does not contain enough suitable exercises…"
+        │     === AVAILABLE EXERCISES FROM KNOWLEDGE BASE ===   (up to 30 exercises)
+        │     "If the knowledge base does not contain enough…"
         │
         └── FitnessAgent::make()
               ->structured(UserMessage($prompt), WorkoutPlanOutput::class)
                     │
-                    └── Anthropic Claude returns WorkoutPlanOutput (PHP typed object)
+                    └── Anthropic Claude (temp 0.3) returns WorkoutPlanOutput
                               │
                               └── state.agent_response = json_encode($output)
         │
@@ -196,7 +239,7 @@ UserInfosCollectedEvent received
 
 ---
 
-## Phase 4 — FitnessAgent System Prompt
+## Phase 5 — FitnessAgent System Prompt
 
 `FitnessAgent` composes its `SystemPrompt` from three prompt classes:
 
@@ -219,19 +262,21 @@ UserInfosCollectedEvent received
 
 ---
 
-## Phase 5 — Structured Output (PHP Typed Classes)
+## Phase 6 — Structured Output (PHP Typed Classes)
 
 The agent uses NeuronAI's structured output feature. The LLM response is deserialized
 directly into typed PHP objects annotated with `#[SchemaProperty]`.
+Fields with existing PHP enums (`TrainingGoalType`, `ExperienceLevel`, `WorkoutType`) use
+enum types directly so NeuronAI generates a JSON schema `enum` constraint automatically.
 
 ```
 WorkoutPlanOutput
 └── WorkoutPlanData                    workout_plan
-      ├── int    $training_days_per_week
-      ├── string $goal
-      ├── string $experience_level
-      ├── string $workout_type
-      └── PlanDayData[]  $plan_days
+      ├── int              $training_days_per_week
+      ├── TrainingGoalType $goal
+      ├── ExperienceLevel  $experience_level
+      ├── WorkoutType      $workout_type
+      └── PlanDayData[]    $plan_days
             ├── int     $day_of_week    (1=Monday … 7=Sunday)
             ├── ?string $workout_name
             ├── int     $duration_minutes
@@ -260,47 +305,35 @@ WorkoutPlanOutput
                               └── float  $rpe               (1.0–10.0)
 ```
 
-After workflow completion the output is serialized:
-```php
-$state->set('agent_response', json_encode($output));   // WorkoutPlanOutput → JSON string
-```
-
 ---
 
-## Phase 6 — Synchronous Persistence
+## Phase 7 — Async Persistence
 
-Persistence happens **synchronously** in the controller, immediately after workflow completion.
-There is no queued job.
+Persistence happens inside `GenerateWorkoutPlanJob`, inside `WorkoutPlanService::fillFromAgentResponse`.
 
 ```
-AgentController
+fillFromAgentResponse(WorkoutPlan $plan, string $jsonResponse)
         │
-        ├── $state->get('agent_response')  — JSON string from workflow
+        ├── parseJsonResponse()
+        │     ├── strips markdown fences if present (```json … ```)
+        │     ├── json_decode() → array
+        │     └── asserts 'workout_plan' key exists
         │
-        └── WorkoutPlanService::createFromAgentResponse(string $jsonResponse, User $user)
-                │
-                ├── parseJsonResponse()
-                │     ├── strips markdown fences if present (```json … ```)
-                │     ├── json_decode() → array
-                │     └── asserts 'workout_plan' key exists
-                │
-                └── DB::transaction()
-                      │
-                      ├── WorkoutPlanRepository::create()   → WorkoutPlan
-                      │
-                      ├── foreach plan_days
-                      │     └── $workoutPlan->planDays()->create()   → PlanDay
-                      │
-                      ├── foreach workout_blocks
-                      │     └── $planDay->workoutBlocks()->create()  → WorkoutBlock
-                      │
-                      └── foreach exercises
-                            ├── Exercise::query()->create()          → Exercise  (always new)
-                            └── $block->blockExercises()->create()   → BlockExercise
-                │
-                └── return WorkoutPlan::load('planDays.workoutBlocks.blockExercises.exercise')
+        └── DB::transaction()
+              │
+              ├── $plan->update(training_days_per_week, goal, experience_level, workout_type, status=completed)
+              │
+              ├── foreach plan_days
+              │     └── $plan->planDays()->create()   → PlanDay
+              │
+              ├── foreach workout_blocks
+              │     └── $planDay->workoutBlocks()->create()  → WorkoutBlock
+              │
+              └── foreach exercises
+                    ├── Exercise::query()->create()          → Exercise  (always new)
+                    └── $block->blockExercises()->create()   → BlockExercise
         │
-        └── return ApiSuccess(WorkoutPlanResource, HTTP 201)
+        └── return $plan->load('planDays.workoutBlocks.blockExercises.exercise')
 ```
 
 > **Note:** Exercises are always created fresh per plan (`create()`, not `firstOrCreate()`).
@@ -347,33 +380,46 @@ AgentCallRequest (validate + sanitize free-text fields)
     ▼
 AgentController::generateWorkout()
     │
-    ├── Build WorkflowState (user_id, fitness_goals, schedule, equipment, constraints, preferences)
+    ├── WorkoutPlanService::createPending($user)  →  WorkoutPlan { status: pending }
+    ├── GenerateWorkoutPlanJob::dispatch($plan, $user, $workflowState)
+    └── return HTTP 202 Accepted  { data: { id, status: "pending" } }
+
+[Queue worker — background]
+    │
+    ▼
+GenerateWorkoutPlanJob::handle()
+    │
+    ├── $plan->update(status: processing)
     │
     ▼
 FitnessAgentWorkflow::create(state)->init()->run()
     │
     ├── InitialNode
-    │     └── emits SanitizeInputEvent
+    │     └── validates required keys, emits SanitizeInputEvent
     │
     ├── CollectUserInfosNode
-    │     ├── Reads FitnessInfo from DB (age, height, weight, gender, experience_level)
+    │     ├── Cache::remember(fitness_profile:{id}, 10 min)
+    │     │     └── Reads FitnessInfo from DB
     │     ├── Sets state.fitness_data
     │     └── emits UserInfosCollectedEvent
     │
     └── GenerateWorkoutPlanNode
-          ├── Build retrieval query from fitness_data
-          ├── FitnessAgentRag → Qdrant (top 30) → slice to top 20
-          ├── buildPrompt() → USER FITNESS PROFILE + USER REQUEST + KNOWLEDGE BASE exercises
-          ├── FitnessAgent::structured(prompt, WorkoutPlanOutput::class)   [Anthropic Claude]
+          ├── buildRetrievalQueries()  →  3 semantic queries
+          ├── Concurrency::run()       →  3 parallel Qdrant searches (15 each)
+          ├── deduplicate + slice to 30 exercises
+          ├── buildPrompt()
+          ├── FitnessAgent::structured(prompt, WorkoutPlanOutput::class)  [Claude, temp 0.3]
           └── state.agent_response = json_encode(WorkoutPlanOutput)
     │
     ▼
-WorkoutPlanService::createFromAgentResponse(state.agent_response, $user)
+WorkoutPlanService::fillFromAgentResponse($plan, state.agent_response)
     │
     ├── Parse JSON → array
     └── DB::transaction()
-          WorkoutPlan → PlanDay → WorkoutBlock → Exercise (create) + BlockExercise
-    │
-    ▼
-ApiSuccess(WorkoutPlanResource, HTTP 201)
+          $plan->update(fields + status: completed)
+          PlanDay → WorkoutBlock → Exercise (create) + BlockExercise
+
+[Client polling]
+GET /api/v1/workout-plans/{id}
+    └── { data: { status: "pending" | "processing" | "completed" | "failed", ... } }
 ```

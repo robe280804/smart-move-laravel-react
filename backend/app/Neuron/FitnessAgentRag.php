@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace App\Neuron;
 
-use GuzzleHttp\HandlerStack;
-use NeuronAI\Agent\SystemPrompt;
 use NeuronAI\HttpClient\GuzzleHttpClient;
 use NeuronAI\Providers\AIProviderInterface;
 use NeuronAI\Providers\Anthropic\Anthropic;
-use NeuronAI\Providers\Ollama\Ollama;
 use NeuronAI\RAG\Embeddings\EmbeddingsProviderInterface;
 use NeuronAI\RAG\Embeddings\OllamaEmbeddingsProvider;
 use NeuronAI\RAG\RAG;
@@ -28,13 +25,6 @@ class FitnessAgentRag extends RAG
         );
     }
 
-    /*protected function instructions(): string
-    {
-        return (string) new SystemPrompt(
-            background: ["You are a friendly AI Agent created with Neuron AI framework."],
-        );
-    }*/
-
     protected function embeddings(): EmbeddingsProviderInterface
     {
         return new OllamaEmbeddingsProvider(
@@ -48,13 +38,13 @@ class FitnessAgentRag extends RAG
         return new QdrantVectorStore(
             collectionUrl: config('services.qdrant.url'),
             key: config('services.qdrant.key'),
-            topK: 30,
+            topK: 15,
             dimension: 768,
         );
     }
 
     /**
-     * @return ToolInterface[]|ToolkitInterface[]
+     * @return \NeuronAI\Tools\ToolInterface[]|\NeuronAI\Tools\Toolkits\ToolkitInterface[]
      */
     protected function tools(): array
     {

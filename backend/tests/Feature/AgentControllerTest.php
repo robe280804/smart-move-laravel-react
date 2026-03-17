@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\TokenAbility;
+use App\Enums\WorkoutPlanStatus;
+use App\Jobs\GenerateWorkoutPlanJob;
 use App\Models\User;
 use App\Models\WorkoutPlan;
 use App\Services\WorkoutPlanService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
-use PHPUnit\Framework\Attributes\PreserveGlobalState;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Tests\TestCase;
 
 class AgentControllerTest extends TestCase
@@ -166,61 +167,42 @@ class AgentControllerTest extends TestCase
 
     // ==================== HAPPY PATH ====================
 
-    #[RunInSeparateProcess]
-    #[PreserveGlobalState(false)]
-    public function test_returns_201_with_workout_plan_resource_on_success(): void
+    public function test_returns_202_with_pending_plan_and_dispatches_job(): void
     {
-        $workflowMock = \Mockery::mock('overload:App\Neuron\FitnessAgentWorkflow');
-        $workflowMock->shouldReceive('create')->andReturnSelf();
-        $workflowMock->shouldReceive('init')->andReturnSelf();
-        $workflowMock->shouldReceive('run')->andReturnSelf();
+        Queue::fake();
 
         $user = User::factory()->create();
-        $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id]);
+        $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id, 'status' => WorkoutPlanStatus::Pending]);
         $plan->setRelation('planDays', collect());
 
         $this->mock(WorkoutPlanService::class)
-            ->shouldReceive('createFromAgentResponse')
+            ->shouldReceive('createPending')
             ->once()
+            ->with(\Mockery::type(User::class))
             ->andReturn($plan);
 
-        Sanctum::actingAs($user, [TokenAbility::ACCESS_API->value]);
-
-        $response = $this->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
-
-        $response->assertCreated()
+        $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData)
+            ->assertStatus(202)
             ->assertJsonStructure([
-                'data' => [
-                    'id',
-                    'user_id',
-                    'training_days_per_week',
-                    'goal',
-                    'experience_level',
-                    'workout_type',
-                    'plan_days',
-                ],
-            ]);
+                'data' => ['id', 'user_id', 'status', 'plan_days'],
+            ])
+            ->assertJsonPath('data.status', WorkoutPlanStatus::Pending->value);
+
+        Queue::assertPushed(GenerateWorkoutPlanJob::class);
     }
 
-    #[RunInSeparateProcess]
-    #[PreserveGlobalState(false)]
     public function test_accepts_optional_nullable_fields(): void
     {
-        $workflowMock = \Mockery::mock('overload:App\Neuron\FitnessAgentWorkflow');
-        $workflowMock->shouldReceive('create')->andReturnSelf();
-        $workflowMock->shouldReceive('init')->andReturnSelf();
-        $workflowMock->shouldReceive('run')->andReturnSelf();
+        Queue::fake();
 
         $user = User::factory()->create();
-        $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id]);
+        $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id, 'status' => WorkoutPlanStatus::Pending]);
         $plan->setRelation('planDays', collect());
 
         $this->mock(WorkoutPlanService::class)
-            ->shouldReceive('createFromAgentResponse')
+            ->shouldReceive('createPending')
             ->once()
             ->andReturn($plan);
-
-        Sanctum::actingAs($user, [TokenAbility::ACCESS_API->value]);
 
         $data = array_merge($this->validRequestData, [
             'injuries'            => 'left knee pain',
@@ -229,8 +211,47 @@ class AgentControllerTest extends TestCase
             'additional_notes'    => 'prefer morning sessions',
         ]);
 
-        $response = $this->postJson('/api/v1/agent/generate-workout', $data);
+        $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data)
+            ->assertStatus(202);
 
-        $response->assertCreated();
+        Queue::assertPushed(GenerateWorkoutPlanJob::class);
+    }
+
+    public function test_job_is_dispatched_with_correct_state_payload(): void
+    {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id, 'status' => WorkoutPlanStatus::Pending]);
+        $plan->setRelation('planDays', collect());
+
+        $this->mock(WorkoutPlanService::class)
+            ->shouldReceive('createPending')
+            ->once()
+            ->andReturn($plan);
+
+        $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
+
+        Queue::assertPushed(GenerateWorkoutPlanJob::class, function (GenerateWorkoutPlanJob $job) use ($user): bool {
+            $state = $this->getJobWorkflowState($job);
+
+            return $state['user_id'] === $user->id
+                && $state['fitness_goals'] === ['muscle_gain']
+                && $state['schedule']['training_days_per_week'] === 4
+                && $state['equipment']['gym_access'] === true;
+        });
+    }
+
+    /**
+     * Expose the private workflowState via reflection for assertion purposes.
+     *
+     * @return array<string, mixed>
+     */
+    private function getJobWorkflowState(GenerateWorkoutPlanJob $job): array
+    {
+        $reflection = new \ReflectionClass($job);
+        $property = $reflection->getProperty('workflowState');
+
+        return $property->getValue($job);
     }
 }
