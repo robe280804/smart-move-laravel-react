@@ -1,7 +1,7 @@
 import { createContext, useState, useContext, type ReactNode, useEffect } from "react";
 import type { User, AuthResponse, AuthContextValue, AccessToken } from "../types/auth";
 import { tokenStore } from "../lib/tokenStore";
-import { refresh } from "../services/authentication";
+import { refresh, logoutUser } from "../services/authentication";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -24,9 +24,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     useEffect(() => {
+        let cancelled = false;
+
         const restoreSession = async () => {
             try {
                 const response = await refresh();
+                if (cancelled || tokenStore.isLoggedOut()) return;
+                tokenStore.markActive();
                 tokenStore.set(response.meta_data.accessToken);
                 setUser(response.data.user);
                 setAccessToken({
@@ -34,17 +38,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     expires_at: response.meta_data.accessTokenExpiresAt,
                 });
             } catch {
-                // No valid refresh token cookie — stay unauthenticated
-                tokenStore.clear();
+                if (!cancelled) tokenStore.clear();
             } finally {
-                setIsLoading(false);
+                if (!cancelled) setIsLoading(false);
             }
         };
 
         restoreSession();
+
+        return () => { cancelled = true; };
     }, []);
 
     const setSession = (response: AuthResponse) => {
+        tokenStore.markActive();
         tokenStore.set(response.meta_data.accessToken);
         setUser(response.data.user);
         setAccessToken({
@@ -57,10 +63,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(updated);
     };
 
-    const logout = () => {
-        tokenStore.clear();
-        setAccessToken(null);
-        setUser(null);
+    const logout = async () => {
+        try {
+            await logoutUser(); // invalidates the refresh token cookie server-side
+        } finally {
+            tokenStore.clear();
+            setAccessToken(null);
+            setUser(null);
+        }
     };
 
     return (

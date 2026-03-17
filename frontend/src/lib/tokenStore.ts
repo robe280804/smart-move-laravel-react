@@ -10,13 +10,17 @@ type SessionUpdatedCallback = (token: string, expiresAt: string) => void;
 
 let _accessToken: string | null = null;
 let _onSessionUpdated: SessionUpdatedCallback | null = null;
+let _loggedOut = false;
 
 export const tokenStore = {
     get: (): string | null => _accessToken,
     set: (token: string | null): void => { _accessToken = token; },
-    clear: (): void => { _accessToken = null; },
+    clear: (): void => { _accessToken = null; _loggedOut = true; },
+    /** Call this only on an explicit login — resets the logged-out guard. */
+    markActive: (): void => { _loggedOut = false; },
+    isLoggedOut: (): boolean => _loggedOut,
     onSessionUpdated: (cb: SessionUpdatedCallback): void => { _onSessionUpdated = cb; },
     notifySessionUpdated: (token: string, expiresAt: string): void => {
-        _onSessionUpdated?.(token, expiresAt);
+        if (!_loggedOut) _onSessionUpdated?.(token, expiresAt);
     },
 };

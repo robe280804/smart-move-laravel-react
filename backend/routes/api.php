@@ -33,6 +33,7 @@ Route::prefix('v1')
 
         // PROTECTED Routes
         Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value])->group(function () {
+            Route::post('auth/logout', [AuthController::class, 'logout']);
             Route::apiResource('users', UserController::class);
             Route::apiResource('fitness-info', FitnessInfoController::class);
 

@@ -30,6 +30,14 @@ export const refresh = async (): Promise<RefreshResponse> => {
     return response.data;
 };
 
+export const logoutUser = async (): Promise<void> => {
+    try {
+        await api.post('/auth/logout');
+    } catch {
+        // Ignore errors — clear local state regardless
+    }
+};
+
 export const forgotPassword = async (email: string): Promise<void> => {
     try {
         await api.post('/auth/reset-password', { email });

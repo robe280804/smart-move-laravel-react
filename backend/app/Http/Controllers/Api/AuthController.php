@@ -20,6 +20,7 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -145,6 +146,18 @@ class AuthController extends Controller
         );
     }
 
+
+
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->tokens()->delete();
+
+        return (new ApiSuccess(
+            data: null,
+            metaData: ['message' => 'Logged out successfully.'],
+            statusCode: Response::HTTP_OK
+        ))->toResponse($request)->withCookie(cookie()->forget('refreshToken'));
+    }
 
 
     private function sendResponseWithTokens(array $tokens, array $body = []): JsonResponse

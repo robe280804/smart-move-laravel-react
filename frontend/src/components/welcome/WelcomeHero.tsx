@@ -1,6 +1,7 @@
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { ImageWithFallback } from "./ImageWithFallaback";
+import { HERO_STATS } from "@/constants/welcome";
 
 export function WelcomeHero({ onGetStarted }: { onGetStarted: () => void }) {
     return (
@@ -16,7 +17,8 @@ export function WelcomeHero({ onGetStarted }: { onGetStarted: () => void }) {
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                     {/* Left Content */}
                     <div className="space-y-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-blue-200 shadow-sm">
+                        {/* Badge — subtle hover */}
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-blue-200 shadow-sm hover:border-blue-400 hover:shadow-md hover:bg-white transition-all duration-200 cursor-default">
                             <Sparkles className="w-4 h-4 text-blue-600" />
                             <span className="text-sm text-slate-700">AI-Powered Fitness Planning</span>
                         </div>
@@ -37,7 +39,7 @@ export function WelcomeHero({ onGetStarted }: { onGetStarted: () => void }) {
                             <Button
                                 onClick={onGetStarted}
                                 size="lg"
-                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-6 text-lg group"
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-6 text-lg group shadow-lg hover:shadow-xl hover:shadow-indigo-200 transition-all duration-200"
                             >
                                 Create Your Plan
                                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -45,41 +47,40 @@ export function WelcomeHero({ onGetStarted }: { onGetStarted: () => void }) {
                             <p className="text-sm text-slate-500">No credit card required • Get started in 2 minutes</p>
                         </div>
 
-                        {/* Stats */}
-                        <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-200">
-                            <div>
-                                <div className="text-3xl font-bold text-slate-900">10K+</div>
-                                <div className="text-sm text-slate-600">Active Users</div>
-                            </div>
-                            <div>
-                                <div className="text-3xl font-bold text-slate-900">50K+</div>
-                                <div className="text-sm text-slate-600">Plans Created</div>
-                            </div>
-                            <div>
-                                <div className="text-3xl font-bold text-slate-900">4.9★</div>
-                                <div className="text-sm text-slate-600">User Rating</div>
-                            </div>
+                        {/* Stats — each item lifts and turns indigo on hover */}
+                        <div className="grid grid-cols-3 gap-4 pt-8 border-t border-slate-200">
+                            {HERO_STATS.map((stat) => (
+                                <div
+                                    key={stat.label}
+                                    className="group p-3 rounded-xl hover:bg-white hover:shadow-md transition-all duration-200 cursor-default"
+                                >
+                                    <div className="text-3xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors duration-200">
+                                        {stat.value}
+                                    </div>
+                                    <div className="text-sm text-slate-500">{stat.label}</div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
                     {/* Right Image */}
                     <div className="relative">
-                        <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl blur-2xl opacity-20" />
-                        <div className="relative">
+                        <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity" />
+                        <div className="relative group">
                             <ImageWithFallback
                                 src="https://images.unsplash.com/photo-1766287453739-c3ffc3f37d05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmaXRuZXNzJTIwdHJhaW5pbmclMjBneW0lMjB3b3Jrb3V0fGVufDF8fHx8MTc3MTk0MzM5MXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
                                 alt="Fitness training"
-                                className="rounded-2xl shadow-2xl w-full h-[600px] object-cover"
+                                className="rounded-2xl shadow-2xl w-full h-[600px] object-cover group-hover:scale-[1.01] transition-transform duration-500"
                             />
-                            {/* Floating Card */}
-                            <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">
+                            {/* Floating Card — lifts on hover */}
+                            <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20 hover:-translate-y-1 hover:shadow-xl transition-all duration-200">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                                        <Sparkles className="w-6 h-6 text-white" />
+                                        <Sparkles className="w-6 h-6 text-white animate-pulse" />
                                     </div>
                                     <div>
                                         <div className="text-sm font-semibold text-slate-900">AI Analyzing...</div>
-                                        <div className="text-xs text-slate-600">Customizing your plan</div>
+                                        <div className="text-xs text-slate-500">Customizing your plan</div>
                                     </div>
                                 </div>
                             </div>

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { WelcomeHero } from "../components/welcome/WelcomeHero";
 import { FeaturesSection } from "../components/welcome/FeatureSection";
 import { HowItWorks } from "../components/welcome/HowItWorks";
+import { PricingSection } from "../components/welcome/PricingSection";
 import { CTASection } from "../components/welcome/CTASection";
 import { Footer } from "../components/welcome/Footer";
 import { useAuth } from "../contexts/AuthContext";
@@ -33,6 +34,7 @@ export function WelcomePage() {
             <WelcomeHero onGetStarted={handleGetStarted} />
             <FeaturesSection />
             <HowItWorks />
+            <PricingSection onGetStarted={handleGetStarted} />
             <CTASection onGetStarted={handleGetStarted} />
             <Footer />
         </div>

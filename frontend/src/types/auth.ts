@@ -17,7 +17,7 @@ export interface AuthContextValue {
     isLoading: boolean;
     setSession: (response: AuthResponse) => void;
     updateUser: (user: User) => void;
-    logout: () => void;
+    logout: () => Promise<void>;
 }
 
 // Shape returned by POST /auth/login and POST /auth/register

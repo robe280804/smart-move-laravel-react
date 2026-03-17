@@ -9,7 +9,7 @@ export const Dashboard = () => {
         <div className="max-w-4xl mx-auto space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-slate-900">
-                    Welcome back, {user!.name}!
+                    Welcome back, {user?.name}!
                 </h1>
                 <p className="text-slate-500 mt-1">Here's your fitness overview.</p>
             </div>
@@ -25,11 +25,11 @@ export const Dashboard = () => {
                 <CardContent className="space-y-3 text-sm text-slate-700">
                     <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-slate-400" />
-                        <span>{user!.name} {user!.surname}</span>
+                        <span>{user?.name} {user?.surname}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-slate-400" />
-                        <span>{user!.email}</span>
+                        <span>{user?.email}</span>
                     </div>
                 </CardContent>
             </Card>

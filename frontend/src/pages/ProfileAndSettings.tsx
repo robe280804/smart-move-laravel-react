@@ -257,233 +257,233 @@ export function ProfileAndSettings() {
 
             <div>
                 {/* Tabs */}
-                    <Tabs defaultValue="personal">
-                        <TabsList className="grid grid-cols-3 w-full">
-                            <TabsTrigger value="personal" className="flex items-center gap-1.5">
-                                <User className="w-3.5 h-3.5" />
-                                Personal
-                            </TabsTrigger>
-                            <TabsTrigger value="fitness" className="flex items-center gap-1.5">
-                                <Dumbbell className="w-3.5 h-3.5" />
-                                Fitness
-                            </TabsTrigger>
-                            <TabsTrigger value="security" className="flex items-center gap-1.5">
-                                <Shield className="w-3.5 h-3.5" />
-                                Security
-                            </TabsTrigger>
-                        </TabsList>
+                <Tabs defaultValue="personal">
+                    <TabsList className="grid grid-cols-3 w-full">
+                        <TabsTrigger value="personal" className="flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5" />
+                            Personal
+                        </TabsTrigger>
+                        <TabsTrigger value="fitness" className="flex items-center gap-1.5">
+                            <Dumbbell className="w-3.5 h-3.5" />
+                            Fitness
+                        </TabsTrigger>
+                        <TabsTrigger value="security" className="flex items-center gap-1.5">
+                            <Shield className="w-3.5 h-3.5" />
+                            Security
+                        </TabsTrigger>
+                    </TabsList>
 
-                        {/* Personal Information */}
-                        <TabsContent value="personal" className="mt-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Personal Information</CardTitle>
-                                    <CardDescription>Update your name and email address</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <form onSubmit={handleProfileSubmit} className="space-y-4">
-                                        <div className="grid sm:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="firstName">First Name</Label>
-                                                <Input
-                                                    id="firstName"
-                                                    value={profileForm.name}
-                                                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                                                    placeholder="Enter your first name"
-                                                />
-                                                {profileErrors.name && <p className="text-sm text-red-500">{profileErrors.name}</p>}
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="lastName">Last Name</Label>
-                                                <Input
-                                                    id="lastName"
-                                                    value={profileForm.surname}
-                                                    onChange={(e) => setProfileForm({ ...profileForm, surname: e.target.value })}
-                                                    placeholder="Enter your last name"
-                                                />
-                                                {profileErrors.surname && <p className="text-sm text-red-500">{profileErrors.surname}</p>}
-                                            </div>
+                    {/* Personal Information */}
+                    <TabsContent value="personal" className="mt-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Personal Information</CardTitle>
+                                <CardDescription>Update your name and email address</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleProfileSubmit} className="space-y-4">
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="firstName">First Name</Label>
+                                            <Input
+                                                id="firstName"
+                                                value={profileForm.name}
+                                                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                                                placeholder="Enter your first name"
+                                            />
+                                            {profileErrors.name && <p className="text-sm text-red-500">{profileErrors.name}</p>}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="email">Email Address</Label>
+                                            <Label htmlFor="lastName">Last Name</Label>
                                             <Input
-                                                id="email"
-                                                type="email"
-                                                value={profileForm.email}
-                                                onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                                                placeholder="Enter your email"
+                                                id="lastName"
+                                                value={profileForm.surname}
+                                                onChange={(e) => setProfileForm({ ...profileForm, surname: e.target.value })}
+                                                placeholder="Enter your last name"
                                             />
-                                            {profileErrors.email && <p className="text-sm text-red-500">{profileErrors.email}</p>}
+                                            {profileErrors.surname && <p className="text-sm text-red-500">{profileErrors.surname}</p>}
                                         </div>
-                                        <div className="pt-2">
-                                            <Button
-                                                type="submit"
-                                                className="bg-gradient-to-r from-blue-600 to-indigo-600 cursor-pointer"
-                                                disabled={isProfileLoading}
-                                            >
-                                                Save Changes
-                                            </Button>
-                                        </div>
-                                    </form>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* Fitness Profile */}
-                        <TabsContent value="fitness" className="mt-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Fitness Profile</CardTitle>
-                                    <CardDescription>
-                                        {fitnessInfo
-                                            ? "Update your fitness details to get better recommendations"
-                                            : "Complete your fitness profile to get personalized workouts"}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <form onSubmit={handleFitnessSubmit} className="space-y-4">
-                                        <div className="grid sm:grid-cols-3 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="height">Height (cm)</Label>
-                                                <Input
-                                                    id="height"
-                                                    type="number"
-                                                    required
-                                                    value={fitnessForm.height}
-                                                    onChange={(e) => setFitnessForm({ ...fitnessForm, height: e.target.value })}
-                                                    placeholder="e.g. 175"
-                                                />
-                                                {fitnessErrors.height && <p className="text-sm text-red-500">{fitnessErrors.height}</p>}
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="weight">Weight (kg)</Label>
-                                                <Input
-                                                    id="weight"
-                                                    type="number"
-                                                    required
-                                                    value={fitnessForm.weight}
-                                                    onChange={(e) => setFitnessForm({ ...fitnessForm, weight: e.target.value })}
-                                                    placeholder="e.g. 70"
-                                                />
-                                                {fitnessErrors.weight && <p className="text-sm text-red-500">{fitnessErrors.weight}</p>}
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="age">Age</Label>
-                                                <Input
-                                                    id="age"
-                                                    type="number"
-                                                    required
-                                                    value={fitnessForm.age}
-                                                    onChange={(e) => setFitnessForm({ ...fitnessForm, age: e.target.value })}
-                                                    placeholder="e.g. 25"
-                                                />
-                                                {fitnessErrors.age && <p className="text-sm text-red-500">{fitnessErrors.age}</p>}
-                                            </div>
-                                        </div>
-                                        <div className="grid sm:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="gender">Gender</Label>
-                                                <select
-                                                    id="gender"
-                                                    required
-                                                    value={fitnessForm.gender}
-                                                    onChange={(e) => setFitnessForm({ ...fitnessForm, gender: e.target.value as Gender })}
-                                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                                >
-                                                    <option value="" disabled>Select gender</option>
-                                                    {GENDERS.map((g) => (
-                                                        <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>
-                                                    ))}
-                                                </select>
-                                                {fitnessErrors.gender && <p className="text-sm text-red-500">{fitnessErrors.gender}</p>}
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="experience_level">Experience Level</Label>
-                                                <select
-                                                    id="experience_level"
-                                                    required
-                                                    value={fitnessForm.experience_level}
-                                                    onChange={(e) => setFitnessForm({ ...fitnessForm, experience_level: e.target.value as ExperienceLevel })}
-                                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                                >
-                                                    <option value="" disabled>Select experience level</option>
-                                                    {EXPERIENCE_LEVELS.map((lvl) => (
-                                                        <option key={lvl} value={lvl}>{lvl.charAt(0).toUpperCase() + lvl.slice(1)}</option>
-                                                    ))}
-                                                </select>
-                                                {fitnessErrors.experience_level && <p className="text-sm text-red-500">{fitnessErrors.experience_level}</p>}
-                                            </div>
-                                        </div>
-                                        <div className="pt-2">
-                                            <Button
-                                                type="submit"
-                                                className="bg-gradient-to-r from-blue-600 to-indigo-600 cursor-pointer"
-                                                disabled={isFitnessInfoLoading}
-                                            >
-                                                {fitnessInfo === null ? "Create Profile" : "Update Profile"}
-                                            </Button>
-                                        </div>
-                                    </form>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* Security */}
-                        <TabsContent value="security" className="mt-4 space-y-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Change Password</CardTitle>
-                                    <CardDescription>Update your password to keep your account secure</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
+                                    </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="currentPassword">Current Password</Label>
-                                        <Input id="currentPassword" type="password" placeholder="Enter current password" />
+                                        <Label htmlFor="email">Email Address</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={profileForm.email}
+                                            onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                                            placeholder="Enter your email"
+                                        />
+                                        {profileErrors.email && <p className="text-sm text-red-500">{profileErrors.email}</p>}
+                                    </div>
+                                    <div className="pt-2">
+                                        <Button
+                                            type="submit"
+                                            className="bg-gradient-to-r from-blue-600 to-indigo-600 cursor-pointer"
+                                            disabled={isProfileLoading}
+                                        >
+                                            Save Changes
+                                        </Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Fitness Profile */}
+                    <TabsContent value="fitness" className="mt-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Fitness Profile</CardTitle>
+                                <CardDescription>
+                                    {fitnessInfo
+                                        ? "Update your fitness details to get better recommendations"
+                                        : "Complete your fitness profile to get personalized workouts"}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleFitnessSubmit} className="space-y-4">
+                                    <div className="grid sm:grid-cols-3 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="height">Height (cm)</Label>
+                                            <Input
+                                                id="height"
+                                                type="number"
+                                                required
+                                                value={fitnessForm.height}
+                                                onChange={(e) => setFitnessForm({ ...fitnessForm, height: e.target.value })}
+                                                placeholder="e.g. 175"
+                                            />
+                                            {fitnessErrors.height && <p className="text-sm text-red-500">{fitnessErrors.height}</p>}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="weight">Weight (kg)</Label>
+                                            <Input
+                                                id="weight"
+                                                type="number"
+                                                required
+                                                value={fitnessForm.weight}
+                                                onChange={(e) => setFitnessForm({ ...fitnessForm, weight: e.target.value })}
+                                                placeholder="e.g. 70"
+                                            />
+                                            {fitnessErrors.weight && <p className="text-sm text-red-500">{fitnessErrors.weight}</p>}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="age">Age</Label>
+                                            <Input
+                                                id="age"
+                                                type="number"
+                                                required
+                                                value={fitnessForm.age}
+                                                onChange={(e) => setFitnessForm({ ...fitnessForm, age: e.target.value })}
+                                                placeholder="e.g. 25"
+                                            />
+                                            {fitnessErrors.age && <p className="text-sm text-red-500">{fitnessErrors.age}</p>}
+                                        </div>
                                     </div>
                                     <div className="grid sm:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="newPassword">New Password</Label>
-                                            <Input id="newPassword" type="password" placeholder="Enter new password" />
+                                            <Label htmlFor="gender">Gender</Label>
+                                            <select
+                                                id="gender"
+                                                required
+                                                value={fitnessForm.gender}
+                                                onChange={(e) => setFitnessForm({ ...fitnessForm, gender: e.target.value as Gender })}
+                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                            >
+                                                <option value="" disabled>Select gender</option>
+                                                {GENDERS.map((g) => (
+                                                    <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>
+                                                ))}
+                                            </select>
+                                            {fitnessErrors.gender && <p className="text-sm text-red-500">{fitnessErrors.gender}</p>}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="confirmPassword">Confirm Password</Label>
-                                            <Input id="confirmPassword" type="password" placeholder="Repeat new password" />
+                                            <Label htmlFor="experience_level">Experience Level</Label>
+                                            <select
+                                                id="experience_level"
+                                                required
+                                                value={fitnessForm.experience_level}
+                                                onChange={(e) => setFitnessForm({ ...fitnessForm, experience_level: e.target.value as ExperienceLevel })}
+                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                            >
+                                                <option value="" disabled>Select experience level</option>
+                                                {EXPERIENCE_LEVELS.map((lvl) => (
+                                                    <option key={lvl} value={lvl}>{lvl.charAt(0).toUpperCase() + lvl.slice(1)}</option>
+                                                ))}
+                                            </select>
+                                            {fitnessErrors.experience_level && <p className="text-sm text-red-500">{fitnessErrors.experience_level}</p>}
                                         </div>
                                     </div>
                                     <div className="pt-2">
-                                        <Button className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                                            Update Password
+                                        <Button
+                                            type="submit"
+                                            className="bg-gradient-to-r from-blue-600 to-indigo-600 cursor-pointer"
+                                            disabled={isFitnessInfoLoading}
+                                        >
+                                            {fitnessInfo === null ? "Create Profile" : "Update Profile"}
                                         </Button>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
 
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Account Security</CardTitle>
-                                    <CardDescription>Additional security options</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                                        <div>
-                                            <p className="font-medium text-slate-900">Two-Factor Authentication</p>
-                                            <p className="text-sm text-slate-500">Add an extra layer of security to your account</p>
-                                        </div>
-                                        <Button variant="outline">Enable</Button>
+                    {/* Security */}
+                    <TabsContent value="security" className="mt-4 space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Change Password</CardTitle>
+                                <CardDescription>Update your password to keep your account secure</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="currentPassword">Current Password</Label>
+                                    <Input id="currentPassword" type="password" placeholder="Enter current password" />
+                                </div>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="newPassword">New Password</Label>
+                                        <Input id="newPassword" type="password" placeholder="Enter new password" />
                                     </div>
-                                    <div className="flex items-center justify-between p-4 border rounded-lg border-red-200 bg-red-50">
-                                        <div>
-                                            <p className="font-medium text-red-900">Delete Account</p>
-                                            <p className="text-sm text-red-600">Permanently delete your account and all data</p>
-                                        </div>
-                                        <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
-                                            Delete
-                                        </Button>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="confirmPassword">Confirm Password</Label>
+                                        <Input id="confirmPassword" type="password" placeholder="Repeat new password" />
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                    </Tabs>
+                                </div>
+                                <div className="pt-2">
+                                    <Button className="bg-gradient-to-r from-blue-600 to-indigo-600">
+                                        Update Password
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Account Security</CardTitle>
+                                <CardDescription>Additional security options</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <div className="flex items-center justify-between p-4 border rounded-lg">
+                                    <div>
+                                        <p className="font-medium text-slate-900">Two-Factor Authentication</p>
+                                        <p className="text-sm text-slate-500">Add an extra layer of security to your account</p>
+                                    </div>
+                                    <Button variant="outline">Enable</Button>
+                                </div>
+                                <div className="flex items-center justify-between p-4 border rounded-lg border-red-200 bg-red-50">
+                                    <div>
+                                        <p className="font-medium text-red-900">Delete Account</p>
+                                        <p className="text-sm text-red-600">Permanently delete your account and all data</p>
+                                    </div>
+                                    <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+                                        Delete
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );

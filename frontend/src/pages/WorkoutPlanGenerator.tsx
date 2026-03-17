@@ -2,7 +2,6 @@ import { Brain } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useWorkoutPlanGenerator } from "@/hooks/useWorkoutPlanGenerator";
-import { WorkoutGeneratorHeader } from "@/components/dashboard/workout/WorkoutGeneratorHeader";
 import { WorkoutProgressBar } from "@/components/dashboard/workout/WorkoutProgressBar";
 import { ChatMessageList } from "@/components/dashboard/workout/ChatMessageList";
 import { WorkoutStepInput } from "@/components/dashboard/workout/WorkoutStepInput";
@@ -34,8 +33,6 @@ export function WorkoutPlanGenerator() {
 
     return (
         <div className="space-y-6">
-            <WorkoutGeneratorHeader />
-
             <WorkoutProgressBar step={step} />
 
             <div className="grid lg:grid-cols-3 gap-6">
