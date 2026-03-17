@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Calendar, Clock, TrendingUp, ChevronDown, ChevronRight } from "lucide-react";
 import { DAYS_OF_WEEK } from "@/constants/const";
 import type { PlanDay } from "@/types/workout";
@@ -62,13 +62,6 @@ export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate }: Pro
     const [openBlocks, setOpenBlocks] = useState<Set<number>>(() =>
         new Set(day.workout_blocks.map((b) => b.id)),
     );
-
-    // When the day is expanded, reset all blocks to open
-    useEffect(() => {
-        if (isExpanded) {
-            setOpenBlocks(new Set(day.workout_blocks.map((b) => b.id)));
-        }
-    }, [isExpanded, day.workout_blocks]);
 
     const toggleBlock = (blockId: number) => {
         setOpenBlocks((prev) => {
