@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router";
-import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy } from "lucide-react";
+import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FITNESS_GOALS, WORKOUT_TYPES, EXPERIENCE_LEVELS, DAYS_OF_WEEK } from "@/constants/const";
 import { useWorkoutPlan } from "@/hooks/useWorkoutPlan";
 import { PlanOverviewCards } from "@/components/dashboard/workout/detail/PlanOverviewCards";
 import { WorkoutDayAccordion } from "@/components/dashboard/workout/detail/WorkoutDayAccordion";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { WorkoutPlanPdf } from "@/components/dashboard/workout/detail/WorkoutPlanPdf";
 
 const GOAL_LABEL = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.label]));
 const GOAL_ICON = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.icon]));
@@ -123,13 +125,31 @@ export const WorkoutPlanDetail = () => {
                             </div>
                         </div>
 
-                        <Button
-                            disabled={!hasChanges}
-                            className="flex items-center gap-2 flex-shrink-0 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-400 shadow-lg shadow-indigo-900/50"
-                        >
-                            <Save className="w-4 h-4" />
-                            {hasChanges ? "Save Changes" : "No Changes"}
-                        </Button>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <PDFDownloadLink
+                                document={<WorkoutPlanPdf plan={plan} />}
+                                fileName={`workout-plan-${plan.id}.pdf`}
+                            >
+                                {({ loading }) => (
+                                    <Button
+                                        variant="outline"
+                                        className="border-white/20 text-white bg-white/10 hover:bg-white/20 transition-colors"
+                                        disabled={loading}
+                                    >
+                                        <Download className="w-4 h-4 mr-2" />
+                                        {loading ? "Generating…" : "Export PDF"}
+                                    </Button>
+                                )}
+                            </PDFDownloadLink>
+
+                            <Button
+                                disabled={!hasChanges}
+                                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-400 shadow-lg shadow-indigo-900/50"
+                            >
+                                <Save className="w-4 h-4" />
+                                {hasChanges ? "Save Changes" : "No Changes"}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Stats row */}
