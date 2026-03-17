@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Dumbbell, Eye, EyeOff, KeyRound } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
@@ -9,13 +9,13 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { resetPasswordSchema } from "../components/forms/authentication";
-import type { ResetPasswordFormData, ResetPasswordFormErrors } from "../types/forms";
-import { resetPassword } from "../services/authentication";
-import { ApiError } from "../lib/apiError";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { resetPasswordSchema } from "@/components/forms/authentication";
+import type { ResetPasswordFormData, ResetPasswordFormErrors } from "@/types/forms";
+import { resetPassword } from "@/services/authentication";
+import { ApiError } from "@/lib/apiError";
 import { toast } from "sonner";
 
 export const ResetPassword = () => {

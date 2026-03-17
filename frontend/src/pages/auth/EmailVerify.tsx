@@ -1,13 +1,13 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Dumbbell, CircleCheck, CircleAlert } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "../../components/ui/button";
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "../components/ui/card";
+} from "../../components/ui/card";
 
 export const EmailVerify = () => {
     const [searchParams] = useSearchParams();

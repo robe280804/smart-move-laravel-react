@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Dumbbell, Mail, Send } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
@@ -9,13 +9,13 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { forgotPasswordSchema } from "../components/forms/authentication";
-import type { ForgotPasswordFormData, ForgotPasswordFormErrors } from "../types/forms";
-import { forgotPassword } from "../services/authentication";
-import { ApiError } from "../lib/apiError";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { forgotPasswordSchema } from "@/components/forms/authentication";
+import type { ForgotPasswordFormData, ForgotPasswordFormErrors } from "@/types/forms";
+import { forgotPassword } from "@/services/authentication";
+import { ApiError } from "@/lib/apiError";
 
 export const ForgotPassword = () => {
     const [form, setForm] = useState<ForgotPasswordFormData>({ email: "" });

@@ -1,18 +1,18 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AuthLayout } from "../layouts/AuthLayout";
 import { SideBar } from "../components/dashboard/SideBar";
-import { Register } from "../pages/Register";
-import { Login } from "../pages/Login";
+import { Register } from "../pages/auth/Register";
+import { Login } from "../pages/auth/Login";
 import { WelcomePage } from "../pages/Welcome";
 import { Dashboard } from "../pages/Dashboard";
-import { ForgotPassword } from "../pages/ForgotPassword";
-import { ResetPassword } from "../pages/ResetPassword";
-import { EmailVerify } from "../pages/EmailVerify";
+import { ForgotPassword } from "../pages/auth/ForgotPassword";
+import { ResetPassword } from "../pages/auth/ResetPassword";
+import { EmailVerify } from "../pages/auth/EmailVerify";
 import { ProtectedRoute } from "../layouts/ProtectedRoute";
-import { ProfileAndSettings } from "../pages/dashboard/ProfileAndSettings";
-import { WorkoutPlanGenerator } from "@/pages/dashboard/WorkoutPlanGenerator";
-import { Workouts } from "@/pages/dashboard/Workouts";
-import { WorkoutPlanDetail } from "@/pages/dashboard/WorkoutPlanDetail";
+import { ProfileAndSettings } from "../pages/ProfileAndSettings";
+import { WorkoutPlanGenerator } from "@/pages/WorkoutPlanGenerator";
+import { Workouts } from "@/pages/wokouts/Workouts";
+import { WorkoutPlanDetail } from "@/pages/wokouts/WorkoutPlanDetail";
 
 export const router = createBrowserRouter([
     {

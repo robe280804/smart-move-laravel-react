@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Dumbbell, Eye, EyeOff, Sparkles } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
@@ -9,15 +9,15 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { registerSchema } from "../components/forms/authentication";
-import type { RegisterFormData, RegisterFormErrors } from "../types/forms";
-import { register } from "../services/authentication";
-import { ApiError } from "../lib/apiError";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { registerSchema } from "@/components/forms/authentication";
+import type { RegisterFormData, RegisterFormErrors } from "@/types/forms";
+import { register } from "@/services/authentication";
+import { ApiError } from "@/lib/apiError";
 import { toast } from "sonner";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 export const Register = () => {

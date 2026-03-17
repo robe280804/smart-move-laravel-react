@@ -3,11 +3,6 @@ import { Link, useLocation, Outlet } from "react-router-dom";
 import {
     Home,
     Dumbbell,
-    TrendingUp,
-    Apple,
-    Camera,
-    Timer,
-    Trophy,
     Menu,
     X,
     Settings,
