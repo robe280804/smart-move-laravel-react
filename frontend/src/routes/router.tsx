@@ -11,6 +11,8 @@ import { EmailVerify } from "../pages/EmailVerify";
 import { ProtectedRoute } from "../layouts/ProtectedRoute";
 import { ProfileAndSettings } from "../pages/dashboard/ProfileAndSettings";
 import { WorkoutPlanGenerator } from "@/pages/dashboard/WorkoutPlanGenerator";
+import { Workouts } from "@/pages/dashboard/Workouts";
+import { WorkoutPlanDetail } from "@/pages/dashboard/WorkoutPlanDetail";
 
 export const router = createBrowserRouter([
     {
@@ -35,7 +37,9 @@ export const router = createBrowserRouter([
                 children: [
                     { path: "/dashboard", element: <Dashboard /> },
                     { path: "/dashboard/profile", element: <ProfileAndSettings /> },
-                    { path: "/dashboard/workout-generate", element: <WorkoutPlanGenerator /> }
+                    { path: "/dashboard/workout-generate", element: <WorkoutPlanGenerator /> },
+                    { path: "/dashboard/workouts", element: <Workouts /> },
+                    { path: "/dashboard/workouts/:id", element: <WorkoutPlanDetail /> },
                 ],
             }
         ]
