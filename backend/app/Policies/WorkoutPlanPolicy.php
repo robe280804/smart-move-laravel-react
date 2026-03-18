@@ -9,6 +9,14 @@ use App\Models\WorkoutPlan;
 
 class WorkoutPlanPolicy
 {
+    /**
+     * All authenticated users can list their own plans (the service scopes the query).
+     */
+    public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
     public function view(User $user, WorkoutPlan $workoutPlan): bool
     {
         return $user->id === $workoutPlan->user_id;

@@ -30,16 +30,16 @@ class FitnessAgentWorkflow extends Workflow
 
     /**
      * Workflow setup:
-     * 1. InitialNode              
+     * 1. InitialNode
      * 2. CollectUserInfosNode     — collects user fitness profile via database
      * 3. GenerateWorkoutPlanNode  — retrieves exercises from Qdrant and calls FitnessAgent
      */
     protected function nodes(): array
     {
         return [
-            new InitialNode(),
+            app(InitialNode::class),
             app(CollectUserInfosNode::class),
-            new GenerateWorkoutPlanNode(),
+            app(GenerateWorkoutPlanNode::class),
         ];
     }
 }

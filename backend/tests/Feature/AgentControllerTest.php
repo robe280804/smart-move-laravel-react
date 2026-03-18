@@ -23,9 +23,9 @@ class AgentControllerTest extends TestCase
     private array $validRequestData = [
         'fitness_goals' => ['muscle_gain'],
         'training_days_per_week' => 4,
-        'available_days' => ['monday', 'tuesday', 'thursday', 'friday'],
+        'available_days' => ['Monday', 'Tuesday', 'Thursday', 'Friday'],
         'session_duration' => 60,
-        'equipment' => ['barbell', 'dumbbells'],
+        'equipment' => ['Barbells', 'Dumbbells'],
         'gym_access' => true,
         'workout_type' => ['strength'],
     ];
