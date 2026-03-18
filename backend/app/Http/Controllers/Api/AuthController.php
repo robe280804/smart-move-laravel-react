@@ -20,7 +20,6 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -30,7 +29,6 @@ class AuthController extends Controller
         private readonly UserService $userService,
         private readonly AuthService $authService
     ) {}
-
 
     public function register(StoreUserRequest $request): JsonResponse
     {
@@ -44,7 +42,6 @@ class AuthController extends Controller
             'user' => new UserResource($user),
         ])->setStatusCode(201);
     }
-
 
     public function login(LoginRequest $request): JsonResponse|Responsable
     {
@@ -61,7 +58,6 @@ class AuthController extends Controller
         ]);
     }
 
-
     /**
      * Refresh token
      *
@@ -77,12 +73,10 @@ class AuthController extends Controller
         ]);
     }
 
-
     /**
      * Perform the actual password reset using the token from the email link.
      *
      * @param  UpdatePasswordRequest  $request  token + email + password + password_confirmation
-     * @return Responsable
      */
     public function updatePassword(UpdatePasswordRequest $request): Responsable
     {
@@ -99,24 +93,25 @@ class AuthController extends Controller
         );
     }
 
-
     /**
      * Verify user email.
-     * 
-     * @param Request $request
-     * @param $id 
-     * @param $hash 
+     *
      * @return RedirectResponse
      */
     public function verifyEmail(Request $request, string $id, string $hash): Responsable|RedirectResponse
     {
         $user = User::findOrFail($id);
 
+        if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+            abort(Response::HTTP_FORBIDDEN, 'Invalid verification link.');
+        }
+
         if ($user->hasVerifiedEmail()) {
             if ($request->wantsJson()) {
                 return new ApiSuccess(data: null, metaData: ['message' => 'Email already verified.'], statusCode: Response::HTTP_OK);
             }
-            return redirect(config('app.frontend_url') . '/email-verify?status=alredy');
+
+            return redirect(config('app.frontend_url').'/email-verify?status=alredy');
         }
 
         $user->markEmailAsVerified();
@@ -124,14 +119,14 @@ class AuthController extends Controller
         if ($request->wantsJson()) {
             return new ApiSuccess(data: null, metaData: ['message' => 'Email successfully verified.'], statusCode: Response::HTTP_OK);
         }
-        return redirect(config('app.frontend_url') . '/email-verify?status=success');
-    }
 
+        return redirect(config('app.frontend_url').'/email-verify?status=success');
+    }
 
     /**
      * Send a password reset link to the given email.
-     * @param $request email
-     * @return Responsable
+     *
+     * @param  $request  email
      */
     public function resetPassword(Request $request): Responsable
     {
@@ -146,8 +141,6 @@ class AuthController extends Controller
         );
     }
 
-
-
     public function logout(Request $request): JsonResponse
     {
         $request->user()->tokens()->delete();
@@ -159,14 +152,13 @@ class AuthController extends Controller
         ))->toResponse($request)->withCookie(cookie()->forget('refreshToken'));
     }
 
-
     private function sendResponseWithTokens(array $tokens, array $body = []): JsonResponse
     {
         $cookie = cookie(
             'refreshToken',
             $tokens['refreshToken'],
             config('sanctum.rt_expiration'),
-            '/',
+            '/api/v1/',
             null,
             true,
             true,

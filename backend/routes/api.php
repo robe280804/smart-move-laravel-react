@@ -52,13 +52,14 @@ Route::prefix('v1')
             'ability:'.TokenAbility::ACCESS_API->value,
         ])->group(function () {
 
-            Route::post('auth/logout', [AuthController::class, 'logout']);
+            Route::post('auth/logout', [AuthController::class, 'logout'])
+                ->middleware('throttle:api');
 
             // Standard CRUD — general API limit
             Route::middleware('throttle:api')->group(function () {
                 Route::post('users/change-password', ChangePasswordController::class);
 
-                Route::apiResource('users', UserController::class);
+                Route::apiResource('users', UserController::class)->only(['show', 'update', 'destroy']);
                 Route::apiResource('fitness-info', FitnessInfoController::class);
 
                 Route::get('workout-plans', [WorkoutPlanController::class, 'index']);

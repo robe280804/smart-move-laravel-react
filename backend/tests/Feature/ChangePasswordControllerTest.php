@@ -100,7 +100,7 @@ class ChangePasswordControllerTest extends TestCase
 
         // The current session token is preserved — user can still reach protected endpoints
         $this->actingAsUser($user)
-            ->getJson('/api/v1/users')
+            ->getJson("/api/v1/users/{$user->id}")
             ->assertOk();
     }
 

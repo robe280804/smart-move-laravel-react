@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DAYS_OF_WEEK, EQUIPMENT_OPTIONS, FITNESS_GOALS, WORKOUT_TYPES } from "@/constants/const";
 import type { WorkoutPlanData } from "@/types/workout";
+import { sanitizeTextInput, TEXT_MAX_LENGTHS } from "@/lib/sanitize";
 
 interface WorkoutStepInputProps {
     step: number;
@@ -171,16 +172,21 @@ export function WorkoutStepInput({
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="injuries">Injuries or limitations (optional)</Label>
-                        <span className={`text-xs ${planData.injuries.length >= 200 ? "text-red-500" : "text-slate-400"}`}>
-                            {planData.injuries.length}/200
+                        <span className={`text-xs ${planData.injuries.length >= TEXT_MAX_LENGTHS.injuries ? "text-red-500" : "text-slate-400"}`}>
+                            {planData.injuries.length}/{TEXT_MAX_LENGTHS.injuries}
                         </span>
                     </div>
                     <Input
                         id="injuries"
                         placeholder="e.g., Lower back pain, knee injury, etc."
                         value={planData.injuries}
-                        onChange={(e) => setPlanData({ ...planData, injuries: e.target.value })}
-                        maxLength={200}
+                        onChange={(e) =>
+                            setPlanData({
+                                ...planData,
+                                injuries: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.injuries),
+                            })
+                        }
+                        maxLength={TEXT_MAX_LENGTHS.injuries}
                     />
                     <p className="text-xs text-slate-500">Leave blank if none</p>
                 </div>
@@ -336,50 +342,71 @@ export function WorkoutStepInput({
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="sports">Sports or activities you practice</Label>
-                        <span className={`text-xs ${planData.sports.length >= 150 ? "text-red-500" : "text-slate-400"}`}>
-                            {planData.sports.length}/150
+                        <span className={`text-xs ${planData.sports.length >= TEXT_MAX_LENGTHS.sports ? "text-red-500" : "text-slate-400"}`}>
+                            {planData.sports.length}/{TEXT_MAX_LENGTHS.sports}
                         </span>
                     </div>
                     <Input
                         id="sports"
                         placeholder="e.g., Football, cycling, tennis, swimming..."
                         value={planData.sports}
-                        onChange={(e) => setPlanData({ ...planData, sports: e.target.value })}
-                        maxLength={150}
+                        onChange={(e) =>
+                            setPlanData({
+                                ...planData,
+                                sports: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.sports),
+                            })
+                        }
+                        maxLength={TEXT_MAX_LENGTHS.sports}
                     />
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="preferredExercises">Exercises you'd like to include or avoid</Label>
-                        <span className={`text-xs ${planData.preferredExercises.length >= 300 ? "text-red-500" : "text-slate-400"}`}>
-                            {planData.preferredExercises.length}/300
+                        <span className={`text-xs ${planData.preferredExercises.length >= TEXT_MAX_LENGTHS.preferredExercises ? "text-red-500" : "text-slate-400"}`}>
+                            {planData.preferredExercises.length}/{TEXT_MAX_LENGTHS.preferredExercises}
                         </span>
                     </div>
                     <Textarea
                         id="preferredExercises"
                         placeholder="e.g., Include: pull-ups, deadlifts. Avoid: running, burpees..."
                         value={planData.preferredExercises}
-                        onChange={(e) => setPlanData({ ...planData, preferredExercises: e.target.value })}
+                        onChange={(e) =>
+                            setPlanData({
+                                ...planData,
+                                preferredExercises: sanitizeTextInput(
+                                    e.target.value,
+                                    TEXT_MAX_LENGTHS.preferredExercises,
+                                ),
+                            })
+                        }
                         className="resize-none"
                         rows={3}
-                        maxLength={300}
+                        maxLength={TEXT_MAX_LENGTHS.preferredExercises}
                     />
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="additionalNotes">Any other requests or notes</Label>
-                        <span className={`text-xs ${planData.additionalNotes.length >= 400 ? "text-red-500" : "text-slate-400"}`}>
-                            {planData.additionalNotes.length}/400
+                        <span className={`text-xs ${planData.additionalNotes.length >= TEXT_MAX_LENGTHS.additionalNotes ? "text-red-500" : "text-slate-400"}`}>
+                            {planData.additionalNotes.length}/{TEXT_MAX_LENGTHS.additionalNotes}
                         </span>
                     </div>
                     <Textarea
                         id="additionalNotes"
                         placeholder="e.g., I travel often and need hotel-friendly workouts, I prefer morning sessions..."
                         value={planData.additionalNotes}
-                        onChange={(e) => setPlanData({ ...planData, additionalNotes: e.target.value })}
+                        onChange={(e) =>
+                            setPlanData({
+                                ...planData,
+                                additionalNotes: sanitizeTextInput(
+                                    e.target.value,
+                                    TEXT_MAX_LENGTHS.additionalNotes,
+                                ),
+                            })
+                        }
                         className="resize-none"
                         rows={3}
-                        maxLength={400}
+                        maxLength={TEXT_MAX_LENGTHS.additionalNotes}
                     />
                 </div>
                 <Button onClick={handleDetails} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600">

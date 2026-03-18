@@ -23,6 +23,8 @@ class WorkoutPlanController extends Controller
 
     public function index(Request $request): Responsable
     {
+        $this->authorize('viewAny', WorkoutPlan::class);
+
         $since = $this->subscriptionService->historyDateLimit($request->user());
         $plans = $this->workoutPlanService->getAll($request->user(), $since);
 

@@ -7,7 +7,6 @@ import {
     BarChart3,
     Zap,
     Crown,
-    ArrowUpRight,
     Timer,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
