@@ -4,7 +4,7 @@ import { updatePersonalInfo } from "@/services/user";
 import { userProfileShcema } from "@/components/forms/user";
 import type { UserProfileFormErrors } from "@/types/forms";
 import { ApiError } from "@/lib/apiError";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
 
 export type ProfileFormState = {
     name: string;
@@ -43,11 +43,7 @@ export function useProfileForm() {
         try {
             const updated = await updatePersonalInfo(user!.id, result.data);
             updateUser(updated);
-            toast.success("Profile updated.", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#22C55E", color: "#fff" },
-            });
+            notify.success("Profile updated.");
         } catch (error: unknown) {
             if (error instanceof ApiError) {
                 if (error.fieldErrors) {
@@ -57,11 +53,7 @@ export function useProfileForm() {
                         ) as UserProfileFormErrors
                     );
                 } else {
-                    toast.error(error.message, {
-                        position: "top-center",
-                        duration: 5000,
-                        style: { background: "#FF4D4F", color: "#fff" },
-                    });
+                    notify.error(error.message);
                 }
             }
         } finally {

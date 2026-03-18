@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
+import { WelcomeNavbar } from "../components/welcome/WelcomeNavbar";
 import { WelcomeHero } from "../components/welcome/WelcomeHero";
 import { FeaturesSection } from "../components/welcome/FeatureSection";
 import { HowItWorks } from "../components/welcome/HowItWorks";
@@ -43,11 +44,7 @@ export function WelcomePage() {
                 navigate("/dashboard");
             }
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Payment failed. Please try again.", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#FF4D4F", color: "#fff" },
-            });
+            notify.error(error instanceof Error ? error.message : "Payment failed. Please try again.");
         }
     };
 
@@ -73,8 +70,11 @@ export function WelcomePage() {
         void startCheckout(planKey);
     };
 
+    const handleLogin = () => navigate("/login");
+
     return (
         <div className="size-full">
+            <WelcomeNavbar onGetStarted={handleGetStarted} onLogin={handleLogin} />
             <WelcomeHero onGetStarted={handleGetStarted} />
             <FeaturesSection />
             <HowItWorks />

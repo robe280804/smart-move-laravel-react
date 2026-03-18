@@ -16,7 +16,7 @@ import { resetPasswordSchema } from "@/components/forms/authentication";
 import type { ResetPasswordFormData, ResetPasswordFormErrors } from "@/types/forms";
 import { resetPassword } from "@/services/authentication";
 import { ApiError } from "@/lib/apiError";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
 
 export const ResetPassword = () => {
     const navigate = useNavigate();
@@ -58,18 +58,11 @@ export const ResetPassword = () => {
         setErrors({});
         try {
             await resetPassword(token!, email!, result.data.password, result.data.password_confirmation);
-            toast.success("Password reset successfully. You can now sign in.", {
-                position: "top-center",
-                duration: 5000,
-            });
+            notify.success("Password reset successfully. You can now sign in.");
             navigate("/login");
         } catch (error: unknown) {
             if (error instanceof ApiError) {
-                toast.error(error.message, {
-                    position: "top-center",
-                    duration: 5000,
-                    style: { background: "#FF4D4F", color: "#fff" },
-                });
+                notify.error(error.message);
             }
         } finally {
             setIsLoading(false);

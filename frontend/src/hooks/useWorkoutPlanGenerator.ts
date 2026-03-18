@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
 import { FITNESS_GOALS, WORKOUT_TYPES } from "@/constants/const";
 import type { MessageType, WorkoutPlanData } from "@/types/workout";
 
@@ -65,11 +65,7 @@ export function useWorkoutPlanGenerator() {
 
     const handleGoals = () => {
         if (planData.fitnessGoals.length === 0) {
-            toast.info("Please select at least one goal", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#3B82F6", color: "#fff" },
-            });
+            notify.info("Please select at least one goal.");
             return;
         }
 
@@ -86,11 +82,7 @@ export function useWorkoutPlanGenerator() {
 
     const handleSchedule = () => {
         if (planData.availableDays.length === 0) {
-            toast.info("Please select at least one available day", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#3B82F6", color: "#fff" },
-            });
+            notify.info("Please select at least one available day.");
             return;
         }
 
@@ -126,11 +118,7 @@ export function useWorkoutPlanGenerator() {
 
     const handleEquipment = () => {
         if (planData.equipment.length === 0) {
-            toast.info("Please select at least one equipment option", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#3B82F6", color: "#fff" },
-            });
+            notify.info("Please select at least one equipment option.");
             return;
         }
 
@@ -146,11 +134,7 @@ export function useWorkoutPlanGenerator() {
 
     const handlePreferences = () => {
         if (planData.workoutType.length === 0) {
-            toast.info("Please select at least one workout type", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#3B82F6", color: "#fff" },
-            });
+            notify.info("Please select at least one workout type.");
             return;
         }
 

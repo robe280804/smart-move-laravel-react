@@ -16,7 +16,7 @@ import { loginSchema } from "@/components/forms/authentication";
 import type { LoginFormData, LoginFormErrors } from "@/types/forms";
 import { login } from "@/services/authentication";
 import { ApiError } from "@/lib/apiError";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const Login = () => {
@@ -68,13 +68,7 @@ export const Login = () => {
                         ) as LoginFormErrors
                     );
                 } else {
-                    toast.error(error.message, {
-                        position: "top-center", duration: 5000,
-                        style: {
-                            background: "#FF4D4F",
-                            color: "#fff",
-                        },
-                    });
+                    notify.error(error.message);
                     //setErrors({ email: error.message });
                 }
             }

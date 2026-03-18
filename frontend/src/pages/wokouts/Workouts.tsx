@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
 import {
     Calendar,
     Dumbbell,
@@ -78,17 +78,9 @@ export const Workouts = () => {
         setIsDeleting(true);
         try {
             await deletePlan(id);
-            toast.success("Workout plan deleted.", {
-                position: "top-center",
-                duration: 3000,
-                style: { background: "#22C55E", color: "#fff" },
-            });
+            notify.success("Workout plan deleted.");
         } catch {
-            toast.error("Failed to delete plan. Please try again.", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#FF4D4F", color: "#fff" },
-            });
+            notify.error("Failed to delete plan. Please try again.");
         } finally {
             setIsDeleting(false);
             setConfirmDeleteId(null);

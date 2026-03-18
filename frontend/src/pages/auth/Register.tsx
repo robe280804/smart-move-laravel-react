@@ -16,7 +16,7 @@ import { registerSchema } from "@/components/forms/authentication";
 import type { RegisterFormData, RegisterFormErrors } from "@/types/forms";
 import { register } from "@/services/authentication";
 import { ApiError } from "@/lib/apiError";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -77,13 +77,7 @@ export const Register = () => {
                         ) as RegisterFormErrors
                     );
                 } else {
-                    toast.error("Something went wrong", {
-                        position: "top-center", duration: 5000,
-                        style: {
-                            background: "#FF4D4F",
-                            color: "#fff",
-                        },
-                    });
+                    notify.error("Something went wrong. Please try again.");
                 }
             }
         } finally {

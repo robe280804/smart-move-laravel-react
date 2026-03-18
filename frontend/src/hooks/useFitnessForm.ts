@@ -5,7 +5,7 @@ import type { ExperienceLevel, Gender } from "@/constants/const";
 import { fitnessInfoSchema } from "@/components/forms/user";
 import type { FitnessInfoFormErrors } from "@/types/forms";
 import { ApiError } from "@/lib/apiError";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
 
 export type FitnessFormState = {
     height: string;
@@ -67,19 +67,11 @@ export function useFitnessForm() {
             if (!fitnessInfo?.id) {
                 const created = await storeFitnessInfo(result.data);
                 setFitnessInfo(created);
-                toast.success("Fitness profile created.", {
-                    position: "top-center",
-                    duration: 5000,
-                    style: { background: "#22C55E", color: "#fff" },
-                });
+                notify.success("Fitness profile created.");
             } else {
                 const updated = await updateFitnessInfo(fitnessInfo.id, result.data);
                 setFitnessInfo(updated);
-                toast.success("Fitness profile updated.", {
-                    position: "top-center",
-                    duration: 5000,
-                    style: { background: "#22C55E", color: "#fff" },
-                });
+                notify.success("Fitness profile updated.");
             }
         } catch (error: unknown) {
             if (error instanceof ApiError) {
@@ -90,11 +82,7 @@ export function useFitnessForm() {
                         ) as FitnessInfoFormErrors
                     );
                 } else {
-                    toast.error(error.message, {
-                        position: "top-center",
-                        duration: 5000,
-                        style: { background: "#FF4D4F", color: "#fff" },
-                    });
+                    notify.error(error.message);
                 }
             }
         } finally {

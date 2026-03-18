@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "sonner";
 import { getWorkoutPlan, updateBlockExercise } from "@/services/workoutPlan";
+import { notify } from "@/lib/toast";
 import { ApiError } from "@/lib/apiError";
 import type { WorkoutPlan } from "@/types/workout";
 
@@ -100,11 +100,7 @@ export const useWorkoutPlan = (id: number) => {
 
         const hasErrors = Object.values(fieldErrors).some((errs) => Object.keys(errs).length > 0);
         if (hasErrors) {
-            toast.error("Please fix the highlighted errors before saving.", {
-                position: "top-center",
-                duration: 4000,
-                style: { background: "#FF4D4F", color: "#fff" },
-            });
+            notify.error("Please fix the highlighted errors before saving.");
             return;
         }
 
@@ -146,11 +142,7 @@ export const useWorkoutPlan = (id: number) => {
 
         if (Object.keys(backendErrors).length > 0) {
             setFieldErrors((prev) => ({ ...prev, ...backendErrors }));
-            toast.error("Some values are invalid. Please fix the highlighted fields.", {
-                position: "top-center",
-                duration: 4000,
-                style: { background: "#FF4D4F", color: "#fff" },
-            });
+            notify.error("Some values are invalid. Please fix the highlighted fields.");
 
             const failedIds = new Set(Object.keys(backendErrors).map(Number));
             setChangedIds((prev) => {
@@ -163,11 +155,7 @@ export const useWorkoutPlan = (id: number) => {
         } else {
             setHasChanges(false);
             setChangedIds(new Set());
-            toast.success("Changes saved successfully.", {
-                position: "top-center",
-                duration: 3000,
-                style: { background: "#22C55E", color: "#fff" },
-            });
+            notify.success("Changes saved successfully.");
         }
     }, [plan, changedIds, fieldErrors]);
 

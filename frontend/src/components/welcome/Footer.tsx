@@ -1,10 +1,12 @@
 import { Dumbbell } from "lucide-react";
 import { FOOTER_LINKS } from "@/constants/welcome";
+import { AnimatedSection } from "./AnimatedSection";
 
 export function Footer() {
     return (
         <footer className="bg-slate-900 text-slate-400 py-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <AnimatedSection>
                 <div className="grid md:grid-cols-4 gap-10 mb-12">
                     {/* Brand */}
                     <div className="space-y-4">
@@ -65,6 +67,7 @@ export function Footer() {
                 <div className="border-t border-slate-800 pt-8 text-center text-sm">
                     <p>&copy; 2026 Smart Move AI. All rights reserved.</p>
                 </div>
+                </AnimatedSection>
             </div>
         </footer>
     );

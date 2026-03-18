@@ -3,7 +3,7 @@ import { changePassword } from "@/services/user";
 import { changePasswordSchema } from "@/components/forms/authentication";
 import type { ChangePasswordFormErrors } from "@/types/forms";
 import { ApiError } from "@/lib/apiError";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
 
 export type SecurityFormState = {
     current_password: string;
@@ -42,11 +42,7 @@ export function useSecurityForm() {
         try {
             await changePassword(result.data);
             setForm(initialForm);
-            toast.success("Password changed successfully.", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#22C55E", color: "#fff" },
-            });
+            notify.success("Password changed successfully.");
         } catch (error: unknown) {
             if (error instanceof ApiError) {
                 if (error.fieldErrors) {
@@ -56,11 +52,7 @@ export function useSecurityForm() {
                         ) as ChangePasswordFormErrors
                     );
                 } else {
-                    toast.error(error.message, {
-                        position: "top-center",
-                        duration: 5000,
-                        style: { background: "#FF4D4F", color: "#fff" },
-                    });
+                    notify.error(error.message);
                 }
             }
         } finally {

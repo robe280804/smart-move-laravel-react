@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getSubscriptionPlan, getBillingPortalUrl, redirectToStripeCheckout } from "@/services/payment";
 import type { PlanKey } from "@/constants/welcome";
-import { toast } from "sonner";
+import { notify } from "@/lib/toast";
 
 export function useSubscription() {
     const [currentPlan, setCurrentPlan] = useState<PlanKey | null>(null);
@@ -20,18 +20,10 @@ export function useSubscription() {
             const result = await redirectToStripeCheckout(planKey);
             if (result.swapped) {
                 setCurrentPlan(planKey);
-                toast.success("Plan updated successfully.", {
-                    position: "top-center",
-                    duration: 5000,
-                    style: { background: "#22C55E", color: "#fff" },
-                });
+                notify.success("Plan updated successfully.");
             }
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Something went wrong. Please try again.", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#FF4D4F", color: "#fff" },
-            });
+            notify.error(error instanceof Error ? error.message : "Something went wrong. Please try again.");
         } finally {
             setCheckoutLoadingPlan(null);
         }
@@ -43,11 +35,7 @@ export function useSubscription() {
             const url = await getBillingPortalUrl();
             window.location.href = url;
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Unable to open billing portal.", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#FF4D4F", color: "#fff" },
-            });
+            notify.error(error instanceof Error ? error.message : "Unable to open billing portal.");
         } finally {
             setIsPlanLoading(false);
         }
