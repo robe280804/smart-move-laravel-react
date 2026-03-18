@@ -49,4 +49,20 @@ class UserService
     {
         $this->userRepository->delete($user);
     }
+
+    /**
+     * Update the user's password and revoke all Sanctum tokens except the current session.
+     */
+    public function changePassword(User $user, string $newPassword, ?int $currentTokenId): void
+    {
+        $this->userRepository->update($user, ['password' => $newPassword]);
+
+        $query = $user->tokens();
+
+        if ($currentTokenId !== null) {
+            $query->where('id', '!=', $currentTokenId);
+        }
+
+        $query->delete();
+    }
 }

@@ -10,12 +10,14 @@ import { PersonalInfoTab } from "@/components/dashboard/profile/PersonalInfoTab"
 import { FitnessProfileTab } from "@/components/dashboard/profile/FitnessProfileTab";
 import { SubscriptionTab } from "@/components/dashboard/profile/SubscriptionTab";
 import { SecurityTab } from "@/components/dashboard/profile/SecurityTab";
+import { useSecurityForm } from "@/hooks/useSecurityForm";
 
 export function ProfileAndSettings() {
     const { user, logout } = useAuth();
     const { form: profileForm, setForm: setProfileForm, errors: profileErrors, isLoading: isProfileLoading, handleSubmit: handleProfileSubmit } = useProfileForm();
     const { fitnessInfo, form: fitnessForm, setForm: setFitnessForm, errors: fitnessErrors, isLoading: isFitnessLoading, handleSubmit: handleFitnessSubmit } = useFitnessForm();
     const { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling } = useSubscription();
+    const { form: securityForm, setForm: setSecurityForm, errors: securityErrors, isLoading: isSecurityLoading, handleSubmit: handleSecuritySubmit } = useSecurityForm();
     const [searchParams] = useSearchParams();
     const initialTab = searchParams.get("tab") ?? "personal";
 
@@ -75,7 +77,13 @@ export function ProfileAndSettings() {
                 </TabsContent>
 
                 <TabsContent value="security" className="mt-4 space-y-4">
-                    <SecurityTab />
+                    <SecurityTab
+                        form={securityForm}
+                        errors={securityErrors}
+                        isLoading={isSecurityLoading}
+                        onFormChange={setSecurityForm}
+                        onSubmit={handleSecuritySubmit}
+                    />
                 </TabsContent>
             </Tabs>
         </div>

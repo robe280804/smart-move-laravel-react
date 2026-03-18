@@ -66,6 +66,28 @@ export const resetPasswordSchema = z
     });
 
 
+// Change password (authenticated user)
+export const changePasswordSchema = z
+    .object({
+        current_password: z.string().min(1, "Current password is required."),
+
+        password: z
+            .string()
+            .min(8, "Password must be at least 8 characters.")
+            .max(64, "Password must not exceed 64 characters.")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+            ),
+
+        password_confirmation: z.string(),
+    })
+    .refine((data) => data.password === data.password_confirmation, {
+        message: "Passwords do not match.",
+        path: ["password_confirmation"],
+    });
+
+
 // Login
 export const loginSchema = z
     .object({

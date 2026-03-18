@@ -2,6 +2,7 @@ import { api } from "../lib/api"
 import type { User } from "../types/auth";
 import { handleApiError } from "../lib/handleApiError";
 import type { FitnessInfo, StoreFitnessInfoData, UpdateFitnessInfoData } from "@/types/user";
+import type { ChangePasswordFormData } from "@/types/forms";
 
 export const me = async (): Promise<User> => {
     try {
@@ -47,6 +48,14 @@ export const updateFitnessInfo = async (id: number, data: UpdateFitnessInfoData)
     try {
         const response = await api.put<{ data: FitnessInfo }>(`/fitness-info/${id}`, data);
         return response.data.data;
+    } catch (error) {
+        return handleApiError(error);
+    }
+}
+
+export const changePassword = async (data: ChangePasswordFormData): Promise<void> => {
+    try {
+        await api.post('/users/change-password', data);
     } catch (error) {
         return handleApiError(error);
     }

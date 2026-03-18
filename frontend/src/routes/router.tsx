@@ -13,6 +13,7 @@ import { ProfileAndSettings } from "../pages/ProfileAndSettings";
 import { WorkoutPlanGenerator } from "@/pages/WorkoutPlanGenerator";
 import { Workouts } from "@/pages/wokouts/Workouts";
 import { WorkoutPlanDetail } from "@/pages/wokouts/WorkoutPlanDetail";
+import { NotFound } from "@/pages/NotFound";
 
 export const router = createBrowserRouter([
     {
@@ -44,5 +45,9 @@ export const router = createBrowserRouter([
             }
         ]
 
+    },
+    {
+        path: "*",
+        element: <NotFound />,
     },
 ]);

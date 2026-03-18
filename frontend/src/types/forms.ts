@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "../components/forms/authentication";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "../components/forms/authentication";
 import { fitnessInfoSchema, userProfileShcema } from "../components/forms/user";
 
 export type RegisterFormData = z.infer<typeof registerSchema>;
@@ -13,6 +13,9 @@ export type ForgotPasswordFormErrors = Partial<Record<keyof ForgotPasswordFormDa
 
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 export type ResetPasswordFormErrors = Partial<Record<keyof ResetPasswordFormData, string>>;
+
+export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+export type ChangePasswordFormErrors = Partial<Record<keyof ChangePasswordFormData, string>>;
 
 export type FitnessInfoFormData = z.infer<typeof fitnessInfoSchema>;
 export type FitnessInfoFormErrors = Partial<Record<keyof FitnessInfoFormData, string>>;

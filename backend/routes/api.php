@@ -4,6 +4,7 @@ use App\Enums\TokenAbility;
 use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlockExerciseController;
+use App\Http\Controllers\Api\ChangePasswordController;
 use App\Http\Controllers\Api\FitnessInfoController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserController;
@@ -55,6 +56,8 @@ Route::prefix('v1')
 
             // Standard CRUD — general API limit
             Route::middleware('throttle:api')->group(function () {
+                Route::post('users/change-password', ChangePasswordController::class);
+
                 Route::apiResource('users', UserController::class);
                 Route::apiResource('fitness-info', FitnessInfoController::class);
 
