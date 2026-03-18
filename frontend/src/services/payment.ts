@@ -1,29 +1,47 @@
+import { api } from "@/lib/api";
+import { handleApiError } from "@/lib/handleApiError";
 import type { PlanKey } from "@/constants/welcome";
 
-// Payment Links created in the Stripe dashboard (Stripe test mode).
-// Go to: Stripe Dashboard → Payment Links → Create link → paste the URL below.
-// No backend or secret key needed for these to work.
-const PAYMENT_LINKS: Record<Exclude<PlanKey, "free">, string> = {
-    advanced: import.meta.env.VITE_STRIPE_PAYMENT_LINK_ADVANCED ?? "",
-    pro: import.meta.env.VITE_STRIPE_PAYMENT_LINK_PRO ?? "",
+export type CheckoutResult = { swapped: true } | { swapped: false; checkoutUrl: string };
+
+export const getSubscriptionPlan = async (): Promise<PlanKey> => {
+    try {
+        const response = await api.get<{ data: { plan: PlanKey } }>("/payments/plan");
+        return response.data.data.plan;
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
+export const getBillingPortalUrl = async (): Promise<string> => {
+    try {
+        const response = await api.post<{ data: { url: string } }>("/payments/billing-portal");
+        return response.data.data.url;
+    } catch (error) {
+        return handleApiError(error);
+    }
 };
 
 /**
- * Redirects the user to a Stripe-hosted Payment Link.
- * Frontend-only — no backend required.
- *
- * When the backend is ready, replace this with a call to POST /payments/checkout
- * which returns a Checkout Session URL, then redirect to that URL instead.
+ * Initiates a checkout for a paid plan.
+ * Returns { swapped: true } when the plan was upgraded/downgraded inline (no redirect needed).
+ * Returns { swapped: false, checkoutUrl } when a Stripe Checkout Session was created.
  */
-export function redirectToStripeCheckout(planKey: Exclude<PlanKey, "free">): void {
-    const url = PAYMENT_LINKS[planKey];
+export const redirectToStripeCheckout = async (planKey: Exclude<PlanKey, "free">): Promise<CheckoutResult> => {
+    try {
+        const response = await api.post<{ data: { checkout_url: string | null } }>("/payments/checkout", {
+            plan: planKey,
+        });
 
-    if (!url) {
-        throw new Error(
-            `No payment link configured for plan "${planKey}". ` +
-            `Set VITE_STRIPE_PAYMENT_LINK_${planKey.toUpperCase()} in your .env file.`,
-        );
+        const checkoutUrl = response.data.data.checkout_url;
+
+        if (checkoutUrl === null) {
+            return { swapped: true };
+        }
+
+        window.location.href = checkoutUrl;
+        return { swapped: false, checkoutUrl };
+    } catch (error) {
+        return handleApiError(error);
     }
-
-    window.location.href = url;
-}
+};

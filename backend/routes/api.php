@@ -4,6 +4,7 @@ use App\Enums\TokenAbility;
 use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FitnessInfoController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WorkoutPlanController;
 use App\Http\Middleware\SetBearerTokenFromCookie;
@@ -28,11 +29,11 @@ Route::prefix('v1')
 
         // REFRESH TOKEN Route
         Route::post('refresh-token', [AuthController::class, 'refreshToken'])
-            ->middleware([SetBearerTokenFromCookie::class, 'auth:sanctum', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value])
+            ->middleware([SetBearerTokenFromCookie::class, 'auth:sanctum', 'ability:'.TokenAbility::ISSUE_ACCESS_TOKEN->value])
             ->name('refresh');
 
         // PROTECTED Routes
-        Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value])->group(function () {
+        Route::middleware(['auth:sanctum', 'ability:'.TokenAbility::ACCESS_API->value])->group(function () {
             Route::post('auth/logout', [AuthController::class, 'logout']);
             Route::apiResource('users', UserController::class);
             Route::apiResource('fitness-info', FitnessInfoController::class);
@@ -42,5 +43,9 @@ Route::prefix('v1')
             Route::delete('workout-plans/{workoutPlan}', [WorkoutPlanController::class, 'destroy']);
 
             Route::post('agent/generate-workout', [AgentController::class, 'generateWorkout']);
+
+            Route::get('payments/plan', [PaymentController::class, 'currentPlan']);
+            Route::post('payments/checkout', [PaymentController::class, 'checkout']);
+            Route::post('payments/billing-portal', [PaymentController::class, 'billingPortal']);
         });
     });

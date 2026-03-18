@@ -15,6 +15,7 @@ export function WelcomePage() {
     const { isAuthenticated, isLoading } = useAuth();
     const navigate = useNavigate();
     const [pendingNavigation, setPendingNavigation] = useState(false);
+    const [pendingPlan, setPendingPlan] = useState<Exclude<PlanKey, "free"> | null>(null);
 
     // Resolve the navigation once the auth check completes
     useEffect(() => {
@@ -22,6 +23,33 @@ export function WelcomePage() {
             navigate(isAuthenticated ? "/dashboard" : "/register");
         }
     }, [isLoading, pendingNavigation, isAuthenticated, navigate]);
+
+    // Resolve the pending plan checkout once the auth check completes
+    useEffect(() => {
+        if (pendingPlan && !isLoading) {
+            if (!isAuthenticated) {
+                navigate("/register");
+            } else {
+                void startCheckout(pendingPlan);
+            }
+            setPendingPlan(null);
+        }
+    }, [isLoading, pendingPlan, isAuthenticated, navigate]);
+
+    const startCheckout = async (planKey: Exclude<PlanKey, "free">) => {
+        try {
+            const result = await redirectToStripeCheckout(planKey);
+            if (result.swapped) {
+                navigate("/dashboard");
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Payment failed. Please try again.", {
+                position: "top-center",
+                duration: 5000,
+                style: { background: "#FF4D4F", color: "#fff" },
+            });
+        }
+    };
 
     const handleGetStarted = () => {
         if (isLoading) {
@@ -33,15 +61,16 @@ export function WelcomePage() {
     };
 
     const handleSelectPlan = (planKey: Exclude<PlanKey, "free">) => {
-        try {
-            redirectToStripeCheckout(planKey);
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Payment failed. Please try again.", {
-                position: "top-center",
-                duration: 5000,
-                style: { background: "#FF4D4F", color: "#fff" },
-            });
+        if (isLoading) {
+            // Auth check still in flight — defer until it resolves
+            setPendingPlan(planKey);
+            return;
         }
+        if (!isAuthenticated) {
+            navigate("/register");
+            return;
+        }
+        void startCheckout(planKey);
     };
 
     return (
