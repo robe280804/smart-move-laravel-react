@@ -21,13 +21,13 @@ class AgentControllerTest extends TestCase
 
     /** @var array<string, mixed> */
     private array $validRequestData = [
-        'fitness_goals'          => ['muscle_gain'],
+        'fitness_goals' => ['muscle_gain'],
         'training_days_per_week' => 4,
-        'available_days'         => ['monday', 'tuesday', 'thursday', 'friday'],
-        'session_duration'       => 60,
-        'equipment'              => ['barbell', 'dumbbells'],
-        'gym_access'             => true,
-        'workout_type'           => ['strength'],
+        'available_days' => ['monday', 'tuesday', 'thursday', 'friday'],
+        'session_duration' => 60,
+        'equipment' => ['barbell', 'dumbbells'],
+        'gym_access' => true,
+        'workout_type' => ['strength'],
     ];
 
     private function actingAsUser(User $user): static
@@ -181,6 +181,11 @@ class AgentControllerTest extends TestCase
             ->with(\Mockery::type(User::class))
             ->andReturn($plan);
 
+        $this->mock(\App\Services\SubscriptionService::class)
+            ->shouldReceive('canGenerate')->andReturn(true)
+            ->shouldReceive('canSaveActivePlan')->andReturn(true)
+            ->shouldReceive('getPlan')->andReturn(\App\Enums\SubscriptionPlan::Free);
+
         $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData)
             ->assertStatus(202)
             ->assertJsonStructure([
@@ -204,11 +209,16 @@ class AgentControllerTest extends TestCase
             ->once()
             ->andReturn($plan);
 
+        $this->mock(\App\Services\SubscriptionService::class)
+            ->shouldReceive('canGenerate')->andReturn(true)
+            ->shouldReceive('canSaveActivePlan')->andReturn(true)
+            ->shouldReceive('getPlan')->andReturn(\App\Enums\SubscriptionPlan::Free);
+
         $data = array_merge($this->validRequestData, [
-            'injuries'            => 'left knee pain',
-            'sports'              => 'cycling',
+            'injuries' => 'left knee pain',
+            'sports' => 'cycling',
             'preferred_exercises' => 'squats, deadlifts',
-            'additional_notes'    => 'prefer morning sessions',
+            'additional_notes' => 'prefer morning sessions',
         ]);
 
         $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data)
@@ -230,6 +240,11 @@ class AgentControllerTest extends TestCase
             ->once()
             ->andReturn($plan);
 
+        $this->mock(\App\Services\SubscriptionService::class)
+            ->shouldReceive('canGenerate')->andReturn(true)
+            ->shouldReceive('canSaveActivePlan')->andReturn(true)
+            ->shouldReceive('getPlan')->andReturn(\App\Enums\SubscriptionPlan::Free);
+
         $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
 
         Queue::assertPushed(GenerateWorkoutPlanJob::class, function (GenerateWorkoutPlanJob $job) use ($user): bool {
@@ -240,6 +255,38 @@ class AgentControllerTest extends TestCase
                 && $state['schedule']['training_days_per_week'] === 4
                 && $state['equipment']['gym_access'] === true;
         });
+    }
+
+    public function test_returns_403_when_generation_limit_is_reached(): void
+    {
+        $user = User::factory()->create();
+
+        $this->mock(\App\Services\SubscriptionService::class)
+            ->shouldReceive('canGenerate')
+            ->once()
+            ->with(\Mockery::type(User::class))
+            ->andReturn(false);
+
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
+
+        $response->assertForbidden();
+    }
+
+    public function test_returns_403_when_active_plans_limit_is_reached(): void
+    {
+        $user = User::factory()->create();
+
+        $this->mock(\App\Services\SubscriptionService::class)
+            ->shouldReceive('canGenerate')
+            ->once()
+            ->andReturn(true)
+            ->shouldReceive('canSaveActivePlan')
+            ->once()
+            ->andReturn(false);
+
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
+
+        $response->assertForbidden();
     }
 
     /**

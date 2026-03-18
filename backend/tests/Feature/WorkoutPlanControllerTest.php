@@ -34,7 +34,7 @@ class WorkoutPlanControllerTest extends TestCase
         $exercise = Exercise::factory()->create();
         BlockExercise::factory()->create([
             'workout_block_id' => $block->id,
-            'exercise_id'      => $exercise->id,
+            'exercise_id' => $exercise->id,
         ]);
 
         return $plan;
@@ -125,6 +125,26 @@ class WorkoutPlanControllerTest extends TestCase
         $response = $this->getJson('/api/v1/workout-plans');
 
         $response->assertUnauthorized();
+    }
+
+    public function test_index_filters_plans_older_than_30_days_for_free_plan(): void
+    {
+        $user = User::factory()->create();
+
+        // Plan created 45 days ago (should be hidden for free plan)
+        WorkoutPlan::factory()->create([
+            'user_id' => $user->id,
+            'created_at' => now()->subDays(45),
+        ]);
+
+        // Plan created today (should be visible)
+        WorkoutPlan::factory()->create(['user_id' => $user->id]);
+
+        // Free plan user (no subscription) - SubscriptionService returns Free with 30-day limit
+        $response = $this->actingAsUser($user)->getJson('/api/v1/workout-plans');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data');
     }
 
     // ==================== SHOW ====================

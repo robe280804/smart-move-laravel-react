@@ -10,6 +10,9 @@ use App\Repositories\Contracts\WorkoutPlanRepositoryInterface;
 use App\Repositories\FitnessInfoRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\WorkoutPlanRepository;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
@@ -36,7 +39,41 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureRateLimiting();
         $this->overrideSanctumConfigurationToSupportRefreshToken();
+    }
+
+    private function configureRateLimiting(): void
+    {
+        // Public auth endpoints — keyed by IP to block brute-force attacks
+        RateLimiter::for('auth', function (Request $request): Limit {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Password reset flow — tighter because it triggers email delivery
+        RateLimiter::for('password-reset', function (Request $request): Limit {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        // Token refresh — called silently on every page load, but still bounded
+        RateLimiter::for('token-refresh', function (Request $request): Limit {
+            return Limit::perMinute(20)->by($request->user()?->id ?? $request->ip());
+        });
+
+        // General authenticated API — covers reads and standard mutations
+        RateLimiter::for('api', function (Request $request): Limit {
+            return Limit::perMinute(120)->by($request->user()?->id ?? $request->ip());
+        });
+
+        // AI workout generation — expensive LLM call, strictly limited per user
+        RateLimiter::for('ai-generation', function (Request $request): Limit {
+            return Limit::perMinute(5)->by($request->user()?->id ?? $request->ip());
+        });
+
+        // Payment endpoints — prevents checkout/billing-portal spam
+        RateLimiter::for('payments', function (Request $request): Limit {
+            return Limit::perMinute(10)->by($request->user()?->id ?? $request->ip());
+        });
     }
 
     private function overrideSanctumConfigurationToSupportRefreshToken(): void

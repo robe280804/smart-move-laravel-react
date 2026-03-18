@@ -29,7 +29,8 @@ class WorkoutPlanServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $plan = $this->service->createFromAgentResponse($this->validJson(), $user);
+        $pending = $this->service->createPending($user);
+        $plan = $this->service->fillFromAgentResponse($pending, $this->validJson());
 
         $this->assertDatabaseHas('workout_plans', [
             'user_id'                => $user->id,
@@ -48,7 +49,8 @@ class WorkoutPlanServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $plan = $this->service->createFromAgentResponse($this->validJsonWithTwoDays(), $user);
+        $pending = $this->service->createPending($user);
+        $plan = $this->service->fillFromAgentResponse($pending, $this->validJsonWithTwoDays());
 
         $this->assertSame(2, $plan->planDays->count());
 
@@ -60,7 +62,8 @@ class WorkoutPlanServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $plan = $this->service->createFromAgentResponse($this->validJson(), $user);
+        $pending = $this->service->createPending($user);
+        $plan = $this->service->fillFromAgentResponse($pending, $this->validJson());
 
         $blocks = $plan->planDays->first()->workoutBlocks;
 
@@ -74,7 +77,8 @@ class WorkoutPlanServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->service->createFromAgentResponse($this->validJson(), $user);
+        $pending = $this->service->createPending($user);
+        $this->service->fillFromAgentResponse($pending, $this->validJson());
 
         $this->assertDatabaseHas('exercises', [
             'category'     => 'Strength',
@@ -87,7 +91,8 @@ class WorkoutPlanServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->service->createFromAgentResponse($this->validJson(), $user);
+        $pending = $this->service->createPending($user);
+        $this->service->fillFromAgentResponse($pending, $this->validJson());
 
         $this->assertDatabaseHas('block_exercises', [
             'order'            => 1,
@@ -104,7 +109,8 @@ class WorkoutPlanServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $plan = $this->service->createFromAgentResponse($this->validJson(), $user);
+        $pending = $this->service->createPending($user);
+        $plan = $this->service->fillFromAgentResponse($pending, $this->validJson());
 
         $this->assertTrue($plan->relationLoaded('planDays'));
         $this->assertTrue($plan->planDays->first()->relationLoaded('workoutBlocks'));
@@ -119,7 +125,8 @@ class WorkoutPlanServiceTest extends TestCase
 
         $wrappedJson = "```json\n" . $this->validJson() . "\n```";
 
-        $plan = $this->service->createFromAgentResponse($wrappedJson, $user);
+        $pending = $this->service->createPending($user);
+        $plan = $this->service->fillFromAgentResponse($pending, $wrappedJson);
 
         $this->assertDatabaseHas('workout_plans', ['user_id' => $user->id]);
         $this->assertSame('muscle_gain', $plan->goal->value);
@@ -131,7 +138,8 @@ class WorkoutPlanServiceTest extends TestCase
 
         $wrappedJson = "```\n" . $this->validJson() . "\n```";
 
-        $this->service->createFromAgentResponse($wrappedJson, $user);
+        $pending = $this->service->createPending($user);
+        $this->service->fillFromAgentResponse($pending, $wrappedJson);
 
         $this->assertDatabaseHas('workout_plans', ['user_id' => $user->id]);
     }
@@ -145,7 +153,8 @@ class WorkoutPlanServiceTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Agent response is not valid JSON.');
 
-        $this->service->createFromAgentResponse('this is not json', $user);
+        $pending = $this->service->createPending($user);
+        $this->service->fillFromAgentResponse($pending, 'this is not json');
     }
 
     public function test_throws_exception_for_truncated_json(): void
@@ -155,7 +164,8 @@ class WorkoutPlanServiceTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Agent response is not valid JSON.');
 
-        $this->service->createFromAgentResponse('{"workout_plan":{"training_days_per_week":3,"goal":"muscle_gain"', $user);
+        $pending = $this->service->createPending($user);
+        $this->service->fillFromAgentResponse($pending, '{"workout_plan":{"training_days_per_week":3,"goal":"muscle_gain"');
     }
 
     public function test_throws_exception_when_workout_plan_key_is_missing(): void
@@ -165,7 +175,8 @@ class WorkoutPlanServiceTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Agent response is missing the "workout_plan" key.');
 
-        $this->service->createFromAgentResponse('{"data":{"foo":"bar"}}', $user);
+        $pending = $this->service->createPending($user);
+        $this->service->fillFromAgentResponse($pending, '{"data":{"foo":"bar"}}');
     }
 
     public function test_rolls_back_transaction_on_db_failure(): void
@@ -192,12 +203,15 @@ class WorkoutPlanServiceTest extends TestCase
             ],
         ]);
 
+        $pending = $this->service->createPending($user);
+
         try {
-            $this->service->createFromAgentResponse($invalidJson, $user);
+            $this->service->fillFromAgentResponse($pending, $invalidJson);
         } catch (\Throwable) {
         }
 
-        $this->assertDatabaseMissing('workout_plans', ['user_id' => $user->id]);
+        $this->assertDatabaseMissing('plan_days', ['workout_plan_id' => $pending->id]);
+        $this->assertDatabaseHas('workout_plans', ['id' => $pending->id, 'status' => 'pending']);
     }
 
     // ==================== HELPERS ====================

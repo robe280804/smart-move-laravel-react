@@ -18,4 +18,9 @@ class WorkoutPlanPolicy
     {
         return $user->id === $workoutPlan->user_id;
     }
+
+    public function updateExercise(User $user, WorkoutPlan $workoutPlan): bool
+    {
+        return $user->id === $workoutPlan->user_id;
+    }
 }

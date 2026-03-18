@@ -7,6 +7,7 @@ namespace App\Repositories;
 use App\Models\User;
 use App\Models\WorkoutPlan;
 use App\Repositories\Contracts\WorkoutPlanRepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
 class WorkoutPlanRepository implements WorkoutPlanRepositoryInterface
@@ -39,6 +40,16 @@ class WorkoutPlanRepository implements WorkoutPlanRepositoryInterface
     {
         return WorkoutPlan::query()
             ->where('user_id', $user->id)
+            ->with('planDays.workoutBlocks.blockExercises.exercise')
+            ->get();
+    }
+
+    /** @return Collection<int, WorkoutPlan> */
+    public function findByUserWithRelationsSince(User $user, ?Carbon $since): Collection
+    {
+        return WorkoutPlan::query()
+            ->where('user_id', $user->id)
+            ->when($since !== null, fn ($q) => $q->where('created_at', '>=', $since))
             ->with('planDays.workoutBlocks.blockExercises.exercise')
             ->get();
     }

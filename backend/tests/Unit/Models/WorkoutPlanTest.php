@@ -21,7 +21,7 @@ class WorkoutPlanTest extends TestCase
         $workoutPlan = new WorkoutPlan();
 
         $this->assertSame(
-            ['user_id', 'training_days_per_week', 'goal', 'experience_level', 'workout_type'],
+            ['user_id', 'status', 'training_days_per_week', 'goal', 'experience_level', 'workout_type'],
             $workoutPlan->getFillable()
         );
     }

@@ -53,5 +53,8 @@ export function useSubscription() {
         }
     };
 
-    return { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling };
+    const canExportPdf = currentPlan !== null && currentPlan !== "free";
+    const canEditExercises = currentPlan !== null && currentPlan !== "free";
+
+    return { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling, canExportPdf, canEditExercises };
 }

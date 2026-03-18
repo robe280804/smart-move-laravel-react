@@ -10,6 +10,10 @@ backend service
 - When adding a feature, identify all layers it touches (route → controller → request → service → repository → resource) before writing any code.
 - Prefer `Grep` and `Glob` over guessing file locations. Never assume a class exists without verifying it.
 
+Bash(where php 2>&1 || echo "not found")
+⎿  C:\Users\UTENTE\.config\herd\bin\php.bat
+● Bash(cd "C:\Users\UTENTE\IdeaProjects\laravel\smart-move-laravel-react \backend" && php.bat vendor/bin/pint app/Providers/AppServiceProvider.php routes/api.php 2>&1) ⎿  { "result": "pass" }
+
 ## Critical Rules
 
 All comments, commit messages, and documentation must be in English only.

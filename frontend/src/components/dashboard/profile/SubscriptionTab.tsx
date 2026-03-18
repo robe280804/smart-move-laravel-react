@@ -64,10 +64,10 @@ export function SubscriptionTab({ currentPlan, isPlanLoading, checkoutLoadingPla
                     const buttonLabel = isActive
                         ? "Current Plan"
                         : isProcessing
-                          ? "Processing..."
-                          : currentPlan !== "free"
-                            ? `Switch to ${tier.name}`
-                            : `Upgrade to ${tier.name}`;
+                            ? "Processing..."
+                            : currentPlan !== "free"
+                                ? `Switch to ${tier.name}`
+                                : `Upgrade to ${tier.name}`;
 
                     return (
                         <Card

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\WorkoutPlanResource;
 use App\Http\Responses\ApiSuccess;
 use App\Models\WorkoutPlan;
+use App\Services\SubscriptionService;
 use App\Services\WorkoutPlanService;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
@@ -17,11 +18,13 @@ class WorkoutPlanController extends Controller
 {
     public function __construct(
         private readonly WorkoutPlanService $workoutPlanService,
+        private readonly SubscriptionService $subscriptionService,
     ) {}
 
     public function index(Request $request): Responsable
     {
-        $plans = $this->workoutPlanService->getAll($request->user());
+        $since = $this->subscriptionService->historyDateLimit($request->user());
+        $plans = $this->workoutPlanService->getAll($request->user(), $since);
 
         return new ApiSuccess(
             data: WorkoutPlanResource::collection($plans),

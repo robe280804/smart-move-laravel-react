@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Calendar, Clock, TrendingUp, ChevronDown, ChevronRight } from "lucide-react";
 import { DAYS_OF_WEEK } from "@/constants/const";
 import type { PlanDay } from "@/types/workout";
+import type { ExerciseField, ExerciseFieldErrors } from "@/hooks/useWorkoutPlan";
 import { ExerciseCard } from "./ExerciseCard";
 
 // day_of_week: 1 = Monday … 7 = Sunday  →  DAYS_OF_WEEK is 0-indexed from Monday
@@ -47,7 +48,7 @@ type UpdateFn = (
     dayId: number,
     blockId: number,
     exerciseId: number,
-    field: "sets" | "reps" | "weight" | "duration_seconds" | "rest_seconds" | "rpe",
+    field: ExerciseField,
     value: string,
 ) => void;
 
@@ -56,9 +57,11 @@ type Props = {
     isExpanded: boolean;
     onToggle: () => void;
     onUpdate: UpdateFn;
+    canEdit: boolean;
+    fieldErrors: Record<number, ExerciseFieldErrors>;
 };
 
-export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate }: Props) => {
+export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate, canEdit, fieldErrors }: Props) => {
     const [openBlocks, setOpenBlocks] = useState<Set<number>>(() =>
         new Set(day.workout_blocks.map((b) => b.id)),
     );
@@ -166,6 +169,8 @@ export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate }: Pro
                                                     BLOCK_CARD_ACCENT[block.name] ??
                                                     "border-l-slate-300"
                                                 }
+                                                canEdit={canEdit}
+                                                errors={fieldErrors[blockExercise.id] ?? {}}
                                                 onUpdate={onUpdate}
                                             />
                                         ))}

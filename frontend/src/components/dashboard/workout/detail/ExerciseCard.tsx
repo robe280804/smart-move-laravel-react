@@ -1,5 +1,6 @@
-import { Info, Repeat, TrendingUp, Weight, Timer, Clock } from "lucide-react";
+import { Info, Repeat, TrendingUp, Weight, Timer, Clock, Lock } from "lucide-react";
 import type { BlockExercise } from "@/types/workout";
+import type { ExerciseField, ExerciseFieldErrors } from "@/hooks/useWorkoutPlan";
 
 type Props = {
     exercise: BlockExercise;
@@ -7,20 +8,57 @@ type Props = {
     blockId: number;
     blockName: string;
     accentClass: string;
-    onUpdate: (
-        dayId: number,
-        blockId: number,
-        exerciseId: number,
-        field: "sets" | "reps" | "weight" | "duration_seconds" | "rest_seconds" | "rpe",
-        value: string,
-    ) => void;
+    canEdit: boolean;
+    errors: ExerciseFieldErrors;
+    onUpdate: (dayId: number, blockId: number, exerciseId: number, field: ExerciseField, value: string) => void;
 };
 
 const inputClass =
     "w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm";
+const inputErrorClass =
+    "w-full px-3 py-2 border border-red-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 text-sm bg-red-50";
+const inputReadonlyClass =
+    "w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 cursor-not-allowed";
 
-export const ExerciseCard = ({ exercise, dayId, blockId, accentClass, onUpdate }: Props) => {
+type FieldInputProps = {
+    field: ExerciseField;
+    label: string;
+    icon: React.ReactNode;
+    value: string | number | null;
+    min: number;
+    max: number;
+    step?: string;
+    canEdit: boolean;
+    error?: string;
+    onUpdate: (field: ExerciseField, value: string) => void;
+};
+
+const FieldInput = ({ field, label, icon, value, min, max, step, canEdit, error, onUpdate }: FieldInputProps) => (
+    <div>
+        <label className="text-xs text-slate-600 mb-1 flex items-center gap-1">
+            {icon}
+            {label}
+        </label>
+        <input
+            type="number"
+            min={min}
+            max={max}
+            step={step}
+            value={value ?? ""}
+            readOnly={!canEdit}
+            onChange={(e) => canEdit && onUpdate(field, e.target.value)}
+            className={!canEdit ? inputReadonlyClass : error ? inputErrorClass : inputClass}
+        />
+        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+    </div>
+);
+
+export const ExerciseCard = ({ exercise, dayId, blockId, accentClass, canEdit, errors, onUpdate }: Props) => {
     const ex = exercise.exercise;
+
+    const handleUpdate = (field: ExerciseField, value: string) => {
+        onUpdate(dayId, blockId, exercise.id, field, value);
+    };
 
     return (
         <div className={`bg-white rounded-lg border border-slate-200 border-l-4 ${accentClass} p-4`}>
@@ -44,131 +82,101 @@ export const ExerciseCard = ({ exercise, dayId, blockId, accentClass, onUpdate }
                 </div>
             </div>
 
-            {/* Editable parameters */}
+            {/* Parameters */}
             <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                 {exercise.sets !== null && (
-                    <div>
-                        <label className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                            <Repeat className="w-3 h-3" />
-                            Sets
-                        </label>
-                        <input
-                            type="number"
-                            min="0"
-                            value={exercise.sets ?? ""}
-                            onChange={(e) =>
-                                onUpdate(dayId, blockId, exercise.id, "sets", e.target.value)
-                            }
-                            className={inputClass}
-                        />
-                    </div>
+                    <FieldInput
+                        field="sets"
+                        label="Sets"
+                        icon={<Repeat className="w-3 h-3" />}
+                        value={exercise.sets}
+                        min={0}
+                        max={100}
+                        canEdit={canEdit}
+                        error={errors.sets}
+                        onUpdate={handleUpdate}
+                    />
                 )}
 
                 {exercise.reps !== null && (
-                    <div>
-                        <label className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" />
-                            Reps
-                        </label>
-                        <input
-                            type="number"
-                            min="0"
-                            value={exercise.reps ?? ""}
-                            onChange={(e) =>
-                                onUpdate(dayId, blockId, exercise.id, "reps", e.target.value)
-                            }
-                            className={inputClass}
-                        />
-                    </div>
+                    <FieldInput
+                        field="reps"
+                        label="Reps"
+                        icon={<TrendingUp className="w-3 h-3" />}
+                        value={exercise.reps}
+                        min={0}
+                        max={100}
+                        canEdit={canEdit}
+                        error={errors.reps}
+                        onUpdate={handleUpdate}
+                    />
                 )}
 
                 {exercise.weight !== null && (
-                    <div>
-                        <label className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                            <Weight className="w-3 h-3" />
-                            Weight (kg)
-                        </label>
-                        <input
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={exercise.weight ?? ""}
-                            onChange={(e) =>
-                                onUpdate(dayId, blockId, exercise.id, "weight", e.target.value)
-                            }
-                            className={inputClass}
-                        />
-                    </div>
+                    <FieldInput
+                        field="weight"
+                        label="Weight (kg)"
+                        icon={<Weight className="w-3 h-3" />}
+                        value={exercise.weight}
+                        min={0}
+                        max={800}
+                        step="0.5"
+                        canEdit={canEdit}
+                        error={errors.weight}
+                        onUpdate={handleUpdate}
+                    />
                 )}
 
                 {exercise.duration_seconds !== null && (
-                    <div>
-                        <label className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                            <Timer className="w-3 h-3" />
-                            Duration (s)
-                        </label>
-                        <input
-                            type="number"
-                            min="0"
-                            value={exercise.duration_seconds ?? ""}
-                            onChange={(e) =>
-                                onUpdate(
-                                    dayId,
-                                    blockId,
-                                    exercise.id,
-                                    "duration_seconds",
-                                    e.target.value,
-                                )
-                            }
-                            className={inputClass}
-                        />
-                    </div>
+                    <FieldInput
+                        field="duration_seconds"
+                        label="Duration (s)"
+                        icon={<Timer className="w-3 h-3" />}
+                        value={exercise.duration_seconds}
+                        min={0}
+                        max={3600}
+                        canEdit={canEdit}
+                        error={errors.duration_seconds}
+                        onUpdate={handleUpdate}
+                    />
                 )}
 
                 {exercise.rest_seconds !== null && (
-                    <div>
-                        <label className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            Rest (s)
-                        </label>
-                        <input
-                            type="number"
-                            min="0"
-                            value={exercise.rest_seconds ?? ""}
-                            onChange={(e) =>
-                                onUpdate(
-                                    dayId,
-                                    blockId,
-                                    exercise.id,
-                                    "rest_seconds",
-                                    e.target.value,
-                                )
-                            }
-                            className={inputClass}
-                        />
-                    </div>
+                    <FieldInput
+                        field="rest_seconds"
+                        label="Rest (s)"
+                        icon={<Clock className="w-3 h-3" />}
+                        value={exercise.rest_seconds}
+                        min={0}
+                        max={600}
+                        canEdit={canEdit}
+                        error={errors.rest_seconds}
+                        onUpdate={handleUpdate}
+                    />
                 )}
 
                 {exercise.rpe !== null && (
-                    <div>
-                        <label className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" />
-                            RPE
-                        </label>
-                        <input
-                            type="number"
-                            min="0"
-                            max="10"
-                            step="0.5"
-                            value={exercise.rpe ?? ""}
-                            onChange={(e) =>
-                                onUpdate(dayId, blockId, exercise.id, "rpe", e.target.value)
-                            }
-                            className={inputClass}
-                        />
-                    </div>
+                    <FieldInput
+                        field="rpe"
+                        label="RPE"
+                        icon={<TrendingUp className="w-3 h-3" />}
+                        value={exercise.rpe}
+                        min={0}
+                        max={10}
+                        step="0.5"
+                        canEdit={canEdit}
+                        error={errors.rpe}
+                        onUpdate={handleUpdate}
+                    />
                 )}
             </div>
+
+            {!canEdit && (
+                <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <Lock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Upgrade to Advanced or Pro to edit exercises.</span>
+                </div>
+            )}
 
             {/* Instructions */}
             {ex.instructions && (

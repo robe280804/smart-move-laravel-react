@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router";
-import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy, Download } from "lucide-react";
+import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FITNESS_GOALS, WORKOUT_TYPES, EXPERIENCE_LEVELS, DAYS_OF_WEEK } from "@/constants/const";
 import { useWorkoutPlan } from "@/hooks/useWorkoutPlan";
-import { PlanOverviewCards } from "@/components/dashboard/workout/detail/PlanOverviewCards";
+import { useSubscription } from "@/hooks/useSubscription";
 import { WorkoutDayAccordion } from "@/components/dashboard/workout/detail/WorkoutDayAccordion";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { WorkoutPlanPdf } from "@/components/dashboard/workout/detail/WorkoutPlanPdf";
@@ -41,7 +41,8 @@ const DetailSkeleton = () => (
 export const WorkoutPlanDetail = () => {
     const { id } = useParams<{ id: string }>();
     const planId = Number(id);
-    const { plan, isLoading, error, hasChanges, updateExercise, refetch } = useWorkoutPlan(planId);
+    const { plan, isLoading, error, hasChanges, isSaving, fieldErrors, hasValidationErrors, updateExercise, saveChanges, refetch } = useWorkoutPlan(planId);
+    const { canExportPdf, canEditExercises } = useSubscription();
     const [expandedDays, setExpandedDays] = useState<number[]>([]);
 
     const toggleDay = (dayId: number) =>
@@ -126,28 +127,42 @@ export const WorkoutPlanDetail = () => {
                         </div>
 
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            <PDFDownloadLink
-                                document={<WorkoutPlanPdf plan={plan} />}
-                                fileName={`workout-plan-${plan.id}.pdf`}
-                            >
-                                {({ loading }) => (
-                                    <Button
-                                        variant="outline"
-                                        className="border-white/20 text-white bg-white/10 hover:bg-white/20 transition-colors"
-                                        disabled={loading}
-                                    >
-                                        <Download className="w-4 h-4 mr-2" />
-                                        {loading ? "Generating…" : "Export PDF"}
-                                    </Button>
-                                )}
-                            </PDFDownloadLink>
+                            {canExportPdf ? (
+                                <PDFDownloadLink
+                                    document={<WorkoutPlanPdf plan={plan} />}
+                                    fileName={`workout-plan-${plan.id}.pdf`}
+                                >
+                                    {({ loading }) => (
+                                        <Button
+                                            variant="outline"
+                                            className="border-white/20 text-white bg-white/10 hover:bg-white/20 transition-colors"
+                                            disabled={loading}
+                                        >
+                                            <Download className="w-4 h-4 mr-2" />
+                                            {loading ? "Generating…" : "Export PDF"}
+                                        </Button>
+                                    )}
+                                </PDFDownloadLink>
+                            ) : (
+                                <Button
+                                    variant="outline"
+                                    className="border-white/20 text-slate-400 bg-white/5 cursor-not-allowed"
+                                    disabled
+                                    title="Upgrade to Advanced or Pro to export PDF"
+                                >
+                                    <Lock className="w-4 h-4 mr-2" />
+                                    Export PDF
+                                </Button>
+                            )}
 
                             <Button
-                                disabled={!hasChanges}
+                                disabled={!hasChanges || isSaving || !canEditExercises || hasValidationErrors}
+                                onClick={saveChanges}
                                 className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-400 shadow-lg shadow-indigo-900/50"
+                                title={hasValidationErrors ? "Fix validation errors before saving" : undefined}
                             >
                                 <Save className="w-4 h-4" />
-                                {hasChanges ? "Save Changes" : "No Changes"}
+                                {isSaving ? "Saving…" : hasChanges ? "Save Changes" : "No Changes"}
                             </Button>
                         </div>
                     </div>
@@ -199,6 +214,8 @@ export const WorkoutPlanDetail = () => {
                         isExpanded={expandedDays.includes(day.id)}
                         onToggle={() => toggleDay(day.id)}
                         onUpdate={updateExercise}
+                        canEdit={canEditExercises}
+                        fieldErrors={fieldErrors}
                     />
                 ))}
             </div>

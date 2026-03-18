@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreditCard, Dumbbell, Shield, User } from "lucide-react";
+import { useSearchParams } from "react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileForm } from "@/hooks/useProfileForm";
 import { useFitnessForm } from "@/hooks/useFitnessForm";
@@ -15,12 +16,14 @@ export function ProfileAndSettings() {
     const { form: profileForm, setForm: setProfileForm, errors: profileErrors, isLoading: isProfileLoading, handleSubmit: handleProfileSubmit } = useProfileForm();
     const { fitnessInfo, form: fitnessForm, setForm: setFitnessForm, errors: fitnessErrors, isLoading: isFitnessLoading, handleSubmit: handleFitnessSubmit } = useFitnessForm();
     const { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling } = useSubscription();
+    const [searchParams] = useSearchParams();
+    const initialTab = searchParams.get("tab") ?? "personal";
 
     return (
         <div className="space-y-6">
             <ProfileHeroBanner user={user} fitnessInfo={fitnessInfo} onLogout={logout} />
 
-            <Tabs defaultValue="personal">
+            <Tabs defaultValue={initialTab}>
                 <TabsList className="grid grid-cols-4 w-full">
                     <TabsTrigger value="personal" className="flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5" />
