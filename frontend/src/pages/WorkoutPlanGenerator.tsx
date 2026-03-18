@@ -33,11 +33,16 @@ export function WorkoutPlanGenerator() {
 
     return (
         <div className="space-y-6">
-            <WorkoutProgressBar step={step} />
+            <div className="animate-fade-in-up">
+                <WorkoutProgressBar step={step} />
+            </div>
 
-            <div className="grid lg:grid-cols-3 gap-6">
+            <div
+                className="grid lg:grid-cols-3 gap-6 animate-fade-in-up"
+                style={{ animationDelay: "75ms" }}
+            >
                 {/* Chat Area */}
-                <Card className="lg:col-span-2 flex flex-col">
+                <Card className="lg:col-span-2 flex flex-col transition-shadow duration-200 hover:shadow-md">
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">

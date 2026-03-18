@@ -90,7 +90,7 @@ export const Workouts = () => {
     return (
         <div>
             {/* Header */}
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 p-6 mb-8">
+            <div className="animate-fade-in-up relative rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 p-6 mb-8">
                 {/* Decorative blobs */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
                 <div className="absolute bottom-0 left-1/3 w-40 h-40 bg-blue-500/10 rounded-full translate-y-1/2 pointer-events-none" />
@@ -163,7 +163,10 @@ export const Workouts = () => {
 
             {/* Loading state */}
             {isLoading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in-up"
+                    style={{ animationDelay: "75ms" }}
+                >
                     {Array.from({ length: 6 }).map((_, i) => (
                         <PlanCardSkeleton key={i} />
                     ))}
@@ -172,7 +175,10 @@ export const Workouts = () => {
 
             {/* Plans grid */}
             {!isLoading && !error && plans.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in-up"
+                    style={{ animationDelay: "75ms" }}
+                >
                     {plans.map((plan, index) => {
                         const isConfirming = confirmDeleteId === plan.id;
                         const gradient = GOAL_GRADIENT[plan.goal] ?? "from-slate-500 to-slate-600";
@@ -183,7 +189,7 @@ export const Workouts = () => {
                         return (
                             <div
                                 key={plan.id}
-                                className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
+                                className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md hover:border-slate-300 transition-all duration-200 flex flex-col"
                             >
                                 {/* Colored top bar */}
                                 <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
@@ -319,7 +325,10 @@ export const Workouts = () => {
 
             {/* Empty state */}
             {!isLoading && !error && plans.length === 0 && (
-                <div className="text-center py-20">
+                <div
+                    className="text-center py-20 animate-fade-in-up"
+                    style={{ animationDelay: "75ms" }}
+                >
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <TrendingUp className="w-8 h-8 text-slate-400" />
                     </div>
