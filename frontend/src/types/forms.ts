@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "../components/forms/authentication";
 import { fitnessInfoSchema, userProfileShcema } from "../components/forms/user";
+import { feedbackSchema } from "../components/forms/feedbackSchema";
 
 export type RegisterFormData = z.infer<typeof registerSchema>;
 export type RegisterFormErrors = Partial<Record<keyof RegisterFormData, string>>;
@@ -22,5 +23,8 @@ export type FitnessInfoFormErrors = Partial<Record<keyof FitnessInfoFormData, st
 
 export type UserProfileFormData = z.infer<typeof userProfileShcema>;
 export type UserProfileFormErrors = Partial<Record<keyof UserProfileFormData, string>>;
+
+export type FeedbackFormData = z.infer<typeof feedbackSchema>;
+export type FeedbackFormErrors = Partial<Record<keyof FeedbackFormData, string>>;
 
 

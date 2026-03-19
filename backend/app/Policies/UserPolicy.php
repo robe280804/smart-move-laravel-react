@@ -9,6 +9,14 @@ use App\Models\User;
 class UserPolicy
 {
     /**
+     * Only admins can list all users.
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->hasRole('admin');
+    }
+
+    /**
      * Users can only view their own profile.
      */
     public function view(User $user, User $model): bool

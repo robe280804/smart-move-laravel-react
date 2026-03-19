@@ -13,6 +13,11 @@ class UserRepository implements UserRepositoryInterface
         return User::query()->latest()->paginate($perPage);
     }
 
+    public function paginateWithSubscriptions(int $perPage = 15): LengthAwarePaginator
+    {
+        return User::query()->with('subscriptions')->latest()->paginate($perPage);
+    }
+
     public function findById(int $id): ?User
     {
         return User::query()->find($id);

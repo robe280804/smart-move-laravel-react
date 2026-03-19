@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWorkoutPlans } from "@/hooks/useWorkoutPlans";
 import { useSubscription } from "@/hooks/useSubscription";
+import { AdminDashboard } from "@/pages/admin/AdminDashboard";
 import { FITNESS_GOALS, WORKOUT_TYPES } from "@/constants/const";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { GoalDistribution } from "@/components/dashboard/GoalDistribution";
@@ -72,9 +73,11 @@ const getRelativeTime = (dateStr: string) => {
 };
 
 export const Dashboard = () => {
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const { plans, isLoading: plansLoading } = useWorkoutPlans();
     const { currentPlan } = useSubscription();
+
+    if (isAdmin) return <AdminDashboard />;
 
     if (plansLoading) return <DashboardSkeleton />;
 

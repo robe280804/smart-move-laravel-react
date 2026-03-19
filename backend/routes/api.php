@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlockExerciseController;
 use App\Http\Controllers\Api\ChangePasswordController;
+use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\FitnessInfoController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserController;
@@ -55,9 +56,14 @@ Route::prefix('v1')
             Route::post('auth/logout', [AuthController::class, 'logout'])
                 ->middleware('throttle:api');
 
+            Route::post('auth/email/resend', [AuthController::class, 'resendVerificationEmail'])
+                ->middleware('throttle:email-resend');
+
             // Standard CRUD — general API limit
             Route::middleware('throttle:api')->group(function () {
                 Route::post('users/change-password', ChangePasswordController::class);
+
+                Route::post('feedbacks', [FeedbackController::class, 'store']);
 
                 Route::apiResource('users', UserController::class)->only(['show', 'update', 'destroy']);
                 Route::apiResource('fitness-info', FitnessInfoController::class);
@@ -72,15 +78,21 @@ Route::prefix('v1')
                 );
             });
 
-            // AI workout generation — tightest limit (expensive LLM call)
+            // AI workout generation — requires verified email + tightest limit (expensive LLM call)
             Route::post('agent/generate-workout', [AgentController::class, 'generateWorkout'])
-                ->middleware('throttle:ai-generation');
+                ->middleware(['verified', 'throttle:ai-generation']);
 
-            // Payment endpoints — prevent checkout/billing-portal spam
-            Route::middleware('throttle:payments')->group(function () {
+            // Payment endpoints — requires verified email + prevent checkout/billing-portal spam
+            Route::middleware(['verified', 'throttle:payments'])->group(function () {
                 Route::get('payments/plan', [PaymentController::class, 'currentPlan']);
                 Route::post('payments/checkout', [PaymentController::class, 'checkout']);
                 Route::post('payments/billing-portal', [PaymentController::class, 'billingPortal']);
+            });
+
+            // Admin-only endpoints
+            Route::middleware(['role:admin', 'throttle:api'])->prefix('admin')->group(function () {
+                Route::get('users', [UserController::class, 'index']);
+                Route::get('feedbacks', [FeedbackController::class, 'index']);
             });
         });
     });

@@ -11,12 +11,23 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class UserController extends Controller
 {
     public function __construct(
         private readonly UserService $userService,
     ) {}
+
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $this->authorize('viewAny', User::class);
+
+        $perPage = (int) $request->query('per_page', 15);
+
+        return UserResource::collection($this->userService->paginateWithSubscriptions($perPage));
+    }
 
     public function show(User $user): UserResource
     {

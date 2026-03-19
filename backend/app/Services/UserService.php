@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Dto\UserDto;
+use App\Enums\Role;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -18,6 +19,11 @@ class UserService
         return $this->userRepository->paginate($perPage);
     }
 
+    public function paginateWithSubscriptions(int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->userRepository->paginateWithSubscriptions($perPage);
+    }
+
     public function findById(int $id): ?User
     {
         return $this->userRepository->findById($id);
@@ -25,12 +31,16 @@ class UserService
 
     public function create(UserDto $dto): User
     {
-        return $this->userRepository->create([
+        $user = $this->userRepository->create([
             'name' => $dto->name,
             'surname' => $dto->surname,
             'email' => $dto->email,
             'password' => $dto->password,
         ]);
+
+        $user->assignRole(Role::User->value);
+
+        return $user;
     }
 
     public function update(User $user, UserDto $dto): User

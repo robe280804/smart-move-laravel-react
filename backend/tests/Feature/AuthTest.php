@@ -6,9 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\TokenAbility;
 use App\Events\UserRegistration;
-use App\Http\Middleware\SetBearerTokenFromCookie;
 use App\Models\User;
-use App\Services\AuthService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -16,7 +14,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\PersonalAccessToken;
-use Mockery\Mock;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -51,7 +48,7 @@ class AuthTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonStructure([
                 'data' => [
-                    'user' => ['id', 'name', 'surname', 'email', 'created_at', 'updated_at'],
+                    'user' => ['id', 'name', 'surname', 'email', 'role', 'created_at', 'updated_at'],
                 ],
                 'meta_data' => ['accessToken', 'accessTokenExpiresAt'],
             ])

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\TokenAbility;
+use App\Events\UserRegistration;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +54,11 @@ class AuthService
         if ($status !== Password::RESET_LINK_SENT) {
             Log::error('Send reset password link failed', ['email' => $email]);
         }
+    }
+
+    public function resendVerificationEmail(User $user): void
+    {
+        event(new UserRegistration($user));
     }
 
     public function resetPassword(array $credentials): string

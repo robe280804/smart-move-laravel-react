@@ -1,8 +1,13 @@
+export type UserRole = "user" | "admin";
+
 export interface User {
     id: number;
     name: string;
     surname: string;
     email: string;
+    role: UserRole | null;
+    email_verified?: boolean;
+    plan?: "free" | "advanced" | "pro";
 }
 
 export interface AccessToken {
@@ -14,6 +19,7 @@ export interface AuthContextValue {
     user: User | null;
     accessToken: AccessToken | null;
     isAuthenticated: boolean;
+    isAdmin: boolean;
     isLoading: boolean;
     setSession: (response: AuthResponse) => void;
     updateUser: (user: User) => void;

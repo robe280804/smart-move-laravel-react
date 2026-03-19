@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Enums\TokenAbility;
 use App\Neuron\Nodes\CollectUserInfosNode;
+use App\Repositories\Contracts\FeedbackRepositoryInterface;
 use App\Repositories\Contracts\FitnessInfoRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Contracts\WorkoutPlanRepositoryInterface;
+use App\Repositories\FeedbackRepository;
 use App\Repositories\FitnessInfoRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\WorkoutPlanRepository;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(FitnessInfoRepositoryInterface::class, FitnessInfoRepository::class);
         $this->app->bind(WorkoutPlanRepositoryInterface::class, WorkoutPlanRepository::class);
+        $this->app->bind(FeedbackRepositoryInterface::class, FeedbackRepository::class);
 
         $this->app->bind(CollectUserInfosNode::class, function ($app) {
             return new CollectUserInfosNode(
@@ -73,6 +76,11 @@ class AppServiceProvider extends ServiceProvider
         // Payment endpoints — prevents checkout/billing-portal spam
         RateLimiter::for('payments', function (Request $request): Limit {
             return Limit::perMinute(10)->by($request->user()?->id ?? $request->ip());
+        });
+
+        // Email resend — prevents abuse of verification email delivery
+        RateLimiter::for('email-resend', function (Request $request): Limit {
+            return Limit::perMinute(3)->by($request->user()?->id ?? $request->ip());
         });
     }
 

@@ -15,7 +15,23 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'surname' => $this->surname,
             'email' => $this->email,
-            'email_verified_at' => $this->email_verified_at,
+            'role' => $this->getRoleNames()->first(),
+            'email_verified' => $this->email_verified_at !== null,
+            'plan' => $this->whenLoaded('subscriptions', function (): string {
+                $active = $this->subscriptions
+                    ->whereIn('stripe_status', ['active', 'trialing'])
+                    ->first();
+
+                if ($active === null) {
+                    return 'free';
+                }
+
+                return match ($active->stripe_price) {
+                    config('plans.stripe_prices.advanced') => 'advanced',
+                    config('plans.stripe_prices.pro') => 'pro',
+                    default => 'free',
+                };
+            }),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

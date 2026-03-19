@@ -1,7 +1,12 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CheckCircle, XCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { resendVerificationEmail } from "@/services/authentication";
+import { notify } from "@/lib/toast";
 import type { SecurityFormState } from "@/hooks/useSecurityForm";
 import type { ChangePasswordFormErrors } from "@/types/forms";
 
@@ -14,8 +19,23 @@ type Props = {
 };
 
 export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }: Props) {
+    const { user } = useAuth();
+    const [isResending, setIsResending] = useState(false);
+
     const set = (field: keyof SecurityFormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
         onFormChange({ ...form, [field]: e.target.value });
+
+    const handleResend = async () => {
+        setIsResending(true);
+        try {
+            await resendVerificationEmail();
+            notify.success("Verification email sent! Check your inbox.");
+        } catch {
+            notify.error("Failed to send. Please try again later.");
+        } finally {
+            setIsResending(false);
+        }
+    };
 
     return (
         <>
@@ -82,6 +102,39 @@ export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }:
                             </Button>
                         </div>
                     </form>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Email Verification</CardTitle>
+                    <CardDescription>Manage your email verification status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                            {user?.email_verified ? (
+                                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                            ) : (
+                                <XCircle className="w-5 h-5 text-rose-400 flex-shrink-0" />
+                            )}
+                            <div>
+                                <p className="font-medium text-slate-900">
+                                    {user?.email_verified ? "Email verified" : "Email not verified"}
+                                </p>
+                                <p className="text-sm text-slate-500">{user?.email}</p>
+                            </div>
+                        </div>
+                        {!user?.email_verified && (
+                            <Button
+                                variant="outline"
+                                disabled={isResending}
+                                onClick={handleResend}
+                            >
+                                {isResending ? "Sending…" : "Resend email"}
+                            </Button>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 

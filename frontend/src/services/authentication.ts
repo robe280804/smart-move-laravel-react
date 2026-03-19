@@ -58,3 +58,11 @@ export const resetPassword = async (
         return handleApiError(error);
     }
 };
+
+export const resendVerificationEmail = async (): Promise<void> => {
+    try {
+        await api.post('/auth/email/resend');
+    } catch (error) {
+        return handleApiError(error);
+    }
+};

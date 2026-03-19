@@ -141,6 +141,27 @@ class AuthController extends Controller
         );
     }
 
+    public function resendVerificationEmail(Request $request): Responsable
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return new ApiSuccess(
+                data: null,
+                metaData: ['message' => 'Email already verified.'],
+                statusCode: Response::HTTP_OK
+            );
+        }
+
+        $this->authService->resendVerificationEmail($user);
+
+        return new ApiSuccess(
+            data: null,
+            metaData: ['message' => 'Verification email sent.'],
+            statusCode: Response::HTTP_OK
+        );
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->tokens()->delete();

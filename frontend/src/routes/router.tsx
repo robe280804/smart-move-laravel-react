@@ -14,6 +14,9 @@ import { WorkoutPlanGenerator } from "@/pages/WorkoutPlanGenerator";
 import { Workouts } from "@/pages/wokouts/Workouts";
 import { WorkoutPlanDetail } from "@/pages/wokouts/WorkoutPlanDetail";
 import { NotFound } from "@/pages/NotFound";
+import { AdminRoute } from "@/layouts/AdminRoute";
+import { AdminUsers } from "@/pages/admin/AdminUsers";
+import { AdminFeedbacks } from "@/pages/admin/AdminFeedbacks";
 
 export const router = createBrowserRouter([
     {
@@ -41,6 +44,18 @@ export const router = createBrowserRouter([
                     { path: "/dashboard/workout-generate", element: <WorkoutPlanGenerator /> },
                     { path: "/dashboard/workouts", element: <Workouts /> },
                     { path: "/dashboard/workouts/:id", element: <WorkoutPlanDetail /> },
+                ],
+            },
+            {
+                element: <AdminRoute />,
+                children: [
+                    {
+                        element: <SideBar />,
+                        children: [
+                            { path: "/dashboard/admin/users", element: <AdminUsers /> },
+                            { path: "/dashboard/admin/feedbacks", element: <AdminFeedbacks /> },
+                        ],
+                    },
                 ],
             }
         ]

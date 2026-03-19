@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Middleware\SecurityHeadersMiddleware;
+use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
+use Spatie\Permission\Middleware\RoleMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeadersMiddleware::class);
         $middleware->alias([
             'ability' => CheckForAnyAbility::class,
+            'role' => RoleMiddleware::class,
+            'verified' => EnsureEmailIsVerified::class,
         ]);
         $middleware->validateCsrfTokens(except: [
             'stripe/*',

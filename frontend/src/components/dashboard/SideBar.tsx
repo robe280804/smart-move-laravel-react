@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import {
     Home,
@@ -7,9 +7,15 @@ import {
     X,
     Settings,
     MessageSquare,
+    Users,
+    ShieldCheck,
+    MailWarning,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { useAuth } from "../../contexts/AuthContext";
+import { FeedbackModal } from "./FeedbackModal";
+import { resendVerificationEmail } from "../../services/authentication";
+import { notify } from "../../lib/toast";
 
 const navigation = [
     {
@@ -50,11 +56,48 @@ const navigation = [
     },*/
 ];
 
+const adminNavigation = [
+    {
+        name: "Users",
+        href: "/dashboard/admin/users",
+        icon: Users,
+    },
+    {
+        name: "Feedbacks",
+        href: "/dashboard/admin/feedbacks",
+        icon: MessageSquare,
+    },
+];
+
 export function SideBar() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [bannerDismissed, setBannerDismissed] = useState(
+        () => sessionStorage.getItem("email-verify-banner-dismissed") === "true",
+    );
     const location = useLocation();
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const userInitial = user?.name?.charAt(0).toUpperCase() ?? "?";
+
+    const [isResending, setIsResending] = useState(false);
+
+    const showVerifyBanner = user?.email_verified === false && !bannerDismissed;
+
+    const dismissBanner = () => {
+        sessionStorage.setItem("email-verify-banner-dismissed", "true");
+        setBannerDismissed(true);
+    };
+
+    const handleResend = useCallback(async () => {
+        setIsResending(true);
+        try {
+            await resendVerificationEmail();
+            notify.success("Verification email sent! Check your inbox.");
+        } catch {
+            notify.error("Failed to send. Please try again later.");
+        } finally {
+            setIsResending(false);
+        }
+    }, []);
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -101,6 +144,35 @@ export function SideBar() {
                                     </Link>
                                 );
                             })}
+                            {isAdmin && (
+                                <>
+                                    <div className="pt-3 pb-1 px-4">
+                                        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            <ShieldCheck className="w-3.5 h-3.5" />
+                                            Admin
+                                        </div>
+                                    </div>
+                                    {adminNavigation.map((item) => {
+                                        const Icon = item.icon;
+                                        const isActive = location.pathname === item.href;
+                                        return (
+                                            <Link
+                                                key={item.name}
+                                                to={item.href}
+                                                onClick={() => setSidebarOpen(false)}
+                                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
+                                                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50"
+                                                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                                                    }`}
+                                            >
+                                                <Icon className="w-5 h-5" />
+                                                <span className="font-medium">{item.name}</span>
+                                            </Link>
+                                        );
+                                    })}
+                                </>
+                            )}
+                            <FeedbackModal />
                         </nav>
                     </div>
                 </div>
@@ -137,8 +209,36 @@ export function SideBar() {
                                 </Link>
                             );
                         })}
+                        {isAdmin && (
+                            <>
+                                <div className="pt-4 pb-1 px-4">
+                                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        <ShieldCheck className="w-3.5 h-3.5" />
+                                        Admin
+                                    </div>
+                                </div>
+                                {adminNavigation.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = location.pathname === item.href;
+                                    return (
+                                        <Link
+                                            key={item.name}
+                                            to={item.href}
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
+                                                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50"
+                                                : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                                                }`}
+                                        >
+                                            <Icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.name}</span>
+                                        </Link>
+                                    );
+                                })}
+                            </>
+                        )}
                     </nav>
-                    <div className="p-4 border-t border-slate-700">
+                    <div className="p-4 border-t border-slate-700 space-y-1">
+                        <FeedbackModal />
                         <Link
                             to="/dashboard/profile"
                             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
@@ -175,6 +275,33 @@ export function SideBar() {
                         </div>
                     </div>
                 </header>
+
+                {/* Email verification banner */}
+                {showVerifyBanner && (
+                    <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border-b border-amber-200">
+                        <MailWarning className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <p className="flex-1 text-sm text-amber-800">
+                            <span className="font-semibold">Please verify your email address.</span>{" "}
+                            We sent a link to{" "}
+                            <span className="font-medium">{user?.email}</span>.{" "}
+                            Didn't receive it?{" "}
+                            <button
+                                onClick={handleResend}
+                                disabled={isResending}
+                                className="underline font-semibold hover:text-amber-900 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                            >
+                                {isResending ? "Sending…" : "Resend email"}
+                            </button>
+                        </p>
+                        <button
+                            onClick={dismissBanner}
+                            className="flex-shrink-0 p-1 rounded hover:bg-amber-100 text-amber-600 transition-colors"
+                            aria-label="Dismiss"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
 
                 {/* Page content */}
                 <main className="flex-1 p-6">

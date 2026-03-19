@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     const isAuthenticated = !!accessToken && new Date(accessToken.expires_at) > new Date();
+    const isAdmin = user?.role === "admin";
 
     /**
      * On app start, silently exchange the HttpOnly refresh-token cookie for a
@@ -75,7 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <AuthContext.Provider
-            value={{ user, accessToken, isAuthenticated, isLoading, setSession, updateUser, logout }}>
+            value={{ user, accessToken, isAuthenticated, isAdmin, isLoading, setSession, updateUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

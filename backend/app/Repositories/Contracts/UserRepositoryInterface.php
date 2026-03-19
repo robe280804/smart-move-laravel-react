@@ -9,6 +9,8 @@ interface UserRepositoryInterface
 {
     public function paginate(int $perPage = 15): LengthAwarePaginator;
 
+    public function paginateWithSubscriptions(int $perPage = 15): LengthAwarePaginator;
+
     public function findById(int $id): ?User;
 
     public function create(array $data): User;
