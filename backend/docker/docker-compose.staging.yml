@@ -99,17 +99,17 @@ services:
     restart: unless-stopped
     env_file: ../.env
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_DATABASE:-smart_move}
+      MYSQL_USER: ${DB_USERNAME:-smart_move_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
       - smart_move_network
     # Do NOT expose port 3306 to the host — only internal access
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USERNAME}", "-p${DB_PASSWORD}"]
+      test: ["CMD", "sh", "-c", "mysqladmin ping -h localhost -u$$DB_USERNAME -p$$DB_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 5
