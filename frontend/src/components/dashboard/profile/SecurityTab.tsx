@@ -3,9 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { resendVerificationEmail } from "@/services/authentication";
+import { deleteAccount } from "@/services/user";
 import { notify } from "@/lib/toast";
 import type { SecurityFormState } from "@/hooks/useSecurityForm";
 import type { ChangePasswordFormErrors } from "@/types/forms";
@@ -19,11 +28,26 @@ type Props = {
 };
 
 export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }: Props) {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [isResending, setIsResending] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const set = (field: keyof SecurityFormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
         onFormChange({ ...form, [field]: e.target.value });
+
+    const handleDelete = async () => {
+        if (!user) return;
+        setIsDeleting(true);
+        try {
+            await deleteAccount(user.id);
+            await logout();
+        } catch {
+            notify.error("Failed to delete account. Please try again.");
+            setIsDeleting(false);
+            setShowDeleteDialog(false);
+        }
+    };
 
     const handleResend = async () => {
         setIsResending(true);
@@ -140,28 +164,57 @@ export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }:
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Account Security</CardTitle>
-                    <CardDescription>Additional security options</CardDescription>
+                    <CardTitle>Danger Zone</CardTitle>
+                    <CardDescription>Irreversible account actions</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                            <p className="font-medium text-slate-900">Two-Factor Authentication</p>
-                            <p className="text-sm text-slate-500">Add an extra layer of security to your account</p>
-                        </div>
-                        <Button variant="outline">Enable</Button>
-                    </div>
+                <CardContent>
                     <div className="flex items-center justify-between p-4 border rounded-lg border-red-200 bg-red-50">
                         <div>
                             <p className="font-medium text-red-900">Delete Account</p>
-                            <p className="text-sm text-red-600">Permanently delete your account and all data</p>
+                            <p className="text-sm text-red-600">Permanently delete your account and all associated data</p>
                         </div>
-                        <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+                        <Button
+                            variant="outline"
+                            className="border-red-300 text-red-700 hover:bg-red-100"
+                            onClick={() => setShowDeleteDialog(true)}
+                        >
                             Delete
                         </Button>
                     </div>
                 </CardContent>
             </Card>
+
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Account</DialogTitle>
+                        <DialogDescription>
+                            This action is <strong>permanent and irreversible</strong>. All your workouts,
+                            fitness data, and settings will be deleted immediately. Your subscription
+                            will be cancelled.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <p className="text-sm text-slate-600">
+                        Are you sure you want to delete your account?
+                    </p>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowDeleteDialog(false)}
+                            disabled={isDeleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? "Deleting…" : "Yes, delete my account"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

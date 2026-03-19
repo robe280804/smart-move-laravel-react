@@ -7,6 +7,7 @@ use App\Enums\Role;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class UserService
 {
@@ -50,13 +51,25 @@ class UserService
             'surname' => $dto->surname,
             'email' => $dto->email,
             'password' => $dto->password,
-        ], fn ($value) => $value !== null);
+        ], fn($value) => $value !== null);
 
         return $this->userRepository->update($user, $data);
     }
 
     public function delete(User $user): void
     {
+        // Cancel any Stripe subscriptions that are still billing before removing the account.
+        $user->subscriptions()
+            ->whereNotIn('stripe_status', ['canceled', 'incomplete_expired'])
+            ->get()
+            ->each(function ($subscription) use ($user): void {
+                try {
+                    $subscription->cancelNow();
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to cancel Stripe subscription {$subscription->stripe_id} for user {$user->id} during account deletion: {$e->getMessage()}");
+                }
+            });
+
         $this->userRepository->delete($user);
     }
 

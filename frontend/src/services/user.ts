@@ -60,3 +60,11 @@ export const changePassword = async (data: ChangePasswordFormData): Promise<void
         return handleApiError(error);
     }
 }
+
+export const deleteAccount = async (id: number): Promise<void> => {
+    try {
+        await api.delete(`/users/${id}`);
+    } catch (error) {
+        return handleApiError(error);
+    }
+}
