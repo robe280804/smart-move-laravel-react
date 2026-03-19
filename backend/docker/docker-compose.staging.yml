@@ -86,6 +86,10 @@ services:
     volumes:
       - certbot_www:/var/www/certbot
       - certbot_conf:/etc/letsencrypt
+    networks:
+      - smart_move_network
+    depends_on:
+      - nginx
     # Renew every 12 hours (Let's Encrypt certs expire after 90 days)
     entrypoint: >
       /bin/sh -c "trap exit TERM;
