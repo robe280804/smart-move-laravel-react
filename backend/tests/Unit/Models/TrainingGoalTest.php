@@ -76,7 +76,14 @@ class TrainingGoalTest extends TestCase
         $user = User::factory()->create();
 
         // Act
-        TrainingGoal::factory()->count(3)->create(['user_id' => $user->id]);
+        TrainingGoal::factory()
+            ->sequence(
+                ['goal' => TrainingGoalType::WeightLoss->value],
+                ['goal' => TrainingGoalType::MuscleGain->value],
+                ['goal' => TrainingGoalType::Endurance->value],
+            )
+            ->count(3)
+            ->create(['user_id' => $user->id]);
 
         // Assert
         $this->assertSame(3, TrainingGoal::where('user_id', $user->id)->count());
