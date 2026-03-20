@@ -2,7 +2,7 @@ import { useState } from "react";
 import { notify } from "@/lib/toast";
 import { FITNESS_GOALS, WORKOUT_TYPES } from "@/constants/const";
 import type { MessageType, WorkoutPlanData } from "@/types/workout";
-import { findSuspiciousField, sanitizeTextInput, TEXT_MAX_LENGTHS } from "@/lib/sanitize";
+import { findSuspiciousField } from "@/lib/sanitize";
 
 const INITIAL_MESSAGE: MessageType = {
     id: "1",
