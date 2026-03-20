@@ -24,12 +24,12 @@ services:
         condition: service_healthy
     command: >
       sh -c "composer install --no-dev --optimize-autoloader --no-interaction &&
-             php artisan storage:link &&
-             php artisan migrate --force &&
-             php artisan config:cache &&
-             php artisan route:cache &&
-             php artisan view:cache &&
-             php-fpm"
+              php artisan storage:link &&
+              php artisan migrate --force &&
+              php artisan config:cache &&
+              php artisan route:cache &&
+              php artisan view:cache &&
+              php-fpm"
 
   # ── Queue worker ───────────────────────────────────────────────────────────
   # Must stay alive for AI generation jobs (timeout 600s)
@@ -92,9 +92,7 @@ services:
       - nginx
     # Renew every 12 hours (Let's Encrypt certs expire after 90 days)
     entrypoint: >
-      /bin/sh -c "trap exit TERM;
-      while :; do certbot renew --webroot -w /var/www/certbot --quiet;
-      sleep 12h & wait $${!}; done"
+      /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
 
   # ── MySQL ──────────────────────────────────────────────────────────────────
   db:
@@ -113,7 +111,7 @@ services:
       - smart_move_network
     # Do NOT expose port 3306 to the host — only internal access
     healthcheck:
-      test: ["CMD", "sh", "-c", "mysqladmin ping -h localhost -u$$DB_USERNAME -p$$DB_PASSWORD"]
+      test: [ "CMD", "sh", "-c", "mysqladmin ping -h localhost -u$$DB_USERNAME -p$$DB_PASSWORD" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -131,7 +129,7 @@ services:
       - smart_move_network
     # Do NOT expose port 6379 to the host
     healthcheck:
-      test: ["CMD", "sh", "-c", "redis-cli -a $$REDIS_PASSWORD ping"]
+      test: [ "CMD", "sh", "-c", "redis-cli -a $$REDIS_PASSWORD ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -141,6 +139,7 @@ volumes:
   redis_data:
   certbot_www:
   certbot_conf:
+
 
 networks:
   smart_move_network:

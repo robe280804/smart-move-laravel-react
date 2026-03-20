@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "mcp__laravel-boost__search-docs",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   },
   "enableAllProjectMcpServers": true,
