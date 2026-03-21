@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TokenAbility;
+use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlockExerciseController;
@@ -92,6 +93,8 @@ Route::prefix('v1')
             // Admin-only endpoints
             Route::middleware(['role:admin', 'throttle:api'])->prefix('admin')->group(function () {
                 Route::get('users', [UserController::class, 'index']);
+                Route::put('users/{user}', [AdminUserController::class, 'update']);
+                Route::delete('users/{user}', [AdminUserController::class, 'destroy']);
                 Route::get('feedbacks', [FeedbackController::class, 'index']);
             });
         });
