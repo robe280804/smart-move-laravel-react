@@ -5,12 +5,11 @@ namespace App\Listeners;
 use App\Events\UserRegistration;
 use App\Mail\WelcomeEmail;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
-class SendWelcomeEmail
+class SendWelcomeEmail implements ShouldQueue
 {
     /**
      * Handle the event.
@@ -18,7 +17,7 @@ class SendWelcomeEmail
     public function handle(UserRegistration $event): void
     {
         try {
-            Mail::to($event->user->email)->queue(
+            Mail::to($event->user->email)->send(
                 new WelcomeEmail(
                     $event->user->name,
                     $event->user->surname,
@@ -26,7 +25,7 @@ class SendWelcomeEmail
             );
         } catch (Throwable $ex) {
             Log::error('Send welcome email failed', [
-                'ex' => $ex->getMessage()
+                'ex' => $ex->getMessage(),
             ]);
         }
     }
