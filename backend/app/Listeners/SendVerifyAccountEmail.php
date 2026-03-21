@@ -4,12 +4,13 @@ namespace App\Listeners;
 
 use App\Events\UserRegistration;
 use App\Mail\VerifyAccountEmail;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Throwable;
 
-class SendVerifyAccountEmail
+class SendVerifyAccountEmail implements ShouldQueue
 {
     /**
      * Handle the event.
