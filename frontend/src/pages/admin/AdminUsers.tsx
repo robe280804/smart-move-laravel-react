@@ -1,9 +1,13 @@
-import { useState, useEffect } from "react";
-import { Users, ChevronLeft, ChevronRight, ShieldCheck, User, CheckCircle, XCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Users, ChevronLeft, ChevronRight, ShieldCheck, User, CheckCircle, XCircle, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getAdminUsers, type PaginatedResponse } from "@/services/admin";
 import type { User as UserType } from "@/types/auth";
 import { notify } from "@/lib/toast";
+import { useAdminUserActions } from "@/hooks/useAdminUserActions";
+import { EditUserDialog } from "@/components/admin/EditUserDialog";
+import { DeleteUserDialog } from "@/components/admin/DeleteUserDialog";
 
 const PLAN_CONFIG: Record<string, { label: string; className: string }> = {
     pro: {
@@ -38,28 +42,35 @@ export const AdminUsers = () => {
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        let cancelled = false;
-
+    const fetchUsers = useCallback(() => {
+        setIsLoading(true);
         getAdminUsers(page)
-            .then((result) => {
-                if (!cancelled) setData(result);
-            })
-            .catch(() => {
-                if (!cancelled) notify.error("Failed to load users.");
-            })
-            .finally(() => {
-                if (!cancelled) setIsLoading(false);
-            });
-
-        return () => {
-            cancelled = true;
-        };
+            .then((result) => setData(result))
+            .catch(() => notify.error("Failed to load users."))
+            .finally(() => setIsLoading(false));
     }, [page]);
+
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
+
+    const {
+        editingUser,
+        deletingUser,
+        form,
+        setForm,
+        errors,
+        isLoading: actionLoading,
+        openEdit,
+        closeEdit,
+        openDelete,
+        closeDelete,
+        handleUpdate,
+        handleDelete,
+    } = useAdminUserActions(fetchUsers);
 
     const goToPage = (next: number) => {
         setPage(next);
-        setIsLoading(true);
     };
 
     return (
@@ -72,7 +83,7 @@ export const AdminUsers = () => {
                 <div>
                     <h1 className="text-xl font-bold text-slate-900">Users</h1>
                     <p className="text-sm text-slate-500">
-                        {data ? `${data.meta.total} registered users` : "Loading…"}
+                        {data ? `${data.meta.total} registered users` : "Loading\u2026"}
                     </p>
                 </div>
             </div>
@@ -80,15 +91,16 @@ export const AdminUsers = () => {
             {/* Table */}
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 {/* Table header */}
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-200">
+                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-200">
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">User</span>
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Verified</span>
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Plan</span>
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</span>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider w-24 text-right">Actions</span>
                 </div>
 
                 {isLoading ? (
-                    <div className="py-20 text-center text-slate-400 text-sm">Loading…</div>
+                    <div className="py-20 text-center text-slate-400 text-sm">Loading&hellip;</div>
                 ) : data?.data.length === 0 ? (
                     <div className="py-20 text-center text-slate-400 text-sm">No users found.</div>
                 ) : (
@@ -100,7 +112,7 @@ export const AdminUsers = () => {
                             return (
                                 <div
                                     key={user.id}
-                                    className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 items-center px-6 py-4 hover:bg-slate-50 transition-colors"
+                                    className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-4 hover:bg-slate-50 transition-colors"
                                 >
                                     {/* User info */}
                                     <div className="flex items-center gap-3 min-w-0">
@@ -149,6 +161,26 @@ export const AdminUsers = () => {
                                             {role.label}
                                         </Badge>
                                     </div>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-end gap-1 w-24">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            onClick={() => openEdit(user)}
+                                            title="Edit user"
+                                        >
+                                            <Pencil className="w-4 h-4 text-slate-500" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            onClick={() => openDelete(user)}
+                                            title="Delete user"
+                                        >
+                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                        </Button>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -162,7 +194,7 @@ export const AdminUsers = () => {
                     <p className="text-sm text-slate-500">
                         Showing page <span className="font-medium text-slate-700">{data.meta.current_page}</span> of{" "}
                         <span className="font-medium text-slate-700">{data.meta.last_page}</span>
-                        {" "}·{" "}
+                        {" "}&middot;{" "}
                         <span className="font-medium text-slate-700">{data.meta.total}</span> users total
                     </p>
                     <div className="flex gap-2">
@@ -185,6 +217,25 @@ export const AdminUsers = () => {
                     </div>
                 </div>
             )}
+
+            {/* Edit Dialog */}
+            <EditUserDialog
+                user={editingUser}
+                form={form}
+                errors={errors}
+                isLoading={actionLoading}
+                onFormChange={setForm}
+                onSubmit={handleUpdate}
+                onClose={closeEdit}
+            />
+
+            {/* Delete Dialog */}
+            <DeleteUserDialog
+                user={deletingUser}
+                isLoading={actionLoading}
+                onConfirm={handleDelete}
+                onClose={closeDelete}
+            />
         </div>
     );
 };

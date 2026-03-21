@@ -51,9 +51,35 @@ class UserService
             'surname' => $dto->surname,
             'email' => $dto->email,
             'password' => $dto->password,
-        ], fn($value) => $value !== null);
+        ], fn ($value) => $value !== null);
 
         return $this->userRepository->update($user, $data);
+    }
+
+    /**
+     * Admin update: allows updating name, surname, email, and role.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function adminUpdate(User $user, array $data): User
+    {
+        $role = null;
+
+        if (array_key_exists('role', $data)) {
+            $role = $data['role'];
+            unset($data['role']);
+        }
+
+        if (count($data) > 0) {
+            $user = $this->userRepository->update($user, $data);
+        }
+
+        if ($role !== null) {
+            $user->syncRoles([$role]);
+            $user->refresh();
+        }
+
+        return $user;
     }
 
     public function delete(User $user): void

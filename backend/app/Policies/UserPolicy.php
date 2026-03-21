@@ -39,4 +39,20 @@ class UserPolicy
     {
         return $user->id === $model->id;
     }
+
+    /**
+     * Admins can update any user except themselves.
+     */
+    public function adminUpdate(User $user, User $model): bool
+    {
+        return $user->hasRole('admin') && $user->id !== $model->id;
+    }
+
+    /**
+     * Admins can delete any user except themselves.
+     */
+    public function adminDelete(User $user, User $model): bool
+    {
+        return $user->hasRole('admin') && $user->id !== $model->id;
+    }
 }
