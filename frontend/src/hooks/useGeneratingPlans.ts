@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
+import { useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import { getWorkoutPlan } from "@/services/workoutPlan";
 import type { WorkoutPlan } from "@/types/workout";
 

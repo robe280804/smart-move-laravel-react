@@ -180,11 +180,11 @@ class AuthController extends Controller
             $tokens['refreshToken'],
             config('sanctum.rt_expiration'),
             '/api/v1/',
-            config('session.domain'),
+            null,
             true,
             true,
             false,
-            'Lax'
+            'None'
         );
 
         return (new ApiSuccess(
