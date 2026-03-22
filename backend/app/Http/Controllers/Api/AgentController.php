@@ -35,6 +35,10 @@ class AgentController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'You have reached your active plans limit.');
         }
 
+        if ($user->fitnessInfo()->first() === null) {
+            abort(Response::HTTP_UNPROCESSABLE_ENTITY, 'Please complete your fitness profile before generating a workout plan.');
+        }
+
         // Create a pending workoutplan with the min field
         $plan = $this->workoutPlanService->createPending($user);
 

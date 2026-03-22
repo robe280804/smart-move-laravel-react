@@ -67,6 +67,7 @@ export type PlanDay = {
 export type WorkoutPlan = {
     id: number;
     user_id: number;
+    status: "pending" | "processing" | "completed" | "failed";
     training_days_per_week: number;
     goal: string;
     experience_level: string;
@@ -87,7 +88,6 @@ export type WorkoutPlanData = {
     injuries: string;
     equipment: string[];
     gymAccess: boolean;
-    workoutType: string[];
     sports: string;
     preferredExercises: string;
     additionalNotes: string;

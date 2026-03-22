@@ -1,7 +1,7 @@
 import { Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FITNESS_GOALS, WORKOUT_TYPES } from "@/constants/const";
+import { FITNESS_GOALS } from "@/constants/const";
 import type { WorkoutPlanData } from "@/types/workout";
 
 interface PlanInfoSidebarProps {
@@ -52,18 +52,6 @@ export function PlanInfoSidebar({ planData }: PlanInfoSidebarProps) {
                             <p className="text-sm font-medium text-slate-900">
                                 {planData.equipment.length} selected
                             </p>
-                        </div>
-                    )}
-                    {planData.workoutType.length > 0 && (
-                        <div>
-                            <p className="text-sm text-slate-600 mb-1">Workout Types</p>
-                            <div className="flex flex-wrap gap-1">
-                                {planData.workoutType.map(type => (
-                                    <Badge key={type} variant="outline" className="text-xs">
-                                        {WORKOUT_TYPES.find(t => t.value === type)?.label}
-                                    </Badge>
-                                ))}
-                            </div>
                         </div>
                     )}
                     {(planData.sports || planData.preferredExercises || planData.additionalNotes) && (

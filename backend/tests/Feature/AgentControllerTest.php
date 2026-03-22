@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\SubscriptionPlan;
 use App\Enums\TokenAbility;
 use App\Enums\WorkoutPlanStatus;
 use App\Jobs\GenerateWorkoutPlanJob;
+use App\Models\FitnessInfo;
 use App\Models\User;
 use App\Models\WorkoutPlan;
+use App\Services\SubscriptionService;
 use App\Services\WorkoutPlanService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -172,6 +175,7 @@ class AgentControllerTest extends TestCase
         Queue::fake();
 
         $user = User::factory()->create();
+        FitnessInfo::factory()->create(['user_id' => $user->id]);
         $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id, 'status' => WorkoutPlanStatus::Pending]);
         $plan->setRelation('planDays', collect());
 
@@ -181,10 +185,10 @@ class AgentControllerTest extends TestCase
             ->with(\Mockery::type(User::class))
             ->andReturn($plan);
 
-        $this->mock(\App\Services\SubscriptionService::class)
+        $this->mock(SubscriptionService::class)
             ->shouldReceive('canGenerate')->andReturn(true)
             ->shouldReceive('canSaveActivePlan')->andReturn(true)
-            ->shouldReceive('getPlan')->andReturn(\App\Enums\SubscriptionPlan::Free);
+            ->shouldReceive('getPlan')->andReturn(SubscriptionPlan::Free);
 
         $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData)
             ->assertStatus(202)
@@ -201,6 +205,7 @@ class AgentControllerTest extends TestCase
         Queue::fake();
 
         $user = User::factory()->create();
+        FitnessInfo::factory()->create(['user_id' => $user->id]);
         $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id, 'status' => WorkoutPlanStatus::Pending]);
         $plan->setRelation('planDays', collect());
 
@@ -209,10 +214,10 @@ class AgentControllerTest extends TestCase
             ->once()
             ->andReturn($plan);
 
-        $this->mock(\App\Services\SubscriptionService::class)
+        $this->mock(SubscriptionService::class)
             ->shouldReceive('canGenerate')->andReturn(true)
             ->shouldReceive('canSaveActivePlan')->andReturn(true)
-            ->shouldReceive('getPlan')->andReturn(\App\Enums\SubscriptionPlan::Free);
+            ->shouldReceive('getPlan')->andReturn(SubscriptionPlan::Free);
 
         $data = array_merge($this->validRequestData, [
             'injuries' => 'left knee pain',
@@ -232,6 +237,7 @@ class AgentControllerTest extends TestCase
         Queue::fake();
 
         $user = User::factory()->create();
+        FitnessInfo::factory()->create(['user_id' => $user->id]);
         $plan = WorkoutPlan::factory()->make(['id' => 1, 'user_id' => $user->id, 'status' => WorkoutPlanStatus::Pending]);
         $plan->setRelation('planDays', collect());
 
@@ -240,10 +246,10 @@ class AgentControllerTest extends TestCase
             ->once()
             ->andReturn($plan);
 
-        $this->mock(\App\Services\SubscriptionService::class)
+        $this->mock(SubscriptionService::class)
             ->shouldReceive('canGenerate')->andReturn(true)
             ->shouldReceive('canSaveActivePlan')->andReturn(true)
-            ->shouldReceive('getPlan')->andReturn(\App\Enums\SubscriptionPlan::Free);
+            ->shouldReceive('getPlan')->andReturn(SubscriptionPlan::Free);
 
         $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
 
@@ -261,7 +267,7 @@ class AgentControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->mock(\App\Services\SubscriptionService::class)
+        $this->mock(SubscriptionService::class)
             ->shouldReceive('canGenerate')
             ->once()
             ->with(\Mockery::type(User::class))
@@ -276,7 +282,7 @@ class AgentControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->mock(\App\Services\SubscriptionService::class)
+        $this->mock(SubscriptionService::class)
             ->shouldReceive('canGenerate')
             ->once()
             ->andReturn(true)
@@ -287,6 +293,19 @@ class AgentControllerTest extends TestCase
         $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
 
         $response->assertForbidden();
+    }
+
+    public function test_returns_422_when_user_has_no_fitness_info(): void
+    {
+        $user = User::factory()->create();
+
+        $this->mock(SubscriptionService::class)
+            ->shouldReceive('canGenerate')->andReturn(true)
+            ->shouldReceive('canSaveActivePlan')->andReturn(true);
+
+        $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $this->validRequestData);
+
+        $response->assertUnprocessable();
     }
 
     /**

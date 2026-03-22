@@ -1,10 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, ChevronDown, ChevronRight, Info, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DAYS_OF_WEEK, EQUIPMENT_OPTIONS, FITNESS_GOALS, WORKOUT_TYPES } from "@/constants/const";
+import { DAYS_OF_WEEK, EQUIPMENT_OPTIONS, FITNESS_GOALS } from "@/constants/const";
 import type { WorkoutPlanData } from "@/types/workout";
 import { sanitizeTextInput, TEXT_MAX_LENGTHS } from "@/lib/sanitize";
 
@@ -13,16 +14,14 @@ interface WorkoutStepInputProps {
     planData: WorkoutPlanData;
     setPlanData: (data: WorkoutPlanData) => void;
     handleGoalToggle: (goal: string) => void;
-    handleWorkoutTypeToggle: (type: string) => void;
     handleGoals: () => void;
     handleSchedule: () => void;
     handleConstraints: () => void;
     handleEquipment: () => void;
-    handlePreferences: () => void;
     handleDetails: () => void;
     handleReset: () => void;
     setShowAllGoals: (show: boolean) => void;
-    setShowAllWorkoutTypes: (show: boolean) => void;
+    generatedPlanId: number | null;
 }
 
 export function WorkoutStepInput({
@@ -30,17 +29,16 @@ export function WorkoutStepInput({
     planData,
     setPlanData,
     handleGoalToggle,
-    handleWorkoutTypeToggle,
     handleGoals,
     handleSchedule,
     handleConstraints,
     handleEquipment,
-    handlePreferences,
     handleDetails,
     handleReset,
     setShowAllGoals,
-    setShowAllWorkoutTypes,
+    generatedPlanId,
 }: WorkoutStepInputProps) {
+    const navigate = useNavigate();
     if (step === 0) {
         return (
             <div className="space-y-3">
@@ -280,56 +278,6 @@ export function WorkoutStepInput({
     if (step === 4) {
         return (
             <div className="space-y-4">
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <Label>Preferred workout types (select 1–3)</Label>
-                        {planData.workoutType.length > 0 && (
-                            <span className="text-xs text-blue-600 font-medium">{planData.workoutType.length}/3 selected</span>
-                        )}
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-3">
-                        {WORKOUT_TYPES.slice(0, 4).map((type) => {
-                            const isSelected = planData.workoutType.includes(type.value);
-                            return (
-                                <button
-                                    key={type.value}
-                                    onClick={() => handleWorkoutTypeToggle(type.value)}
-                                    className={`p-4 border-2 rounded-xl transition-all text-left ${isSelected
-                                        ? "border-blue-600 bg-blue-50"
-                                        : planData.workoutType.length >= 3
-                                            ? "border-slate-200 opacity-50 cursor-not-allowed"
-                                            : "border-slate-200 hover:border-blue-600 hover:bg-blue-50"
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">{type.icon}</span>
-                                        <span className={`font-medium flex-1 ${isSelected ? "text-blue-600" : "text-slate-900"}`}>
-                                            {type.label}
-                                        </span>
-                                        {isSelected && <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />}
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-                <Button variant="outline" className="w-full" onClick={() => setShowAllWorkoutTypes(true)}>
-                    View all workout types <ChevronDown className="w-4 h-4 ml-2" />
-                </Button>
-                <Button
-                    onClick={handlePreferences}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                    disabled={planData.workoutType.length === 0}
-                >
-                    Continue <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-            </div>
-        );
-    }
-
-    if (step === 5) {
-        return (
-            <div className="space-y-4">
                 <div className="flex gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
@@ -419,12 +367,17 @@ export function WorkoutStepInput({
         );
     }
 
-    if (step === 7) {
+    if (step === 6) {
         return (
             <div className="space-y-3">
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600">
-                    View Complete Plan <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
+                {generatedPlanId && (
+                    <Button
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                        onClick={() => navigate(`/dashboard/workouts/${generatedPlanId}`)}
+                    >
+                        View Complete Plan <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                )}
                 <Button variant="outline" className="w-full" onClick={handleReset}>
                     Generate Another Plan
                 </Button>

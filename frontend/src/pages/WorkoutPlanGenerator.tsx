@@ -1,4 +1,6 @@
-import { Brain } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { AlertTriangle, Brain } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useWorkoutPlanGenerator } from "@/hooks/useWorkoutPlanGenerator";
@@ -7,29 +9,60 @@ import { ChatMessageList } from "@/components/dashboard/workout/ChatMessageList"
 import { WorkoutStepInput } from "@/components/dashboard/workout/WorkoutStepInput";
 import { PlanInfoSidebar } from "@/components/dashboard/workout/PlanInfoSidebar";
 import { GoalsModal } from "@/components/dashboard/workout/GoalsModal";
-import { WorkoutTypesModal } from "@/components/dashboard/workout/WorkoutTypesModal";
+import { getFitnessInfo } from "@/services/user";
 
 export function WorkoutPlanGenerator() {
+    const [hasFitnessInfo, setHasFitnessInfo] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        getFitnessInfo()
+            .then((data) => setHasFitnessInfo(data !== null))
+            .catch(() => setHasFitnessInfo(false));
+    }, []);
+
     const {
         step,
         showAllGoals,
         setShowAllGoals,
-        showAllWorkoutTypes,
-        setShowAllWorkoutTypes,
         messages,
         isGenerating,
         planData,
         setPlanData,
         handleGoalToggle,
-        handleWorkoutTypeToggle,
         handleGoals,
         handleSchedule,
         handleConstraints,
         handleEquipment,
-        handlePreferences,
         handleDetails,
         handleReset,
+        generatedPlanId,
     } = useWorkoutPlanGenerator();
+
+    if (hasFitnessInfo === null) {
+        return null;
+    }
+
+    if (!hasFitnessInfo) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Card className="max-w-md w-full">
+                    <CardContent className="flex flex-col items-center gap-4 pt-6 text-center">
+                        <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                            <AlertTriangle className="w-6 h-6 text-amber-600" />
+                        </div>
+                        <CardTitle>Fitness Profile Required</CardTitle>
+                        <CardDescription className="text-base">
+                            Before generating a personalized workout plan, you need to complete your fitness profile
+                            with your physical information (height, weight, age, etc.).
+                        </CardDescription>
+                        <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-indigo-600">
+                            <Link to="/dashboard/profile">Complete Fitness Profile</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -54,7 +87,7 @@ export function WorkoutPlanGenerator() {
                                     <CardDescription>Answer questions to build your plan</CardDescription>
                                 </div>
                             </div>
-                            {step > 0 && step < 7 && (
+                            {step > 0 && step < 6 && (
                                 <Button variant="ghost" size="sm" onClick={handleReset}>
                                     Start Over
                                 </Button>
@@ -68,16 +101,14 @@ export function WorkoutPlanGenerator() {
                             planData={planData}
                             setPlanData={setPlanData}
                             handleGoalToggle={handleGoalToggle}
-                            handleWorkoutTypeToggle={handleWorkoutTypeToggle}
                             handleGoals={handleGoals}
                             handleSchedule={handleSchedule}
                             handleConstraints={handleConstraints}
                             handleEquipment={handleEquipment}
-                            handlePreferences={handlePreferences}
                             handleDetails={handleDetails}
                             handleReset={handleReset}
                             setShowAllGoals={setShowAllGoals}
-                            setShowAllWorkoutTypes={setShowAllWorkoutTypes}
+                            generatedPlanId={generatedPlanId}
                         />
                     </CardContent>
                 </Card>
@@ -90,13 +121,6 @@ export function WorkoutPlanGenerator() {
                 selectedGoals={planData.fitnessGoals}
                 onToggle={handleGoalToggle}
                 onClose={() => setShowAllGoals(false)}
-            />
-
-            <WorkoutTypesModal
-                isOpen={showAllWorkoutTypes}
-                selectedTypes={planData.workoutType}
-                onToggle={handleWorkoutTypeToggle}
-                onClose={() => setShowAllWorkoutTypes(false)}
             />
         </div>
     );
