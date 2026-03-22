@@ -202,6 +202,8 @@ export const Workouts = () => {
                             EXPERIENCE_BADGE[plan.experience_level] ??
                             "bg-slate-100 text-slate-700";
 
+                        const isGenerating = plan.status === "pending" || plan.status === "processing";
+
                         return (
                             <div
                                 key={plan.id}
@@ -223,9 +225,15 @@ export const Workouts = () => {
                                                 <h3 className="font-semibold text-slate-900 text-sm leading-tight truncate">
                                                     {GOAL_LABEL[plan.goal] ?? plan.goal}
                                                 </h3>
-                                                <span className="text-xs text-slate-400 flex-shrink-0">
-                                                    #{index + 1}
-                                                </span>
+                                                {isGenerating ? (
+                                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 flex-shrink-0 animate-pulse">
+                                                        Generating…
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400 flex-shrink-0">
+                                                        #{index + 1}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-xs text-slate-500">
@@ -283,7 +291,15 @@ export const Workouts = () => {
 
                                     {/* Actions */}
                                     <div className="mt-auto">
-                                        {isConfirming ? (
+                                        {isGenerating ? (
+                                            <Button
+                                                variant="outline"
+                                                className="w-full text-xs h-9"
+                                                disabled
+                                            >
+                                                Generating…
+                                            </Button>
+                                        ) : isConfirming ? (
                                             <div className="flex items-center gap-2">
                                                 <p className="text-xs text-slate-500 flex-1">
                                                     Delete this plan?

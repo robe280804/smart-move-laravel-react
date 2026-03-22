@@ -19,7 +19,7 @@ use NeuronAI\Workflow\WorkflowState;
 
 class GenerateWorkoutPlanNode extends Node
 {
-    private const MAX_EXERCISES_IN_CONTEXT = 30;
+    private const MAX_EXERCISES_IN_CONTEXT = 45;
 
     /**
      * Maps frontend equipment labels to the vocabulary stored in the Qdrant
@@ -97,13 +97,13 @@ class GenerateWorkoutPlanNode extends Node
             $preferences,
         );
 
-        Log::info('Prompt built for workout plan generation', ['prompt_length' => mb_strlen($prompt)]);
+        Log::debug('Prompt built for workout plan generation', ['prompt' => $prompt]);
 
         /** @var WorkoutPlanOutput $output */
         $output = FitnessAgent::make()
             ->structured(new UserMessage($prompt), WorkoutPlanOutput::class);
 
-        Log::info('Workout plan generation completed');
+        Log::debug('Output built from Fitness agent', ['output' => $output]);
 
         $state->set('agent_response', json_encode($output));
 
@@ -154,7 +154,7 @@ class GenerateWorkoutPlanNode extends Node
 
         /** @var array<int, \Closure(): Document[]> $closures */
         $closures = [
-            fn (): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query1)),
+            fn(): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query1)),
         ];
 
         // Query 2 — equipment + workout type
@@ -162,33 +162,41 @@ class GenerateWorkoutPlanNode extends Node
             $query2 = implode(' ', array_filter([...$equipmentItems, ...$workoutTypes, 'exercises']));
 
             if ($equipmentFilter !== []) {
-                $closures[] = fn (): array => FitnessAgentRagFiltered::make()
+                $closures[] = fn(): array => FitnessAgentRagFiltered::make()
                     ->setEquipmentFilter($equipmentFilter)
                     ->resolveRetrieval()
                     ->retrieve(new UserMessage($query2));
             } else {
-                $closures[] = fn (): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query2));
+                $closures[] = fn(): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query2));
             }
         }
 
-        $closures[] = fn (): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query3));
+        $closures[] = fn(): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query3));
 
         // Query 4 — sport-specific (optional)
         if ($sports !== '') {
             $query4 = sprintf('%s sport specific functional exercises training', $sports);
-            $closures[] = fn (): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query4));
+            $closures[] = fn(): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query4));
         }
 
         // Query 5 — rehabilitation / injury-safe (optional)
         if ($this->isRehabilitationCase($constraints)) {
             $query5 = sprintf('rehabilitation injury safe low impact exercises %s', $constraints);
-            $closures[] = fn (): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query5));
+            $closures[] = fn(): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query5));
         }
 
         // Query 6 — movement pattern coverage (compound-priority goals only)
         if ($this->isStrengthOriented($primaryGoal)) {
             $query6 = $this->buildMovementPatternQuery($experienceLevel, $hasGymAccess);
-            $closures[] = fn (): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query6));
+            $closures[] = fn(): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query6));
+        }
+
+        // Queries 7 & 8 — dedicated isolation exercise retrieval for hypertrophy
+        if ($primaryGoal === 'muscle_gain') {
+            $query7 = sprintf('isolation exercises bicep curl tricep extension lateral raise rear delt cable fly pec hypertrophy %s', $experienceLevel);
+            $query8 = sprintf('leg isolation exercises leg curl leg extension hamstring calf raise lunge hip thrust glute hypertrophy %s', $experienceLevel);
+            $closures[] = fn(): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query7));
+            $closures[] = fn(): array => FitnessAgentRag::make()->resolveRetrieval()->retrieve(new UserMessage($query8));
         }
 
         /** @var array<int, Document[]> $batchResults */
@@ -220,6 +228,12 @@ class GenerateWorkoutPlanNode extends Node
     private function buildGoalQuery(string $goalFormatted, string $experienceLevel, string $constraints, string $primaryGoal): string
     {
         $parts = match (true) {
+            $primaryGoal === 'muscle_gain' => [
+                $goalFormatted,
+                'compound isolation hypertrophy barbell dumbbell cable bicep tricep shoulder chest back legs',
+                $experienceLevel,
+                'exercises',
+            ],
             $this->isStrengthOriented($primaryGoal) => [
                 $goalFormatted,
                 'barbell squat deadlift bench press overhead press compound',
@@ -270,6 +284,10 @@ class GenerateWorkoutPlanNode extends Node
         }
 
         return match (true) {
+            $primaryGoal === 'muscle_gain' => sprintf(
+                '%s hypertrophy isolation dumbbell cable bicep curl tricep extension lateral raise leg curl leg extension calf raise chest fly exercises',
+                $experienceLevel,
+            ),
             $this->isStrengthOriented($primaryGoal) => sprintf(
                 '%s compound multi-joint barbell squat hinge press pull row heavy resistance exercises',
                 $experienceLevel,
@@ -353,6 +371,13 @@ class GenerateWorkoutPlanNode extends Node
             }
         }
 
+        // For hypertrophy, cap compounds at 60% of the context window so isolation
+        // exercises always claim the remaining 40% of slots.
+        if ($primaryGoal === 'muscle_gain') {
+            $compoundCap = (int) round(self::MAX_EXERCISES_IN_CONTEXT * 0.60);
+            $compound = array_slice($compound, 0, $compoundCap);
+        }
+
         return array_merge($compound, $other);
     }
 
@@ -404,7 +429,7 @@ class GenerateWorkoutPlanNode extends Node
 
         return [
             'should' => array_map(
-                fn (string $term): array => ['key' => 'equipment', 'match' => ['value' => $term]],
+                fn(string $term): array => ['key' => 'equipment', 'match' => ['value' => $term]],
                 $terms,
             ),
         ];
@@ -424,7 +449,7 @@ class GenerateWorkoutPlanNode extends Node
         $lines = ['=== AVAILABLE EXERCISES FROM KNOWLEDGE BASE ==='];
 
         foreach ($documents as $document) {
-            $lines[] = '- '.$document->getContent();
+            $lines[] = '- ' . $document->getContent();
         }
 
         return implode("\n", $lines);
@@ -577,14 +602,14 @@ class GenerateWorkoutPlanNode extends Node
         $base = 'The user has not specified exercise preferences, injuries, or additional constraints. As a certified strength and conditioning coach, use your professional expertise to select the most effective exercises for their stated goal.';
 
         if ($this->isStrengthOriented($primaryGoal) && $hasGymAccess) {
-            return $base.' For this strength-oriented goal with full gym access, build the program around the fundamental compound lifts: barbell squat, conventional deadlift, bench press, overhead press, and barbell row, with targeted accessory work to address weak points and ensure balanced development.';
+            return $base . ' For this strength-oriented goal with full gym access, build the program around the fundamental compound lifts: barbell squat, conventional deadlift, bench press, overhead press, and barbell row, with targeted accessory work to address weak points and ensure balanced development.';
         }
 
         if ($this->isStrengthOriented($primaryGoal)) {
-            return $base.' For this strength-oriented goal without gym access, build the program around the most challenging bodyweight progressions: pistol squats, push-up variations, pull-up/chin-up variations, dips, and single-leg hip hinges.';
+            return $base . ' For this strength-oriented goal without gym access, build the program around the most challenging bodyweight progressions: pistol squats, push-up variations, pull-up/chin-up variations, dips, and single-leg hip hinges.';
         }
 
-        return $base.' Select the gold-standard exercises for this goal, prioritizing movements with the highest training transfer and effectiveness.';
+        return $base . ' Select the gold-standard exercises for this goal, prioritizing movements with the highest training transfer and effectiveness.';
     }
 
     private function castToString(mixed $value): string
