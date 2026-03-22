@@ -182,7 +182,7 @@ class AgentControllerTest extends TestCase
         $this->mock(WorkoutPlanService::class)
             ->shouldReceive('createPending')
             ->once()
-            ->with(\Mockery::type(User::class))
+            ->with(\Mockery::type(User::class), \Mockery::type('array'))
             ->andReturn($plan);
 
         $this->mock(SubscriptionService::class)

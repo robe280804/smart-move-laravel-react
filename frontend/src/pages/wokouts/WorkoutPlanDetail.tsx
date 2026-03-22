@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router";
-import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy, Download, Lock, Crown, X } from "lucide-react";
+import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy, Download, Lock, Crown, X, Clock, Wrench, AlertTriangle, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FITNESS_GOALS, WORKOUT_TYPES, EXPERIENCE_LEVELS, DAYS_OF_WEEK } from "@/constants/const";
 import { useWorkoutPlan } from "@/hooks/useWorkoutPlan";
@@ -72,6 +72,32 @@ export const WorkoutPlanDetail = () => {
         setExpandedDays((prev) =>
             prev.includes(dayId) ? prev.filter((d) => d !== dayId) : [...prev, dayId],
         );
+
+    const request = useMemo(() => {
+        if (!plan) return null;
+        if (plan.generation_request) return plan.generation_request;
+
+        const availableDays = plan.plan_days
+            .map((d) => DAYS_OF_WEEK[d.day_of_week - 1]?.toLowerCase())
+            .filter(Boolean) as string[];
+
+        return {
+            fitness_goals: plan.goal,
+            schedule: {
+                training_days_per_week: plan.training_days_per_week,
+                available_days: availableDays,
+                session_duration: plan.plan_days[0]?.duration_minutes ?? 0,
+            },
+            equipment: { items: [] as string[], gym_access: false },
+            constraints: null,
+            preferences: {
+                workout_types: plan.workout_type ? [plan.workout_type] : [],
+                sports: null,
+                preferred_exercises: null,
+                additional_notes: null,
+            },
+        };
+    }, [plan]);
 
     if (isLoading) {
         return <DetailSkeleton />;
@@ -245,6 +271,134 @@ export const WorkoutPlanDetail = () => {
                     </button>
                 </div>
             )}
+
+            {/* Generation request summary */}
+            {request && <div className="rounded-xl border border-slate-200 bg-white p-5 mb-6">
+                <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-4">
+                    Your Request
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Goal */}
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 flex-shrink-0">
+                            <Trophy className="h-4 w-4 text-indigo-600" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium text-slate-500">Goal</p>
+                            <p className="text-sm text-slate-900">
+                                {GOAL_LABEL[request.fitness_goals] ?? request.fitness_goals}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Schedule */}
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 flex-shrink-0">
+                            <Calendar className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium text-slate-500">Schedule</p>
+                            <p className="text-sm text-slate-900">
+                                {request.schedule.training_days_per_week} days/week
+                            </p>
+                            <p className="text-xs text-slate-500">
+                                {request.schedule.available_days
+                                    .map((d) => d.charAt(0).toUpperCase() + d.slice(1, 3))
+                                    .join(" · ")}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Session Duration */}
+                    {request.schedule.session_duration > 0 && (
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50 flex-shrink-0">
+                                <Clock className="h-4 w-4 text-green-600" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-slate-500">Session Duration</p>
+                                <p className="text-sm text-slate-900">
+                                    {request.schedule.session_duration} min
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Equipment */}
+                    {request.equipment.items.length > 0 && (
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 flex-shrink-0">
+                                <Wrench className="h-4 w-4 text-amber-600" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-slate-500">Equipment</p>
+                                <p className="text-sm text-slate-900">
+                                    {request.equipment.items.join(", ")}
+                                </p>
+                                {request.equipment.gym_access && (
+                                    <p className="text-xs text-slate-500">Gym access</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Workout Types */}
+                    {request.preferences.workout_types.length > 0 && (
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 flex-shrink-0">
+                                <Settings2 className="h-4 w-4 text-purple-600" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-slate-500">Workout Types</p>
+                                <p className="text-sm text-slate-900">
+                                    {request.preferences.workout_types
+                                        .map((t) => WORKOUT_TYPE_LABEL[t] ?? t)
+                                        .join(", ")}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Injuries / Constraints */}
+                    {request.constraints && (
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 flex-shrink-0">
+                                <AlertTriangle className="h-4 w-4 text-red-500" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-slate-500">Injuries / Limitations</p>
+                                <p className="text-sm text-slate-900">{request.constraints}</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Additional notes row */}
+                {(request.preferences.sports ||
+                    request.preferences.preferred_exercises ||
+                    request.preferences.additional_notes) && (
+                    <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                        {request.preferences.sports && (
+                            <p className="text-sm text-slate-600">
+                                <span className="font-medium text-slate-700">Sports:</span>{" "}
+                                {request.preferences.sports}
+                            </p>
+                        )}
+                        {request.preferences.preferred_exercises && (
+                            <p className="text-sm text-slate-600">
+                                <span className="font-medium text-slate-700">Preferred exercises:</span>{" "}
+                                {request.preferences.preferred_exercises}
+                            </p>
+                        )}
+                        {request.preferences.additional_notes && (
+                            <p className="text-sm text-slate-600">
+                                <span className="font-medium text-slate-700">Notes:</span>{" "}
+                                {request.preferences.additional_notes}
+                            </p>
+                        )}
+                    </div>
+                )}
+            </div>}
 
             <div className="space-y-4 mt-6">
                 {plan.plan_days.map((day) => (

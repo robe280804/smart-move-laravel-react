@@ -100,12 +100,15 @@ class WorkoutPlanService
 
     /**
      * Create a placeholder plan that the async job will populate once the agent finishes.
+     *
+     * @param  array<string, mixed>|null  $generationRequest
      */
-    public function createPending(User $user): WorkoutPlan
+    public function createPending(User $user, ?array $generationRequest = null): WorkoutPlan
     {
         return $this->workoutPlanRepository->create([
             'user_id' => $user->id,
             'status' => WorkoutPlanStatus::Pending,
+            'generation_request' => $generationRequest,
         ]);
     }
 
