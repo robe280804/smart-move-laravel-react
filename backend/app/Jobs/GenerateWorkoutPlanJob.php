@@ -7,7 +7,7 @@ namespace App\Jobs;
 use App\Enums\WorkoutPlanStatus;
 use App\Models\User;
 use App\Models\WorkoutPlan;
-use App\Neuron\FitnessAgentWorkflow;
+use App\Services\WorkoutGenerationService;
 use App\Services\WorkoutPlanService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +15,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use NeuronAI\Workflow\WorkflowState;
 
 class GenerateWorkoutPlanJob implements ShouldQueue
 {
@@ -35,7 +34,7 @@ class GenerateWorkoutPlanJob implements ShouldQueue
     public int $tries = 1;
 
     /**
-     * @param array<string, mixed> $workflowState Serialisable state bag built by the controller.
+     * @param  array<string, mixed>  $workflowState  Serialisable state bag built by the controller.
      */
     public function __construct(
         private readonly WorkoutPlan $plan,
@@ -43,25 +42,13 @@ class GenerateWorkoutPlanJob implements ShouldQueue
         private readonly array $workflowState,
     ) {}
 
-    public function handle(WorkoutPlanService $service): void
+    public function handle(WorkoutPlanService $service, WorkoutGenerationService $generationService): void
     {
-        // Status update to processing
         $this->plan->update(['status' => WorkoutPlanStatus::Processing]);
 
-        $state = new WorkflowState();
+        $jsonResponse = $generationService->generate($this->user, $this->workflowState);
 
-        foreach ($this->workflowState as $key => $value) {
-            $state->set($key, $value);
-        }
-
-        // Workflow execute
-        $workflow = FitnessAgentWorkflow::create(state: $state);
-        $workflow->init()->run();
-
-        $service->fillFromAgentResponse(
-            $this->plan,
-            (string) $state->get('agent_response', ''),
-        );
+        $service->fillFromAgentResponse($this->plan, $jsonResponse);
 
         Log::info('GenerateWorkoutPlanJob completed', ['plan_id' => $this->plan->id]);
     }
@@ -72,7 +59,7 @@ class GenerateWorkoutPlanJob implements ShouldQueue
 
         Log::error('GenerateWorkoutPlanJob failed', [
             'plan_id' => $this->plan->id,
-            'error'   => $e->getMessage(),
+            'error' => $e->getMessage(),
         ]);
     }
 }

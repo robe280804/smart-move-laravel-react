@@ -33,11 +33,11 @@ class WorkoutPlanServiceTest extends TestCase
         $plan = $this->service->fillFromAgentResponse($pending, $this->validJson());
 
         $this->assertDatabaseHas('workout_plans', [
-            'user_id'                => $user->id,
+            'user_id' => $user->id,
             'training_days_per_week' => 3,
-            'goal'                   => 'muscle_gain',
-            'experience_level'       => 'advanced',
-            'workout_type'           => 'Strength',
+            'goal' => 'muscle_gain',
+            'experience_level' => 'advanced',
+            'workout_type' => 'strength',
         ]);
 
         $this->assertSame($user->id, $plan->user_id);
@@ -81,9 +81,9 @@ class WorkoutPlanServiceTest extends TestCase
         $this->service->fillFromAgentResponse($pending, $this->validJson());
 
         $this->assertDatabaseHas('exercises', [
-            'category'     => 'Strength',
+            'category' => 'Strength',
             'muscle_group' => 'Chest',
-            'equipment'    => 'Barbell',
+            'equipment' => 'Barbell',
         ]);
     }
 
@@ -95,13 +95,13 @@ class WorkoutPlanServiceTest extends TestCase
         $this->service->fillFromAgentResponse($pending, $this->validJson());
 
         $this->assertDatabaseHas('block_exercises', [
-            'order'            => 1,
-            'sets'             => 4,
-            'reps'             => 8,
-            'weight'           => 80.0,
+            'order' => 1,
+            'sets' => 4,
+            'reps' => 8,
+            'weight' => 80.0,
             'duration_seconds' => null,
-            'rest_seconds'     => 120,
-            'rpe'              => 8.0,
+            'rest_seconds' => 120,
+            'rpe' => 8.0,
         ]);
     }
 
@@ -123,7 +123,7 @@ class WorkoutPlanServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $wrappedJson = "```json\n" . $this->validJson() . "\n```";
+        $wrappedJson = "```json\n".$this->validJson()."\n```";
 
         $pending = $this->service->createPending($user);
         $plan = $this->service->fillFromAgentResponse($pending, $wrappedJson);
@@ -136,7 +136,7 @@ class WorkoutPlanServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $wrappedJson = "```\n" . $this->validJson() . "\n```";
+        $wrappedJson = "```\n".$this->validJson()."\n```";
 
         $pending = $this->service->createPending($user);
         $this->service->fillFromAgentResponse($pending, $wrappedJson);
@@ -183,23 +183,15 @@ class WorkoutPlanServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // Missing 'exercises' key inside workout_block will trigger an error during iteration.
+        // Invalid goal value triggers ValueError from TrainingGoalType::from(),
+        // causing the transaction to roll back.
         $invalidJson = (string) json_encode([
             'workout_plan' => [
                 'training_days_per_week' => 3,
-                'goal'                   => 'muscle_gain',
-                'experience_level'       => 'advanced',
-                'workout_type'           => 'Strength',
-                'plan_days'              => [
-                    [
-                        'day_of_week'      => 1,
-                        'workout_name'     => 'Upper Body',
-                        'duration_minutes' => 60,
-                        'workout_blocks'   => [
-                            ['name' => 'Warmup', 'order' => 1],
-                        ],
-                    ],
-                ],
+                'goal' => 'invalid_goal',
+                'experience_level' => 'advanced',
+                'workout_type' => 'strength',
+                'plan_days' => [],
             ],
         ]);
 
@@ -221,57 +213,60 @@ class WorkoutPlanServiceTest extends TestCase
         return (string) json_encode([
             'workout_plan' => [
                 'training_days_per_week' => 3,
-                'goal'                   => 'muscle_gain',
-                'experience_level'       => 'advanced',
-                'workout_type'           => 'Strength',
-                'plan_days'              => [
+                'goal' => 'muscle_gain',
+                'experience_level' => 'advanced',
+                'workout_type' => 'strength',
+                'plan_days' => [
                     [
-                        'day_of_week'      => 1,
-                        'workout_name'     => 'Upper Body Strength',
+                        'day_of_week' => 1,
+                        'workout_name' => 'Upper Body Strength',
                         'duration_minutes' => 60,
-                        'workout_blocks'   => [
+                        'workout_blocks' => [
                             [
-                                'name'      => 'Warmup',
-                                'order'     => 1,
+                                'name' => 'Warmup',
+                                'order' => 1,
                                 'exercises' => [
                                     [
-                                        'category'           => 'Cardio',
-                                        'muscle_group'       => 'Full Body',
-                                        'equipment'          => 'Body Only',
-                                        'instructions'       => 'Light jog for 5 minutes.',
-                                        'infos'              => 'Raises heart rate.',
+                                        'name' => 'Light Jog',
+                                        'category' => 'Cardio',
+                                        'muscle_group' => 'Full Body',
+                                        'equipment' => 'Body Only',
+                                        'instructions' => 'Light jog for 5 minutes.',
+                                        'infos' => 'Raises heart rate.',
                                         'additional_metrics' => ['met_value' => 4.0, 'energy_system' => 'Aerobic', 'difficulty' => 'beginner'],
-                                        'prescription'       => ['order' => 1, 'sets' => 1, 'reps' => null, 'weight' => null, 'duration_seconds' => 300, 'rest_seconds' => 60, 'rpe' => 4.0],
+                                        'prescription' => ['order' => 1, 'sets' => 1, 'reps' => null, 'weight' => null, 'duration_seconds' => 300, 'rest_seconds' => 60, 'rpe' => 4.0],
                                     ],
                                 ],
                             ],
                             [
-                                'name'      => 'Main Block',
-                                'order'     => 2,
+                                'name' => 'Main Block',
+                                'order' => 2,
                                 'exercises' => [
                                     [
-                                        'category'           => 'Strength',
-                                        'muscle_group'       => 'Chest',
-                                        'equipment'          => 'Barbell',
-                                        'instructions'       => 'Flat bench press.',
-                                        'infos'              => 'Compound chest exercise.',
+                                        'name' => 'Barbell Bench Press',
+                                        'category' => 'Strength',
+                                        'muscle_group' => 'Chest',
+                                        'equipment' => 'Barbell',
+                                        'instructions' => 'Flat bench press.',
+                                        'infos' => 'Compound chest exercise.',
                                         'additional_metrics' => ['met_value' => 5.0, 'energy_system' => 'Anaerobic', 'difficulty' => 'advanced'],
-                                        'prescription'       => ['order' => 1, 'sets' => 4, 'reps' => 8, 'weight' => 80.0, 'duration_seconds' => null, 'rest_seconds' => 120, 'rpe' => 8.0],
+                                        'prescription' => ['order' => 1, 'sets' => 4, 'reps' => 8, 'weight' => 80.0, 'duration_seconds' => null, 'rest_seconds' => 120, 'rpe' => 8.0],
                                     ],
                                 ],
                             ],
                             [
-                                'name'      => 'Cool-Down',
-                                'order'     => 3,
+                                'name' => 'Cool-Down',
+                                'order' => 3,
                                 'exercises' => [
                                     [
-                                        'category'           => 'Stretching',
-                                        'muscle_group'       => 'Chest',
-                                        'equipment'          => 'Body Only',
-                                        'instructions'       => 'Gentle chest stretch 30s.',
-                                        'infos'              => 'Reduces tension.',
+                                        'name' => 'Chest Stretch',
+                                        'category' => 'Stretching',
+                                        'muscle_group' => 'Chest',
+                                        'equipment' => 'Body Only',
+                                        'instructions' => 'Gentle chest stretch 30s.',
+                                        'infos' => 'Reduces tension.',
                                         'additional_metrics' => ['met_value' => 2.0, 'energy_system' => 'Aerobic', 'difficulty' => 'beginner'],
-                                        'prescription'       => ['order' => 1, 'sets' => 1, 'reps' => null, 'weight' => null, 'duration_seconds' => 30, 'rest_seconds' => 0, 'rpe' => 2.0],
+                                        'prescription' => ['order' => 1, 'sets' => 1, 'reps' => null, 'weight' => null, 'duration_seconds' => 30, 'rest_seconds' => 0, 'rpe' => 2.0],
                                     ],
                                 ],
                             ],
@@ -285,17 +280,18 @@ class WorkoutPlanServiceTest extends TestCase
     private function validJsonWithTwoDays(): string
     {
         $block = [
-            'name'      => 'Warmup',
-            'order'     => 1,
+            'name' => 'Warmup',
+            'order' => 1,
             'exercises' => [
                 [
-                    'category'           => 'Cardio',
-                    'muscle_group'       => 'Full Body',
-                    'equipment'          => 'Body Only',
-                    'instructions'       => 'Light jog.',
-                    'infos'              => 'Warmup.',
+                    'name' => 'Light Jog',
+                    'category' => 'Cardio',
+                    'muscle_group' => 'Full Body',
+                    'equipment' => 'Body Only',
+                    'instructions' => 'Light jog.',
+                    'infos' => 'Warmup.',
                     'additional_metrics' => ['met_value' => 3.0, 'energy_system' => 'Aerobic', 'difficulty' => 'beginner'],
-                    'prescription'       => ['order' => 1, 'sets' => 1, 'reps' => null, 'weight' => null, 'duration_seconds' => 300, 'rest_seconds' => 30, 'rpe' => 3.0],
+                    'prescription' => ['order' => 1, 'sets' => 1, 'reps' => null, 'weight' => null, 'duration_seconds' => 300, 'rest_seconds' => 30, 'rpe' => 3.0],
                 ],
             ],
         ];
@@ -303,10 +299,10 @@ class WorkoutPlanServiceTest extends TestCase
         return (string) json_encode([
             'workout_plan' => [
                 'training_days_per_week' => 2,
-                'goal'                   => 'strength_building',
-                'experience_level'       => 'intermediate',
-                'workout_type'           => 'Strength',
-                'plan_days'              => [
+                'goal' => 'strength_building',
+                'experience_level' => 'intermediate',
+                'workout_type' => 'strength',
+                'plan_days' => [
                     ['day_of_week' => 1, 'workout_name' => 'Upper Body Strength', 'duration_minutes' => 60, 'workout_blocks' => [$block]],
                     ['day_of_week' => 3, 'workout_name' => 'Lower Body Strength', 'duration_minutes' => 60, 'workout_blocks' => [$block]],
                 ],

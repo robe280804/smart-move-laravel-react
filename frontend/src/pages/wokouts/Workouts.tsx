@@ -73,17 +73,27 @@ const PlanCardSkeleton = () => (
 
 export const Workouts = () => {
     const { plans, isLoading, error, deletePlan, refetch } = useWorkoutPlans();
-    const { completedPlans } = useGeneratingPlans();
+    const { completedPlans, failedPlans, dismissPlan } = useGeneratingPlans();
     const prevCompletedCount = useRef(completedPlans.length);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // On mount: dismiss any stale completed/failed banners from previous sessions
+    useEffect(() => {
+        completedPlans.forEach((p) => dismissPlan(p.id));
+        failedPlans.forEach((p) => dismissPlan(p.id));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // When a plan finishes generating, refresh the list and auto-dismiss the banner
     useEffect(() => {
         if (completedPlans.length > prevCompletedCount.current) {
-            refetch();
+            refetch().then(() => {
+                completedPlans.forEach((p) => dismissPlan(p.id));
+            });
         }
         prevCompletedCount.current = completedPlans.length;
-    }, [completedPlans.length, refetch]);
+    }, [completedPlans.length, refetch, completedPlans, dismissPlan]);
 
     const handleDeleteConfirm = async (id: number) => {
         setIsDeleting(true);
