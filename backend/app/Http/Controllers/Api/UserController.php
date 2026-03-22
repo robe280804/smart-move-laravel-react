@@ -24,7 +24,7 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $perPage = (int) $request->query('per_page', 15);
+        $perPage = min((int) $request->query('per_page', 15), 100);
 
         return UserResource::collection($this->userService->paginateWithSubscriptions($perPage));
     }

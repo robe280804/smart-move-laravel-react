@@ -23,7 +23,7 @@ class SendVerifyAccountEmail implements ShouldQueue
                 now()->addMinutes(60),
                 [
                     'id' => $event->user->id,
-                    'hash' => sha1($event->user->email),
+                    'hash' => hash('sha256', $event->user->email),
                 ]
             );
 

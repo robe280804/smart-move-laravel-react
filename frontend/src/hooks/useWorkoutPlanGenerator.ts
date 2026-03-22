@@ -4,6 +4,7 @@ import { FITNESS_GOALS } from "@/constants/const";
 import type { MessageType, WorkoutPlanData } from "@/types/workout";
 import { findSuspiciousField } from "@/lib/sanitize";
 import { generateWorkoutPlan, getWorkoutPlan } from "@/services/workoutPlan";
+import { trackGeneratingPlan, updateGeneratingPlanStatus } from "@/hooks/useGeneratingPlans";
 import { ApiError } from "@/lib/apiError";
 
 const INITIAL_MESSAGE: MessageType = {
@@ -170,6 +171,7 @@ export function useWorkoutPlanGenerator() {
 
         try {
             const pendingPlan = await generateWorkoutPlan(planData);
+            trackGeneratingPlan(pendingPlan);
 
             pollingRef.current = setInterval(async () => {
                 try {
@@ -178,6 +180,7 @@ export function useWorkoutPlanGenerator() {
                     if (plan.status === "completed") {
                         clearInterval(pollingRef.current!);
                         pollingRef.current = null;
+                        updateGeneratingPlanStatus(pendingPlan.id, "completed");
                         setGeneratedPlanId(plan.id);
                         addMessage("assistant",
                             "Your personalized workout plan has been generated successfully! Click below to view your complete plan."
@@ -189,6 +192,7 @@ export function useWorkoutPlanGenerator() {
                     if (plan.status === "failed") {
                         clearInterval(pollingRef.current!);
                         pollingRef.current = null;
+                        updateGeneratingPlanStatus(pendingPlan.id, "failed");
                         addMessage("assistant",
                             "Sorry, something went wrong while generating your plan. Please try again."
                         );

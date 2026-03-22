@@ -60,13 +60,13 @@ class GenerateWorkoutPlanNode extends Node
             $preferences,
         );
 
-        Log::info('prompt in Generate workout plan node', ['prompt' => $prompt]);
+        Log::info('Prompt built for workout plan generation', ['prompt_length' => mb_strlen($prompt)]);
 
         /** @var WorkoutPlanOutput $output */
         $output = FitnessAgent::make()
             ->structured(new UserMessage($prompt), WorkoutPlanOutput::class);
 
-        Log::info('response in Generate workout plan node', ['response' => $output]);
+        Log::info('Workout plan generation completed');
 
         $state->set('agent_response', json_encode($output));
 

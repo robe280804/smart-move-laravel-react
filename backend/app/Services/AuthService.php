@@ -42,7 +42,7 @@ class AuthService
 
     public function refreshToken(User $user): array
     {
-        $user->tokens()->delete();
+        $user->currentAccessToken()->delete();
 
         return $this->generateTokens($user);
     }

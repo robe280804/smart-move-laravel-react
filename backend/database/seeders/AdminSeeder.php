@@ -15,7 +15,7 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         $email = config('app.admin_email');
-        $password = config('app.admin_password');
+        $password = env('ADMIN_PASSWORD');
 
         if (! $email || ! $password) {
             $this->command->warn('AdminSeeder skipped: ADMIN_EMAIL or ADMIN_PASSWORD not set in .env');

@@ -102,7 +102,7 @@ class AuthController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+        if (! hash_equals(hash('sha256', $user->getEmailForVerification()), $hash)) {
             abort(Response::HTTP_FORBIDDEN, 'Invalid verification link.');
         }
 
@@ -180,11 +180,11 @@ class AuthController extends Controller
             $tokens['refreshToken'],
             config('sanctum.rt_expiration'),
             '/api/v1/',
-            null,
+            config('session.domain'),
             true,
             true,
             false,
-            'None'
+            'Lax'
         );
 
         return (new ApiSuccess(

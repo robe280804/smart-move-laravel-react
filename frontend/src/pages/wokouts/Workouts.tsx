@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { notify } from "@/lib/toast";
 import {
@@ -16,6 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { FITNESS_GOALS, WORKOUT_TYPES, EXPERIENCE_LEVELS, DAYS_OF_WEEK } from "@/constants/const";
 import { useWorkoutPlans } from "@/hooks/useWorkoutPlans";
+import { useGeneratingPlans } from "@/hooks/useGeneratingPlans";
+import { GeneratingWorkoutBanner } from "@/components/dashboard/GeneratingWorkoutBanner";
 
 const GOAL_LABEL = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.label]));
 const GOAL_ICON = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.icon]));
@@ -71,8 +73,17 @@ const PlanCardSkeleton = () => (
 
 export const Workouts = () => {
     const { plans, isLoading, error, deletePlan, refetch } = useWorkoutPlans();
+    const { completedPlans } = useGeneratingPlans();
+    const prevCompletedCount = useRef(completedPlans.length);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    useEffect(() => {
+        if (completedPlans.length > prevCompletedCount.current) {
+            refetch();
+        }
+        prevCompletedCount.current = completedPlans.length;
+    }, [completedPlans.length, refetch]);
 
     const handleDeleteConfirm = async (id: number) => {
         setIsDeleting(true);
@@ -149,6 +160,11 @@ export const Workouts = () => {
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Generating plan banner */}
+            <div className="mb-4">
+                <GeneratingWorkoutBanner />
             </div>
 
             {/* Error state */}

@@ -137,7 +137,7 @@ class WorkoutPlanService
 
         $data = json_decode($cleaned, true);
 
-        Log::info('agent response', ['res' => $data]);
+        Log::info('Agent response parsed', ['has_workout_plan' => isset($data['workout_plan'])]);
 
         if (! is_array($data)) {
             throw new RuntimeException('Agent response is not valid JSON.');

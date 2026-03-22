@@ -119,14 +119,18 @@ export function WorkoutStepInput({
                         <Input
                             id="sessionDuration"
                             type="number"
-                            min="15"
-                            max="180"
+                            min="20"
+                            max="300"
                             value={planData.sessionDuration}
                             onChange={(e) => {
                                 setPlanData({
                                     ...planData,
                                     sessionDuration: e.target.value
                                 })
+                            }}
+                            onBlur={(e) => {
+                                const val = Math.max(20, Math.min(300, parseInt(e.target.value) || 20));
+                                setPlanData({ ...planData, sessionDuration: String(val) });
                             }}
                         />
                     </div>
@@ -231,8 +235,8 @@ export function WorkoutStepInput({
                     <div className="grid md:grid-cols-2 gap-2">
                         <label
                             className={`flex items-center gap-2 p-3 border-2 rounded-lg transition-all md:col-span-2 ${hasEverything || planData.gymAccess
-                                    ? "border-blue-600 bg-blue-50 cursor-not-allowed"
-                                    : "border-blue-300 bg-blue-50/50 hover:border-blue-500 cursor-pointer"
+                                ? "border-blue-600 bg-blue-50 cursor-not-allowed"
+                                : "border-blue-300 bg-blue-50/50 hover:border-blue-500 cursor-pointer"
                                 }`}
                         >
                             <Checkbox
@@ -246,10 +250,10 @@ export function WorkoutStepInput({
                             <label
                                 key={equipment}
                                 className={`flex items-center gap-2 p-3 border-2 rounded-lg transition-all ${equipmentDisabled
-                                        ? "border-blue-600 bg-blue-50 cursor-not-allowed opacity-70"
-                                        : planData.equipment.includes(equipment)
-                                            ? "border-blue-600 bg-blue-50 cursor-pointer"
-                                            : "border-slate-200 hover:border-slate-300 cursor-pointer"
+                                    ? "border-blue-600 bg-blue-50 cursor-not-allowed opacity-70"
+                                    : planData.equipment.includes(equipment)
+                                        ? "border-blue-600 bg-blue-50 cursor-pointer"
+                                        : "border-slate-200 hover:border-slate-300 cursor-pointer"
                                     }`}
                             >
                                 <Checkbox

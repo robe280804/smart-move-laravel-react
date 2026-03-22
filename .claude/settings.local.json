@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r Handler /c/Users/UTENTE/IdeaProjects/laravel/smart-move-laravel-react/backend/app --include=*.php -l)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

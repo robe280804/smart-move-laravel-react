@@ -8,6 +8,7 @@ use App\Dto\FitnessInfoDto;
 use App\Models\FitnessInfo;
 use App\Models\User;
 use App\Repositories\Contracts\FitnessInfoRepositoryInterface;
+use Illuminate\Support\Facades\Cache;
 
 class FitnessInfoService
 {
@@ -42,7 +43,11 @@ class FitnessInfoService
             'experience_level' => $dto->experience_level,
         ], fn ($value) => $value !== null);
 
-        return $this->fitnessInfoRepository->update($fitnessInfo, $data);
+        $updated = $this->fitnessInfoRepository->update($fitnessInfo, $data);
+
+        Cache::forget("fitness_profile:{$fitnessInfo->user_id}");
+
+        return $updated;
     }
 
     public function delete(FitnessInfo $fitnessInfo): void
