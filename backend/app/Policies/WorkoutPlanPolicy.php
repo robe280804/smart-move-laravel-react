@@ -31,4 +31,9 @@ class WorkoutPlanPolicy
     {
         return $user->id === $workoutPlan->user_id;
     }
+
+    public function exportPdf(User $user, WorkoutPlan $workoutPlan): bool
+    {
+        return $user->id === $workoutPlan->user_id;
+    }
 }

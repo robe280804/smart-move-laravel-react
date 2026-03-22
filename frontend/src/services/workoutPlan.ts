@@ -58,6 +58,26 @@ export const generateWorkoutPlan = async (data: WorkoutPlanData): Promise<Workou
     }
 };
 
+export const downloadWorkoutPlanPdf = async (planId: number): Promise<void> => {
+    try {
+        const response = await api.get(`/workout-plans/${planId}/pdf`, {
+            responseType: "blob",
+        });
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `workout-plan-${planId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
 export const updateBlockExercise = async (
     planId: number,
     blockExerciseId: number,

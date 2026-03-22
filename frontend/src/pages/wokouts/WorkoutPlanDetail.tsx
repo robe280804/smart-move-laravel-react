@@ -6,8 +6,8 @@ import { FITNESS_GOALS, WORKOUT_TYPES, EXPERIENCE_LEVELS, DAYS_OF_WEEK } from "@
 import { useWorkoutPlan } from "@/hooks/useWorkoutPlan";
 import { useSubscription } from "@/hooks/useSubscription";
 import { WorkoutDayAccordion } from "@/components/dashboard/workout/detail/WorkoutDayAccordion";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { WorkoutPlanPdf } from "@/components/dashboard/workout/detail/WorkoutPlanPdf";
+import { downloadWorkoutPlanPdf } from "@/services/workoutPlan";
+import { notify } from "@/lib/toast";
 
 const GOAL_LABEL = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.label]));
 const GOAL_ICON = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.icon]));
@@ -43,6 +43,7 @@ export const WorkoutPlanDetail = () => {
     const planId = Number(id);
     const { plan, isLoading, error, hasChanges, isSaving, fieldErrors, hasValidationErrors, updateExercise, saveChanges, refetch } = useWorkoutPlan(planId);
     const { canExportPdf, canEditExercises, currentPlan } = useSubscription();
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const [expandedDays, setExpandedDays] = useState<number[]>([]);
     const [upgradeBannerDismissed, setUpgradeBannerDismissed] = useState(
         () => sessionStorage.getItem("upgrade-banner-dismissed") === "true",
@@ -50,6 +51,17 @@ export const WorkoutPlanDetail = () => {
 
     const isFreePlan = currentPlan === "free";
     const showUpgradeBanner = isFreePlan && !upgradeBannerDismissed;
+
+    const handleExportPdf = async () => {
+        setIsExportingPdf(true);
+        try {
+            await downloadWorkoutPlanPdf(planId);
+        } catch {
+            notify.error("Failed to export PDF. Please try again.");
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
 
     const dismissUpgradeBanner = () => {
         sessionStorage.setItem("upgrade-banner-dismissed", "true");
@@ -139,21 +151,15 @@ export const WorkoutPlanDetail = () => {
 
                         <div className="flex items-center gap-2 flex-shrink-0">
                             {canExportPdf ? (
-                                <PDFDownloadLink
-                                    document={<WorkoutPlanPdf plan={plan} />}
-                                    fileName={`workout-plan-${plan.id}.pdf`}
+                                <Button
+                                    variant="outline"
+                                    className="border-white/20 text-white bg-white/10 hover:bg-white/20 transition-colors"
+                                    disabled={isExportingPdf}
+                                    onClick={handleExportPdf}
                                 >
-                                    {({ loading }) => (
-                                        <Button
-                                            variant="outline"
-                                            className="border-white/20 text-white bg-white/10 hover:bg-white/20 transition-colors"
-                                            disabled={loading}
-                                        >
-                                            <Download className="w-4 h-4 mr-2" />
-                                            {loading ? "Generating…" : "Export PDF"}
-                                        </Button>
-                                    )}
-                                </PDFDownloadLink>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    {isExportingPdf ? "Generating…" : "Export PDF"}
+                                </Button>
                             ) : (
                                 <Button
                                     variant="outline"

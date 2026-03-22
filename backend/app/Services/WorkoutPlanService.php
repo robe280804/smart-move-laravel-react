@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\ExperienceLevel;
+use App\Enums\TrainingGoalType;
 use App\Enums\WorkoutPlanStatus;
+use App\Enums\WorkoutType;
 use App\Models\BlockExercise;
 use App\Models\Exercise;
 use App\Models\User;
 use App\Models\WorkoutPlan;
 use App\Repositories\Contracts\WorkoutPlanRepositoryInterface;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -45,6 +50,46 @@ class WorkoutPlanService
     public function loadRelations(WorkoutPlan $workoutPlan): WorkoutPlan
     {
         return $workoutPlan->load('planDays.workoutBlocks.blockExercises.exercise');
+    }
+
+    public function generatePdf(WorkoutPlan $workoutPlan): Response
+    {
+        $this->loadRelations($workoutPlan);
+
+        $dayNames = [
+            1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday',
+            5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday',
+        ];
+
+        $goalEnum = $workoutPlan->goal;
+        $workoutTypeEnum = WorkoutType::tryFrom($workoutPlan->workout_type);
+        $experienceEnum = $workoutPlan->experience_level;
+
+        $totalExercises = $workoutPlan->planDays->sum(
+            fn ($day) => $day->workoutBlocks->sum(fn ($block) => $block->blockExercises->count()),
+        );
+
+        $trainingDays = $workoutPlan->planDays
+            ->sortBy('day_of_week')
+            ->map(fn ($day) => substr($dayNames[$day->day_of_week] ?? '?', 0, 3))
+            ->implode(' · ');
+
+        $pdf = Pdf::loadView('pdf.workout-plan', [
+            'plan' => $workoutPlan,
+            'goalLabel' => $goalEnum instanceof TrainingGoalType ? $goalEnum->label() : ucfirst((string) $workoutPlan->goal),
+            'workoutTypeLabel' => $workoutTypeEnum?->label() ?? ucfirst($workoutPlan->workout_type),
+            'experienceLabel' => $experienceEnum instanceof ExperienceLevel ? ucfirst($experienceEnum->value) : ucfirst((string) $workoutPlan->experience_level),
+            'totalExercises' => $totalExercises,
+            'trainingDays' => $trainingDays,
+            'dayNames' => $dayNames,
+            'generatedDate' => $workoutPlan->created_at->format('M d, Y'),
+        ]);
+
+        $pdf->setPaper('A4');
+
+        $fileName = 'workout-plan-'.$workoutPlan->id.'.pdf';
+
+        return $pdf->download($fileName);
     }
 
     public function delete(WorkoutPlan $workoutPlan): void
