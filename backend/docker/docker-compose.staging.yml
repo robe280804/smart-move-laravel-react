@@ -24,12 +24,12 @@ services:
         condition: service_healthy
     command: >
       sh -c "composer install --no-dev --optimize-autoloader --no-interaction &&
-              php artisan storage:link &&
-              php artisan migrate --force &&
-              php artisan config:cache &&
-              php artisan route:cache &&
-              php artisan view:cache &&
-              php-fpm"
+             php artisan storage:link &&
+             php artisan migrate --force &&
+             php artisan config:cache &&
+             php artisan route:cache &&
+             php artisan view:cache &&
+             php-fpm"
 
   # ── Queue worker ───────────────────────────────────────────────────────────
   # Must stay alive for AI generation jobs (timeout 600s)
@@ -86,10 +86,6 @@ services:
     volumes:
       - certbot_www:/var/www/certbot
       - certbot_conf:/etc/letsencrypt
-    networks:
-      - smart_move_network
-    depends_on:
-      - nginx
     # Renew every 12 hours (Let's Encrypt certs expire after 90 days)
     entrypoint: >
       /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
@@ -101,10 +97,10 @@ services:
     restart: unless-stopped
     env_file: ../.env
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${DB_DATABASE:-smart_move}
-      MYSQL_USER: ${DB_USERNAME:-smart_move_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -121,8 +117,7 @@ services:
     container_name: smart_move_redis
     image: redis:7.4-alpine
     restart: unless-stopped
-    env_file: ../.env
-    command: sh -c "redis-server --requirepass $$REDIS_PASSWORD"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     networks:
