@@ -12,7 +12,8 @@ use App\Services\SubscriptionService;
 use App\Services\WorkoutPlanService;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class WorkoutPlanController extends Controller
 {
@@ -31,7 +32,7 @@ class WorkoutPlanController extends Controller
         return new ApiSuccess(
             data: WorkoutPlanResource::collection($plans),
             metaData: [],
-            statusCode: Response::HTTP_OK,
+            statusCode: SymfonyResponse::HTTP_OK,
         );
     }
 
@@ -44,8 +45,19 @@ class WorkoutPlanController extends Controller
         return new ApiSuccess(
             data: new WorkoutPlanResource($workoutPlan),
             metaData: [],
-            statusCode: Response::HTTP_OK,
+            statusCode: SymfonyResponse::HTTP_OK,
         );
+    }
+
+    public function exportPdf(Request $request, WorkoutPlan $workoutPlan): Response
+    {
+        $this->authorize('exportPdf', $workoutPlan);
+
+        if (! $this->subscriptionService->getPlan($request->user())->canExportPdf()) {
+            abort(SymfonyResponse::HTTP_FORBIDDEN, 'PDF export is not available on your current plan.');
+        }
+
+        return $this->workoutPlanService->generatePdf($workoutPlan);
     }
 
     public function destroy(WorkoutPlan $workoutPlan): Responsable
@@ -57,7 +69,7 @@ class WorkoutPlanController extends Controller
         return new ApiSuccess(
             data: null,
             metaData: ['message' => 'Workout plan deleted successfully.'],
-            statusCode: Response::HTTP_NO_CONTENT,
+            statusCode: SymfonyResponse::HTTP_NO_CONTENT,
         );
     }
 }

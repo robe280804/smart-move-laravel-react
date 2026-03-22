@@ -71,6 +71,7 @@ Route::prefix('v1')
 
                 Route::get('workout-plans', [WorkoutPlanController::class, 'index']);
                 Route::get('workout-plans/{workoutPlan}', [WorkoutPlanController::class, 'show']);
+                Route::get('workout-plans/{workoutPlan}/pdf', [WorkoutPlanController::class, 'exportPdf']);
                 Route::delete('workout-plans/{workoutPlan}', [WorkoutPlanController::class, 'destroy']);
 
                 Route::patch(

@@ -64,13 +64,35 @@ export type PlanDay = {
     updated_at: string;
 };
 
+export type GenerationRequest = {
+    fitness_goals: string;
+    schedule: {
+        training_days_per_week: number;
+        available_days: string[];
+        session_duration: number;
+    };
+    equipment: {
+        items: string[];
+        gym_access: boolean;
+    };
+    constraints: string | null;
+    preferences: {
+        workout_types: string[];
+        sports: string | null;
+        preferred_exercises: string | null;
+        additional_notes: string | null;
+    };
+};
+
 export type WorkoutPlan = {
     id: number;
     user_id: number;
+    status: "pending" | "processing" | "completed" | "failed";
     training_days_per_week: number;
     goal: string;
     experience_level: string;
     workout_type: string;
+    generation_request: GenerationRequest | null;
     plan_days: PlanDay[];
     created_at: string;
     updated_at: string;
@@ -79,7 +101,7 @@ export type WorkoutPlan = {
 // ─── Form data types ──────────────────────────────────────────────────────────
 
 export type WorkoutPlanData = {
-    fitnessGoals: string[];
+    fitnessGoals: string;
     trainingDaysPerWeek: number;
     availableDays: string[];
     sessionDuration: number|string;   // string for the form
@@ -87,7 +109,6 @@ export type WorkoutPlanData = {
     injuries: string;
     equipment: string[];
     gymAccess: boolean;
-    workoutType: string[];
     sports: string;
     preferredExercises: string;
     additionalNotes: string;

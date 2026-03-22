@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\ExperienceLevel;
 use App\Enums\TrainingGoalType;
 use App\Enums\WorkoutPlanStatus;
+use Database\Factories\WorkoutPlanFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkoutPlan extends Model
 {
-    /** @use HasFactory<\Database\Factories\WorkoutPlanFactory> */
+    /** @use HasFactory<WorkoutPlanFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -24,6 +25,7 @@ class WorkoutPlan extends Model
         'goal',
         'experience_level',
         'workout_type',
+        'generation_request',
     ];
 
     protected function casts(): array
@@ -33,6 +35,7 @@ class WorkoutPlan extends Model
             'training_days_per_week' => 'integer',
             'goal' => TrainingGoalType::class,
             'experience_level' => ExperienceLevel::class,
+            'generation_request' => 'array',
         ];
     }
 

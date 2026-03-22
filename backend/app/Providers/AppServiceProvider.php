@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Enums\TokenAbility;
-use App\Neuron\Nodes\CollectUserInfosNode;
 use App\Repositories\Contracts\FeedbackRepositoryInterface;
 use App\Repositories\Contracts\FitnessInfoRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
@@ -15,6 +14,7 @@ use App\Repositories\WorkoutPlanRepository;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
@@ -29,12 +29,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FitnessInfoRepositoryInterface::class, FitnessInfoRepository::class);
         $this->app->bind(WorkoutPlanRepositoryInterface::class, WorkoutPlanRepository::class);
         $this->app->bind(FeedbackRepositoryInterface::class, FeedbackRepository::class);
-
-        $this->app->bind(CollectUserInfosNode::class, function ($app) {
-            return new CollectUserInfosNode(
-                $app->make(UserRepositoryInterface::class),
-            );
-        });
     }
 
     /**
@@ -42,6 +36,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         $this->configureRateLimiting();
         $this->overrideSanctumConfigurationToSupportRefreshToken();
     }

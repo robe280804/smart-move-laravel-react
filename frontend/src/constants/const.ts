@@ -55,5 +55,19 @@ export const WORKOUT_TYPES = [
     { value: "recovery", label: "Recovery / Stretching", icon: "🧎" }
 ] as const;
 
+export const GOAL_TO_WORKOUT_TYPES: Record<string, string[]> = {
+    weight_loss: ["cardio", "hiit"],
+    muscle_gain: ["strength"],
+    strength_building: ["strength"],
+    endurance: ["cardio", "conditioning"],
+    flexibility: ["mobility"],
+    general_fitness: ["strength", "cardio"],
+    body_recomposition: ["strength", "hiit"],
+    athletic_performance: ["conditioning", "functional"],
+    rehabilitation: ["recovery", "mobility"],
+    posture_correction: ["core", "mobility"],
+    functional_fitness: ["functional", "bodyweight"],
+};
+
 export type ExperienceLevel = typeof EXPERIENCE_LEVELS[number];
 export type Gender = typeof GENDERS[number];

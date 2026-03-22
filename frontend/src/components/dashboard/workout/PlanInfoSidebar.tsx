@@ -1,7 +1,7 @@
 import { Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FITNESS_GOALS, WORKOUT_TYPES } from "@/constants/const";
+import { FITNESS_GOALS } from "@/constants/const";
 import type { WorkoutPlanData } from "@/types/workout";
 
 interface PlanInfoSidebarProps {
@@ -16,16 +16,12 @@ export function PlanInfoSidebar({ planData }: PlanInfoSidebarProps) {
                     <CardTitle className="text-lg">Your Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {planData.fitnessGoals.length > 0 && (
+                    {planData.fitnessGoals && (
                         <div>
-                            <p className="text-sm text-slate-600 mb-1">Fitness Goals</p>
-                            <div className="flex flex-wrap gap-1">
-                                {planData.fitnessGoals.map(g => (
-                                    <Badge key={g} className="bg-blue-600">
-                                        {FITNESS_GOALS.find(fg => fg.value === g)?.label}
-                                    </Badge>
-                                ))}
-                            </div>
+                            <p className="text-sm text-slate-600 mb-1">Fitness Goal</p>
+                            <Badge className="bg-blue-600">
+                                {FITNESS_GOALS.find(fg => fg.value === planData.fitnessGoals)?.label}
+                            </Badge>
                         </div>
                     )}
                     {planData.availableDays.length > 0 && (
@@ -52,18 +48,6 @@ export function PlanInfoSidebar({ planData }: PlanInfoSidebarProps) {
                             <p className="text-sm font-medium text-slate-900">
                                 {planData.equipment.length} selected
                             </p>
-                        </div>
-                    )}
-                    {planData.workoutType.length > 0 && (
-                        <div>
-                            <p className="text-sm text-slate-600 mb-1">Workout Types</p>
-                            <div className="flex flex-wrap gap-1">
-                                {planData.workoutType.map(type => (
-                                    <Badge key={type} variant="outline" className="text-xs">
-                                        {WORKOUT_TYPES.find(t => t.value === type)?.label}
-                                    </Badge>
-                                ))}
-                            </div>
                         </div>
                     )}
                     {(planData.sports || planData.preferredExercises || planData.additionalNotes) && (

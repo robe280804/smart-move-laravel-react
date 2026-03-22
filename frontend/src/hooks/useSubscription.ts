@@ -8,10 +8,14 @@ export function useSubscription() {
     const [isPlanLoading, setIsPlanLoading] = useState(false);
     const [checkoutLoadingPlan, setCheckoutLoadingPlan] = useState<PlanKey | null>(null);
 
-    useEffect(() => {
+    const fetchPlan = () => {
         getSubscriptionPlan()
             .then(setCurrentPlan)
             .catch(() => setCurrentPlan("free"));
+    };
+
+    useEffect(() => {
+        fetchPlan();
     }, []);
 
     const handleSelectPlan = async (planKey: Exclude<PlanKey, "free">) => {
@@ -44,5 +48,5 @@ export function useSubscription() {
     const canExportPdf = currentPlan !== null && currentPlan !== "free";
     const canEditExercises = currentPlan !== null && currentPlan !== "free";
 
-    return { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling, canExportPdf, canEditExercises };
+    return { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling, canExportPdf, canEditExercises, refetchPlan: fetchPlan };
 }

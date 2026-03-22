@@ -111,7 +111,7 @@ services:
       - smart_move_network
     # Do NOT expose port 3306 to the host — only internal access
     healthcheck:
-      test: [ "CMD", "sh", "-c", "mysqladmin ping -h localhost -u$$DB_USERNAME -p$$DB_PASSWORD" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USERNAME}", "-p${DB_PASSWORD}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -129,7 +129,7 @@ services:
       - smart_move_network
     # Do NOT expose port 6379 to the host
     healthcheck:
-      test: [ "CMD", "sh", "-c", "redis-cli -a $$REDIS_PASSWORD ping" ]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5

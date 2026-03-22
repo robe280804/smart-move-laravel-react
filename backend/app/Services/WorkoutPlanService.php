@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Ai\Agents\StructuredOutput\WorkoutPlanOutput;
+use App\Enums\ExperienceLevel;
+use App\Enums\TrainingGoalType;
 use App\Enums\WorkoutPlanStatus;
+use App\Enums\WorkoutType;
 use App\Models\BlockExercise;
 use App\Models\Exercise;
 use App\Models\User;
 use App\Models\WorkoutPlan;
 use App\Repositories\Contracts\WorkoutPlanRepositoryInterface;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -47,6 +53,46 @@ class WorkoutPlanService
         return $workoutPlan->load('planDays.workoutBlocks.blockExercises.exercise');
     }
 
+    public function generatePdf(WorkoutPlan $workoutPlan): Response
+    {
+        $this->loadRelations($workoutPlan);
+
+        $dayNames = [
+            1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday',
+            5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday',
+        ];
+
+        $goalEnum = $workoutPlan->goal;
+        $workoutTypeEnum = WorkoutType::tryFrom($workoutPlan->workout_type);
+        $experienceEnum = $workoutPlan->experience_level;
+
+        $totalExercises = $workoutPlan->planDays->sum(
+            fn ($day) => $day->workoutBlocks->sum(fn ($block) => $block->blockExercises->count()),
+        );
+
+        $trainingDays = $workoutPlan->planDays
+            ->sortBy('day_of_week')
+            ->map(fn ($day) => substr($dayNames[$day->day_of_week] ?? '?', 0, 3))
+            ->implode(' · ');
+
+        $pdf = Pdf::loadView('pdf.workout-plan', [
+            'plan' => $workoutPlan,
+            'goalLabel' => $goalEnum instanceof TrainingGoalType ? $goalEnum->label() : ucfirst((string) $workoutPlan->goal),
+            'workoutTypeLabel' => $workoutTypeEnum?->label() ?? ucfirst($workoutPlan->workout_type),
+            'experienceLabel' => $experienceEnum instanceof ExperienceLevel ? ucfirst($experienceEnum->value) : ucfirst((string) $workoutPlan->experience_level),
+            'totalExercises' => $totalExercises,
+            'trainingDays' => $trainingDays,
+            'dayNames' => $dayNames,
+            'generatedDate' => $workoutPlan->created_at->format('M d, Y'),
+        ]);
+
+        $pdf->setPaper('A4');
+
+        $fileName = 'workout-plan-'.$workoutPlan->id.'.pdf';
+
+        return $pdf->download($fileName);
+    }
+
     public function delete(WorkoutPlan $workoutPlan): void
     {
         $this->workoutPlanRepository->delete($workoutPlan);
@@ -54,12 +100,15 @@ class WorkoutPlanService
 
     /**
      * Create a placeholder plan that the async job will populate once the agent finishes.
+     *
+     * @param  array<string, mixed>|null  $generationRequest
      */
-    public function createPending(User $user): WorkoutPlan
+    public function createPending(User $user, ?array $generationRequest = null): WorkoutPlan
     {
         return $this->workoutPlanRepository->create([
             'user_id' => $user->id,
             'status' => WorkoutPlanStatus::Pending,
+            'generation_request' => $generationRequest,
         ]);
     }
 
@@ -69,54 +118,54 @@ class WorkoutPlanService
      */
     public function fillFromAgentResponse(WorkoutPlan $plan, string $jsonResponse): WorkoutPlan
     {
-        $data = $this->parseJsonResponse($jsonResponse);
+        $output = $this->parseJsonResponse($jsonResponse);
 
-        return DB::transaction(function () use ($data, $plan): WorkoutPlan {
-            $planData = $data['workout_plan'];
+        return DB::transaction(function () use ($output, $plan): WorkoutPlan {
+            $planData = $output->workout_plan;
 
             $plan->update([
-                'training_days_per_week' => $planData['training_days_per_week'],
-                'goal' => $planData['goal'],
-                'experience_level' => $planData['experience_level'],
-                'workout_type' => $planData['workout_type'],
+                'training_days_per_week' => $planData->training_days_per_week,
+                'goal' => $planData->goal,
+                'experience_level' => $planData->experience_level,
+                'workout_type' => $planData->workout_type,
                 'status' => WorkoutPlanStatus::Completed,
             ]);
 
-            foreach ($planData['plan_days'] as $dayData) {
+            foreach ($planData->plan_days as $dayData) {
                 $planDay = $plan->planDays()->create([
-                    'day_of_week' => $dayData['day_of_week'],
-                    'workout_name' => $dayData['workout_name'] ?? null,
-                    'duration_minutes' => $dayData['duration_minutes'],
+                    'day_of_week' => $dayData->day_of_week,
+                    'workout_name' => $dayData->workout_name,
+                    'duration_minutes' => $dayData->duration_minutes,
                 ]);
 
-                foreach ($dayData['workout_blocks'] as $blockData) {
+                foreach ($dayData->workout_blocks as $blockData) {
                     $block = $planDay->workoutBlocks()->create([
-                        'name' => $blockData['name'],
-                        'order' => $blockData['order'],
+                        'name' => $blockData->name,
+                        'order' => $blockData->order,
                     ]);
 
-                    foreach ($blockData['exercises'] as $exerciseData) {
+                    foreach ($blockData->exercises as $exerciseData) {
                         $exercise = Exercise::query()->create([
-                            'name' => $exerciseData['name'] ?? null,
-                            'category' => $exerciseData['category'],
-                            'muscle_group' => $exerciseData['muscle_group'] ?? null,
-                            'equipment' => $exerciseData['equipment'] ?? null,
-                            'instructions' => $exerciseData['instructions'] ?? null,
-                            'infos' => $exerciseData['infos'] ?? null,
-                            'additional_metrics' => $exerciseData['additional_metrics'] ?? null,
+                            'name' => $exerciseData->name,
+                            'category' => $exerciseData->category,
+                            'muscle_group' => $exerciseData->muscle_group,
+                            'equipment' => $exerciseData->equipment,
+                            'instructions' => $exerciseData->instructions,
+                            'infos' => $exerciseData->infos,
+                            'additional_metrics' => $exerciseData->additional_metrics?->toArray(),
                         ]);
 
-                        $prescription = $exerciseData['prescription'] ?? [];
+                        $prescription = $exerciseData->prescription;
 
                         $block->blockExercises()->create([
                             'exercise_id' => $exercise->id,
-                            'order' => $prescription['order'] ?? null,
-                            'sets' => $prescription['sets'] ?? null,
-                            'reps' => $prescription['reps'] ?? null,
-                            'weight' => $prescription['weight'] ?? null,
-                            'duration_seconds' => $prescription['duration_seconds'] ?? null,
-                            'rest_seconds' => $prescription['rest_seconds'] ?? null,
-                            'rpe' => $prescription['rpe'] ?? null,
+                            'order' => $prescription->order,
+                            'sets' => $prescription->sets,
+                            'reps' => $prescription->reps,
+                            'weight' => $prescription->weight,
+                            'duration_seconds' => $prescription->duration_seconds,
+                            'rest_seconds' => $prescription->rest_seconds,
+                            'rpe' => $prescription->rpe,
                         ]);
                     }
                 }
@@ -126,10 +175,7 @@ class WorkoutPlanService
         });
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function parseJsonResponse(string $response): array
+    private function parseJsonResponse(string $response): WorkoutPlanOutput
     {
         $cleaned = preg_replace('/^```(?:json)?\s*/m', '', $response);
         $cleaned = preg_replace('/\s*```\s*$/m', '', (string) $cleaned);
@@ -137,7 +183,7 @@ class WorkoutPlanService
 
         $data = json_decode($cleaned, true);
 
-        Log::info('agent response', ['res' => $data]);
+        Log::info('Agent response parsed', ['has_workout_plan' => isset($data['workout_plan'])]);
 
         if (! is_array($data)) {
             throw new RuntimeException('Agent response is not valid JSON.');
@@ -147,6 +193,6 @@ class WorkoutPlanService
             throw new RuntimeException('Agent response is missing the "workout_plan" key.');
         }
 
-        return $data;
+        return WorkoutPlanOutput::fromArray($data);
     }
 }

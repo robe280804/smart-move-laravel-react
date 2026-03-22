@@ -6,7 +6,6 @@ const STEP_LABELS = [
     "Schedule",
     "Constraints",
     "Equipment",
-    "Preferences",
     "Details",
     "Generate",
 ];

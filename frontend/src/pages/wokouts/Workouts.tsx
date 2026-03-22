@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { notify } from "@/lib/toast";
 import {
@@ -16,6 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { FITNESS_GOALS, WORKOUT_TYPES, EXPERIENCE_LEVELS, DAYS_OF_WEEK } from "@/constants/const";
 import { useWorkoutPlans } from "@/hooks/useWorkoutPlans";
+import { useGeneratingPlans } from "@/hooks/useGeneratingPlans";
+import { GeneratingWorkoutBanner } from "@/components/dashboard/GeneratingWorkoutBanner";
 
 const GOAL_LABEL = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.label]));
 const GOAL_ICON = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.icon]));
@@ -71,8 +73,27 @@ const PlanCardSkeleton = () => (
 
 export const Workouts = () => {
     const { plans, isLoading, error, deletePlan, refetch } = useWorkoutPlans();
+    const { completedPlans, failedPlans, dismissPlan } = useGeneratingPlans();
+    const prevCompletedCount = useRef(completedPlans.length);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // On mount: dismiss any stale completed/failed banners from previous sessions
+    useEffect(() => {
+        completedPlans.forEach((p) => dismissPlan(p.id));
+        failedPlans.forEach((p) => dismissPlan(p.id));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // When a plan finishes generating, refresh the list and auto-dismiss the banner
+    useEffect(() => {
+        if (completedPlans.length > prevCompletedCount.current) {
+            refetch().then(() => {
+                completedPlans.forEach((p) => dismissPlan(p.id));
+            });
+        }
+        prevCompletedCount.current = completedPlans.length;
+    }, [completedPlans.length, refetch, completedPlans, dismissPlan]);
 
     const handleDeleteConfirm = async (id: number) => {
         setIsDeleting(true);
@@ -151,6 +172,11 @@ export const Workouts = () => {
                 )}
             </div>
 
+            {/* Generating plan banner */}
+            <div className="mb-4">
+                <GeneratingWorkoutBanner />
+            </div>
+
             {/* Error state */}
             {error && !isLoading && (
                 <div className="text-center py-16">
@@ -186,6 +212,8 @@ export const Workouts = () => {
                             EXPERIENCE_BADGE[plan.experience_level] ??
                             "bg-slate-100 text-slate-700";
 
+                        const isGenerating = plan.status === "pending" || plan.status === "processing";
+
                         return (
                             <div
                                 key={plan.id}
@@ -207,9 +235,15 @@ export const Workouts = () => {
                                                 <h3 className="font-semibold text-slate-900 text-sm leading-tight truncate">
                                                     {GOAL_LABEL[plan.goal] ?? plan.goal}
                                                 </h3>
-                                                <span className="text-xs text-slate-400 flex-shrink-0">
-                                                    #{index + 1}
-                                                </span>
+                                                {isGenerating ? (
+                                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 flex-shrink-0 animate-pulse">
+                                                        Generating…
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400 flex-shrink-0">
+                                                        #{index + 1}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-xs text-slate-500">
@@ -267,7 +301,15 @@ export const Workouts = () => {
 
                                     {/* Actions */}
                                     <div className="mt-auto">
-                                        {isConfirming ? (
+                                        {isGenerating ? (
+                                            <Button
+                                                variant="outline"
+                                                className="w-full text-xs h-9"
+                                                disabled
+                                            >
+                                                Generating…
+                                            </Button>
+                                        ) : isConfirming ? (
                                             <div className="flex items-center gap-2">
                                                 <p className="text-xs text-slate-500 flex-1">
                                                     Delete this plan?

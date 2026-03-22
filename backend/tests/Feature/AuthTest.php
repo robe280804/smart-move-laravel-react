@@ -383,7 +383,7 @@ class AuthTest extends TestCase
         $url = URL::temporarySignedRoute(
             'verification.verify',
             now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1($user->email)]
+            ['id' => $user->id, 'hash' => hash('sha256', $user->email)]
         );
 
         $response = $this->getJson($url);
@@ -401,7 +401,7 @@ class AuthTest extends TestCase
         $url = URL::temporarySignedRoute(
             'verification.verify',
             now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1($user->email)]
+            ['id' => $user->id, 'hash' => hash('sha256', $user->email)]
         );
 
         $response = $this->getJson($url);
@@ -426,7 +426,7 @@ class AuthTest extends TestCase
         $url = URL::temporarySignedRoute(
             'verification.verify',
             now()->subMinute(),
-            ['id' => $user->id, 'hash' => sha1($user->email)]
+            ['id' => $user->id, 'hash' => hash('sha256', $user->email)]
         );
 
         $response = $this->getJson($url);

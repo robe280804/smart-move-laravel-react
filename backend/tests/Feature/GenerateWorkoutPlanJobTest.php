@@ -9,12 +9,9 @@ use App\Jobs\GenerateWorkoutPlanJob;
 use App\Models\FitnessInfo;
 use App\Models\User;
 use App\Models\WorkoutPlan;
-use App\Neuron\Events\UserInfosCollectedEvent;
-use App\Neuron\Nodes\GenerateWorkoutPlanNode;
+use App\Services\WorkoutGenerationService;
 use App\Services\WorkoutPlanService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use NeuronAI\Workflow\Events\StopEvent;
-use NeuronAI\Workflow\WorkflowState;
 use Tests\TestCase;
 
 class GenerateWorkoutPlanJobTest extends TestCase
@@ -25,7 +22,7 @@ class GenerateWorkoutPlanJobTest extends TestCase
     private array $workflowState = [
         'user_id' => 1,
         'user_email' => 'user@example.com',
-        'fitness_goals' => ['muscle_gain'],
+        'fitness_goals' => 'muscle_gain',
         'schedule' => [
             'training_days_per_week' => 4,
             'available_days' => ['monday', 'tuesday', 'thursday', 'friday'],
@@ -62,19 +59,10 @@ class GenerateWorkoutPlanJobTest extends TestCase
             'status' => WorkoutPlanStatus::Completed,
         ]);
 
-        // Mock GenerateWorkoutPlanNode to avoid real Qdrant / Anthropic calls.
-        // The mock must still set agent_response on state and return StopEvent
-        // so the workflow terminates normally and fillFromAgentResponse is reached.
-        $this->mock(GenerateWorkoutPlanNode::class)
-            ->shouldReceive('setWorkflowContext')
+        $this->mock(WorkoutGenerationService::class)
+            ->shouldReceive('generate')
             ->once()
-            ->shouldReceive('run')
-            ->once()
-            ->andReturnUsing(function ($event, WorkflowState $state): StopEvent {
-                $state->set('agent_response', json_encode(['workout_plan' => []]));
-
-                return new StopEvent;
-            });
+            ->andReturn('{"workout_plan":{}}');
 
         $serviceMock = $this->mock(WorkoutPlanService::class);
         $serviceMock->shouldReceive('fillFromAgentResponse')

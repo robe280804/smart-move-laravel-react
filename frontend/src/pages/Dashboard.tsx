@@ -20,6 +20,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { GoalDistribution } from "@/components/dashboard/GoalDistribution";
 import { WeeklyOverview } from "@/components/dashboard/WeeklyOverview";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { GeneratingWorkoutBanner } from "@/components/dashboard/GeneratingWorkoutBanner";
 
 const GOAL_LABEL = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.label]));
 const GOAL_ICON = Object.fromEntries(FITNESS_GOALS.map((g) => [g.value, g.icon]));
@@ -134,6 +135,9 @@ export const Dashboard = () => {
                     </Link>
                 </div>
             </section>
+
+            {/* ── Generating plan banner ──────────── */}
+            <GeneratingWorkoutBanner />
 
             {/* ── KPI Stats ────────────────────────── */}
             <section

@@ -35,15 +35,11 @@ class AgentController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'You have reached your active plans limit.');
         }
 
-        // Create a pending workoutplan with the min field
-        $plan = $this->workoutPlanService->createPending($user);
+        if ($user->fitnessInfo()->first() === null) {
+            abort(Response::HTTP_UNPROCESSABLE_ENTITY, 'Please complete your fitness profile before generating a workout plan.');
+        }
 
-        $queue = $this->subscriptionService->getPlan($user)->hasPriorityGeneration() ? 'high' : 'default';
-
-        // Dispach the job
-        GenerateWorkoutPlanJob::dispatch($plan, $user, [
-            'user_id' => $user->id,
-            'user_email' => $user->email,
+        $generationRequest = [
             'fitness_goals' => $request->validated('fitness_goals'),
             'schedule' => [
                 'training_days_per_week' => $request->validated('training_days_per_week'),
@@ -61,6 +57,16 @@ class AgentController extends Controller
                 'preferred_exercises' => $request->validated('preferred_exercises'),
                 'additional_notes' => $request->validated('additional_notes'),
             ],
+        ];
+
+        $plan = $this->workoutPlanService->createPending($user, $generationRequest);
+
+        $queue = $this->subscriptionService->getPlan($user)->hasPriorityGeneration() ? 'high' : 'default';
+
+        GenerateWorkoutPlanJob::dispatch($plan, $user, [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            ...$generationRequest,
         ])->onQueue($queue);
 
         return new ApiSuccess(

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreditCard, Dumbbell, Shield, User } from "lucide-react";
 import { useSearchParams } from "react-router";
@@ -16,10 +17,16 @@ export function ProfileAndSettings() {
     const { user, logout } = useAuth();
     const { form: profileForm, setForm: setProfileForm, errors: profileErrors, isLoading: isProfileLoading, handleSubmit: handleProfileSubmit } = useProfileForm();
     const { fitnessInfo, form: fitnessForm, setForm: setFitnessForm, errors: fitnessErrors, isLoading: isFitnessLoading, handleSubmit: handleFitnessSubmit } = useFitnessForm();
-    const { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling } = useSubscription();
+    const { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling, refetchPlan } = useSubscription();
     const { form: securityForm, setForm: setSecurityForm, errors: securityErrors, isLoading: isSecurityLoading, handleSubmit: handleSecuritySubmit } = useSecurityForm();
     const [searchParams] = useSearchParams();
     const initialTab = searchParams.get("tab") ?? "personal";
+
+    useEffect(() => {
+        if (searchParams.get("checkout") === "success") {
+            refetchPlan();
+        }
+    }, []);
 
     return (
         <div className="space-y-6">

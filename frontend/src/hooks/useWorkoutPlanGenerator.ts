@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { notify } from "@/lib/toast";
-import { FITNESS_GOALS, WORKOUT_TYPES } from "@/constants/const";
+import { FITNESS_GOALS } from "@/constants/const";
 import type { MessageType, WorkoutPlanData } from "@/types/workout";
 import { findSuspiciousField } from "@/lib/sanitize";
+import { generateWorkoutPlan, getWorkoutPlan } from "@/services/workoutPlan";
+import { trackGeneratingPlan, updateGeneratingPlanStatus } from "@/hooks/useGeneratingPlans";
+import { ApiError } from "@/lib/apiError";
 
 const INITIAL_MESSAGE: MessageType = {
     id: "1",
@@ -12,7 +15,7 @@ const INITIAL_MESSAGE: MessageType = {
 };
 
 const INITIAL_PLAN_DATA: WorkoutPlanData = {
-    fitnessGoals: [],
+    fitnessGoals: "",
     trainingDaysPerWeek: 3,
     availableDays: [],
     sessionDuration: 60,
@@ -20,7 +23,6 @@ const INITIAL_PLAN_DATA: WorkoutPlanData = {
     injuries: "",
     equipment: [],
     gymAccess: false,
-    workoutType: [],
     sports: "",
     preferredExercises: "",
     additionalNotes: "",
@@ -29,10 +31,19 @@ const INITIAL_PLAN_DATA: WorkoutPlanData = {
 export function useWorkoutPlanGenerator() {
     const [step, setStep] = useState(0);
     const [showAllGoals, setShowAllGoals] = useState(false);
-    const [showAllWorkoutTypes, setShowAllWorkoutTypes] = useState(false);
     const [messages, setMessages] = useState<MessageType[]>([INITIAL_MESSAGE]);
     const [isGenerating, setIsGenerating] = useState(false);
     const [planData, setPlanData] = useState<WorkoutPlanData>(INITIAL_PLAN_DATA);
+    const [generatedPlanId, setGeneratedPlanId] = useState<number | null>(null);
+    const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (pollingRef.current) {
+                clearInterval(pollingRef.current);
+            }
+        };
+    }, []);
 
     const addMessage = (role: "user" | "assistant", content: string) => {
         const newMessage: MessageType = {
@@ -45,35 +56,21 @@ export function useWorkoutPlanGenerator() {
     };
 
     const handleGoalToggle = (goal: string) => {
-        const isSelected = planData.fitnessGoals.includes(goal);
-        if (isSelected) {
-            setPlanData({ ...planData, fitnessGoals: planData.fitnessGoals.filter(g => g !== goal) });
+        if (planData.fitnessGoals === goal) {
+            setPlanData({ ...planData, fitnessGoals: "" });
         } else {
-            if (planData.fitnessGoals.length >= 3) return;
-            setPlanData({ ...planData, fitnessGoals: [...planData.fitnessGoals, goal] });
-        }
-    };
-
-    const handleWorkoutTypeToggle = (type: string) => {
-        const isSelected = planData.workoutType.includes(type);
-        if (isSelected) {
-            setPlanData({ ...planData, workoutType: planData.workoutType.filter(t => t !== type) });
-        } else {
-            if (planData.workoutType.length >= 3) return;
-            setPlanData({ ...planData, workoutType: [...planData.workoutType, type] });
+            setPlanData({ ...planData, fitnessGoals: goal });
         }
     };
 
     const handleGoals = () => {
-        if (planData.fitnessGoals.length === 0) {
-            notify.info("Please select at least one goal.");
+        if (!planData.fitnessGoals) {
+            notify.info("Please select a goal.");
             return;
         }
 
-        const goalLabels = planData.fitnessGoals
-            .map(g => FITNESS_GOALS.find(fg => fg.value === g)?.label)
-            .join(", ");
-        addMessage("user", `My goals: ${goalLabels}`);
+        const goalLabel = FITNESS_GOALS.find(fg => fg.value === planData.fitnessGoals)?.label ?? planData.fitnessGoals;
+        addMessage("user", `My goal: ${goalLabel}`);
 
         setTimeout(() => {
             addMessage("assistant", "Great choice! Now, let's talk about your schedule. How many days per week can you commit to training?");
@@ -133,25 +130,8 @@ export function useWorkoutPlanGenerator() {
         addMessage("user", `${gymText}. Available equipment: ${equipmentText}`);
 
         setTimeout(() => {
-            addMessage("assistant", "Almost done! What type of workouts do you prefer? You can select multiple options.");
+            addMessage("assistant", "Almost done! Do you have any additional details to share? You can mention sports you practice, specific exercises you'd like to include, or any other requests. This step is optional.");
             setStep(4);
-        }, 500);
-    };
-
-    const handlePreferences = () => {
-        if (planData.workoutType.length === 0) {
-            notify.info("Please select at least one workout type.");
-            return;
-        }
-
-        const typeLabels = planData.workoutType
-            .map(type => WORKOUT_TYPES.find(t => t.value === type)?.label)
-            .join(", ");
-        addMessage("user", `I prefer: ${typeLabels}`);
-
-        setTimeout(() => {
-            addMessage("assistant", "Almost there! Do you have any additional details to share? You can mention sports you practice, specific exercises you'd like to include, or any other requests. This step is optional.");
-            setStep(5);
         }, 500);
     };
 
@@ -176,67 +156,107 @@ export function useWorkoutPlanGenerator() {
 
         setTimeout(() => {
             addMessage("assistant", "Excellent! I have all the information I need. Let me generate your personalized workout plan...");
-            setStep(6);
+            setStep(5);
             generatePlan();
         }, 500);
     };
 
-    const generatePlan = () => {
+    const generatePlan = async () => {
         setIsGenerating(true);
+        setGeneratedPlanId(null);
 
-        console.log(planData);
+        try {
+            const pendingPlan = await generateWorkoutPlan(planData);
+            trackGeneratingPlan(pendingPlan);
 
-        setTimeout(() => {
-            const goalLabels = planData.fitnessGoals
-                .map(g => FITNESS_GOALS.find(fg => fg.value === g)?.label)
-                .join(", ");
-            const planSummary = `
-                🎯 **Your Personalized ${planData.trainingDaysPerWeek}-Day Workout Plan**
+            pollingRef.current = setInterval(async () => {
+                try {
+                    const plan = await getWorkoutPlan(pendingPlan.id);
 
-                **Goal${planData.fitnessGoals.length > 1 ? "s" : ""}:** ${goalLabels}
-                **Schedule:** ${planData.availableDays.join(", ")} • ${planData.sessionDuration} min/session
-                **Equipment:** ${planData.equipment.join(", ")}
-                **Focus:** ${planData.workoutType.map(t => WORKOUT_TYPES.find(wt => wt.value === t)?.label).join(", ")}
+                    if (plan.status === "completed") {
+                        clearInterval(pollingRef.current!);
+                        pollingRef.current = null;
+                        updateGeneratingPlanStatus(pendingPlan.id, "completed");
+                        setGeneratedPlanId(plan.id);
+                        addMessage("assistant",
+                            "Your personalized workout plan has been generated successfully! Click below to view your complete plan."
+                        );
+                        setIsGenerating(false);
+                        setStep(6);
+                    }
 
-                Your plan has been generated successfully! It includes:
-                ✅ Progressive overload structure
-                ✅ Personalized exercise selection
-                ✅ Recovery optimization
-                ✅ AI-adjusted intensity levels
-
-                Would you like to view your complete workout plan or save it to your dashboard?
-            `.trim();
-
-            addMessage("assistant", planSummary);
+                    if (plan.status === "failed") {
+                        clearInterval(pollingRef.current!);
+                        pollingRef.current = null;
+                        updateGeneratingPlanStatus(pendingPlan.id, "failed");
+                        addMessage("assistant",
+                            "Sorry, something went wrong while generating your plan. Please try again."
+                        );
+                        setIsGenerating(false);
+                        setStep(6);
+                    }
+                } catch {
+                    clearInterval(pollingRef.current!);
+                    pollingRef.current = null;
+                    notify.error("Connection lost while checking plan status. Please try again.");
+                    setIsGenerating(false);
+                    setStep(4);
+                }
+            }, 3000);
+        } catch (error) {
             setIsGenerating(false);
-            setStep(7);
-        }, 3000);
+
+            if (error instanceof ApiError && error.statusCode === 403) {
+                notify.error(error.message);
+                addMessage("assistant", error.message);
+                setStep(6);
+                return;
+            }
+
+            if (error instanceof ApiError && error.statusCode === 422) {
+                notify.error(error.message);
+                addMessage("assistant", error.message);
+                setStep(6);
+                return;
+            }
+
+            if (error instanceof ApiError && error.statusCode === 429) {
+                notify.error("Too many requests. Please wait a moment and try again.");
+                setStep(4);
+                return;
+            }
+
+            notify.error("Failed to generate workout plan. Please try again.");
+            setStep(4);
+        }
     };
 
     const handleReset = () => {
+        if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+        }
         setStep(0);
         setMessages([{ ...INITIAL_MESSAGE, timestamp: new Date() }]);
         setPlanData(INITIAL_PLAN_DATA);
+        setGeneratedPlanId(null);
     };
 
     return {
         step,
         showAllGoals,
         setShowAllGoals,
-        showAllWorkoutTypes,
-        setShowAllWorkoutTypes,
         messages,
         isGenerating,
         planData,
         setPlanData,
         handleGoalToggle,
-        handleWorkoutTypeToggle,
         handleGoals,
         handleSchedule,
         handleConstraints,
         handleEquipment,
-        handlePreferences,
         handleDetails,
         handleReset,
+        generatedPlanId,
     };
 }
