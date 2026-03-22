@@ -4,7 +4,10 @@
       "Bash(grep -r Handler /c/Users/UTENTE/IdeaProjects/laravel/smart-move-laravel-react/backend/app --include=*.php -l)",
       "Bash(npx tsc:*)",
       "Bash(find /c/Users/UTENTE/IdeaProjects/laravel/smart-move-laravel-react/frontend/src -type f -name *tokenStore* -o -name *token*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(php.bat vendor/bin/pint --dirty --format agent)",
+      "Bash(php.bat artisan:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

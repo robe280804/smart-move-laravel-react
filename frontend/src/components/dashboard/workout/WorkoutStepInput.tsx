@@ -42,24 +42,17 @@ export function WorkoutStepInput({
     if (step === 0) {
         return (
             <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <Label>What are your fitness goals? (select 1–3)</Label>
-                    {planData.fitnessGoals.length > 0 && (
-                        <span className="text-xs text-blue-600 font-medium">{planData.fitnessGoals.length}/3 selected</span>
-                    )}
-                </div>
+                <Label>What is your primary fitness goal?</Label>
                 <div className="grid md:grid-cols-2 gap-3">
                     {FITNESS_GOALS.slice(0, 4).map((goal) => {
-                        const isSelected = planData.fitnessGoals.includes(goal.value);
+                        const isSelected = planData.fitnessGoals === goal.value;
                         return (
                             <button
                                 key={goal.value}
                                 onClick={() => handleGoalToggle(goal.value)}
                                 className={`p-4 border-2 rounded-xl transition-all text-left ${isSelected
                                     ? "border-blue-600 bg-blue-50"
-                                    : planData.fitnessGoals.length >= 3
-                                        ? "border-slate-200 opacity-50 cursor-not-allowed"
-                                        : "border-slate-200 hover:border-blue-600 hover:bg-blue-50"
+                                    : "border-slate-200 hover:border-blue-600 hover:bg-blue-50"
                                     }`}
                             >
                                 <div className="flex items-start gap-3">
@@ -82,7 +75,7 @@ export function WorkoutStepInput({
                 <Button
                     onClick={handleGoals}
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                    disabled={planData.fitnessGoals.length === 0}
+                    disabled={!planData.fitnessGoals}
                 >
                     Continue <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>

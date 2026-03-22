@@ -15,7 +15,7 @@ const INITIAL_MESSAGE: MessageType = {
 };
 
 const INITIAL_PLAN_DATA: WorkoutPlanData = {
-    fitnessGoals: [],
+    fitnessGoals: "",
     trainingDaysPerWeek: 3,
     availableDays: [],
     sessionDuration: 60,
@@ -56,25 +56,21 @@ export function useWorkoutPlanGenerator() {
     };
 
     const handleGoalToggle = (goal: string) => {
-        const isSelected = planData.fitnessGoals.includes(goal);
-        if (isSelected) {
-            setPlanData({ ...planData, fitnessGoals: planData.fitnessGoals.filter(g => g !== goal) });
+        if (planData.fitnessGoals === goal) {
+            setPlanData({ ...planData, fitnessGoals: "" });
         } else {
-            if (planData.fitnessGoals.length >= 3) return;
-            setPlanData({ ...planData, fitnessGoals: [...planData.fitnessGoals, goal] });
+            setPlanData({ ...planData, fitnessGoals: goal });
         }
     };
 
     const handleGoals = () => {
-        if (planData.fitnessGoals.length === 0) {
-            notify.info("Please select at least one goal.");
+        if (!planData.fitnessGoals) {
+            notify.info("Please select a goal.");
             return;
         }
 
-        const goalLabels = planData.fitnessGoals
-            .map(g => FITNESS_GOALS.find(fg => fg.value === g)?.label)
-            .join(", ");
-        addMessage("user", `My goals: ${goalLabels}`);
+        const goalLabel = FITNESS_GOALS.find(fg => fg.value === planData.fitnessGoals)?.label ?? planData.fitnessGoals;
+        addMessage("user", `My goal: ${goalLabel}`);
 
         setTimeout(() => {
             addMessage("assistant", "Great choice! Now, let's talk about your schedule. How many days per week can you commit to training?");

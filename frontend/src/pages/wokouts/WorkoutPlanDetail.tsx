@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router";
-import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy, Download, Lock } from "lucide-react";
+import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy, Download, Lock, Crown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FITNESS_GOALS, WORKOUT_TYPES, EXPERIENCE_LEVELS, DAYS_OF_WEEK } from "@/constants/const";
 import { useWorkoutPlan } from "@/hooks/useWorkoutPlan";
@@ -42,8 +42,19 @@ export const WorkoutPlanDetail = () => {
     const { id } = useParams<{ id: string }>();
     const planId = Number(id);
     const { plan, isLoading, error, hasChanges, isSaving, fieldErrors, hasValidationErrors, updateExercise, saveChanges, refetch } = useWorkoutPlan(planId);
-    const { canExportPdf, canEditExercises } = useSubscription();
+    const { canExportPdf, canEditExercises, currentPlan } = useSubscription();
     const [expandedDays, setExpandedDays] = useState<number[]>([]);
+    const [upgradeBannerDismissed, setUpgradeBannerDismissed] = useState(
+        () => sessionStorage.getItem("upgrade-banner-dismissed") === "true",
+    );
+
+    const isFreePlan = currentPlan === "free";
+    const showUpgradeBanner = isFreePlan && !upgradeBannerDismissed;
+
+    const dismissUpgradeBanner = () => {
+        sessionStorage.setItem("upgrade-banner-dismissed", "true");
+        setUpgradeBannerDismissed(true);
+    };
 
     const toggleDay = (dayId: number) =>
         setExpandedDays((prev) =>
@@ -202,9 +213,32 @@ export const WorkoutPlanDetail = () => {
                 </div>
             </div>
 
-            {/* Content 
-            <PlanOverviewCards plan={plan} />
-*/}
+            {/* Upgrade banner for free plan users */}
+            {showUpgradeBanner && (
+                <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-6">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 flex-shrink-0">
+                        <Crown className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-amber-800">
+                            Upgrade your plan to unlock exercise editing and PDF export.
+                        </p>
+                        <Link
+                            to="/dashboard/profile?tab=subscription"
+                            className="text-sm font-semibold text-amber-700 hover:text-amber-900 underline underline-offset-2"
+                        >
+                            View plans
+                        </Link>
+                    </div>
+                    <button
+                        onClick={dismissUpgradeBanner}
+                        className="flex-shrink-0 rounded-md p-1 text-amber-400 hover:text-amber-600 hover:bg-amber-100 transition-colors"
+                        aria-label="Dismiss upgrade banner"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+            )}
 
             <div className="space-y-4 mt-6">
                 {plan.plan_days.map((day) => (

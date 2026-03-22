@@ -16,16 +16,12 @@ export function PlanInfoSidebar({ planData }: PlanInfoSidebarProps) {
                     <CardTitle className="text-lg">Your Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {planData.fitnessGoals.length > 0 && (
+                    {planData.fitnessGoals && (
                         <div>
-                            <p className="text-sm text-slate-600 mb-1">Fitness Goals</p>
-                            <div className="flex flex-wrap gap-1">
-                                {planData.fitnessGoals.map(g => (
-                                    <Badge key={g} className="bg-blue-600">
-                                        {FITNESS_GOALS.find(fg => fg.value === g)?.label}
-                                    </Badge>
-                                ))}
-                            </div>
+                            <p className="text-sm text-slate-600 mb-1">Fitness Goal</p>
+                            <Badge className="bg-blue-600">
+                                {FITNESS_GOALS.find(fg => fg.value === planData.fitnessGoals)?.label}
+                            </Badge>
                         </div>
                     )}
                     {planData.availableDays.length > 0 && (

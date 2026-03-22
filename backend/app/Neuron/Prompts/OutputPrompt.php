@@ -14,6 +14,8 @@ class OutputPrompt
             'Valid values for "goal": weight_loss, muscle_gain, strength_building, endurance, flexibility, general_fitness, body_recomposition, athletic_performance, rehabilitation, posture_correction, functional_fitness.',
             'Valid values for "experience_level": beginner, intermediate, advanced, professional.',
             'Valid values for "workout_type": strength, cardio, mobility, conditioning, hiit, bodyweight, functional, core, recovery.',
+            'Valid values for "category": compound, isolation, cardio, mobility, plyometric, core, conditioning.',
+            'When the user selects multiple workout types, set "workout_type" to the type most aligned with the primary training goal. Reflect all selected types in the actual exercise programming across the plan days.',
             'Valid values for "energy_system": aerobic, anaerobic_lactic, anaerobic_alactic, mixed.',
             'Valid values for "difficulty": beginner, intermediate, advanced, professional.',
             'Use metric units exclusively (kg, cm). Never use imperial units.',

@@ -64,8 +64,7 @@ class AgentCallRequest extends FormRequest
         $workoutValues = array_column(WorkoutType::cases(), 'value');
 
         return [
-            'fitness_goals' => ['required', 'array', 'min:1', 'max:3'],
-            'fitness_goals.*' => ['required', 'string', Rule::in($goalValues)],
+            'fitness_goals' => ['required', 'string', Rule::in($goalValues)],
 
             'training_days_per_week' => ['required', 'integer', 'min:1', 'max:7'],
 

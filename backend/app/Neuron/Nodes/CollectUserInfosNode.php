@@ -8,7 +8,6 @@ use App\Neuron\Events\SanitizeInputEvent;
 use App\Neuron\Events\UserInfosCollectedEvent;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use NeuronAI\Workflow\Node;
 use NeuronAI\Workflow\WorkflowState;
 
@@ -31,10 +30,10 @@ class CollectUserInfosNode extends Node
                     ->firstOrFail();
 
                 return [
-                    'age'              => $fitnessInfo->age,
-                    'height'           => $fitnessInfo->height,
-                    'weight'           => $fitnessInfo->weight,
-                    'gender'           => $fitnessInfo->gender,
+                    'age' => $fitnessInfo->age,
+                    'height' => $fitnessInfo->height,
+                    'weight' => $fitnessInfo->weight,
+                    'gender' => $fitnessInfo->gender,
                     'experience_level' => $fitnessInfo->experience_level,
                 ];
             },
@@ -42,8 +41,6 @@ class CollectUserInfosNode extends Node
 
         $state->set('fitness_data', $fitnessInfoPrompt);
 
-        Log::info('CollectUserInfosNode fitness profile', ['user_id' => $userId]);
-
-        return new UserInfosCollectedEvent();
+        return new UserInfosCollectedEvent;
     }
 }

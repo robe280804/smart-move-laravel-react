@@ -9,7 +9,6 @@ use App\Jobs\GenerateWorkoutPlanJob;
 use App\Models\FitnessInfo;
 use App\Models\User;
 use App\Models\WorkoutPlan;
-use App\Neuron\Events\UserInfosCollectedEvent;
 use App\Neuron\Nodes\GenerateWorkoutPlanNode;
 use App\Services\WorkoutPlanService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,7 +24,7 @@ class GenerateWorkoutPlanJobTest extends TestCase
     private array $workflowState = [
         'user_id' => 1,
         'user_email' => 'user@example.com',
-        'fitness_goals' => ['muscle_gain'],
+        'fitness_goals' => 'muscle_gain',
         'schedule' => [
             'training_days_per_week' => 4,
             'available_days' => ['monday', 'tuesday', 'thursday', 'friday'],

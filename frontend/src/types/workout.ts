@@ -80,7 +80,7 @@ export type WorkoutPlan = {
 // ─── Form data types ──────────────────────────────────────────────────────────
 
 export type WorkoutPlanData = {
-    fitnessGoals: string[];
+    fitnessGoals: string;
     trainingDaysPerWeek: number;
     availableDays: string[];
     sessionDuration: number|string;   // string for the form

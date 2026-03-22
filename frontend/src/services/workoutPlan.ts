@@ -33,14 +33,8 @@ type UpdateBlockExerciseData = Partial<
     Pick<BlockExercise, "sets" | "reps" | "weight" | "duration_seconds" | "rest_seconds" | "rpe">
 >;
 
-const deriveWorkoutTypes = (goals: string[]): string[] => {
-    const types = new Set<string>();
-    for (const goal of goals) {
-        for (const type of GOAL_TO_WORKOUT_TYPES[goal] ?? []) {
-            types.add(type);
-        }
-    }
-    return [...types].slice(0, 3);
+const deriveWorkoutTypes = (goal: string): string[] => {
+    return (GOAL_TO_WORKOUT_TYPES[goal] ?? []).slice(0, 3);
 };
 
 export const generateWorkoutPlan = async (data: WorkoutPlanData): Promise<WorkoutPlan> => {
@@ -53,7 +47,7 @@ export const generateWorkoutPlan = async (data: WorkoutPlanData): Promise<Workou
             injuries: data.injuries || null,
             equipment: data.equipment,
             gym_access: data.gymAccess,
-            workout_type: deriveWorkoutTypes(data.fitnessGoals),
+            workout_type: deriveWorkoutTypes(data.fitnessGoals),  // single goal string
             sports: data.sports || null,
             preferred_exercises: data.preferredExercises || null,
             additional_notes: data.additionalNotes || null,

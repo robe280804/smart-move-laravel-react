@@ -118,7 +118,7 @@ export function WorkoutPlanGenerator() {
 
             <GoalsModal
                 isOpen={showAllGoals}
-                selectedGoals={planData.fitnessGoals}
+                selectedGoal={planData.fitnessGoals}
                 onToggle={handleGoalToggle}
                 onClose={() => setShowAllGoals(false)}
             />

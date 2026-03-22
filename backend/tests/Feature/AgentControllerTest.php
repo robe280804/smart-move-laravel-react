@@ -24,7 +24,7 @@ class AgentControllerTest extends TestCase
 
     /** @var array<string, mixed> */
     private array $validRequestData = [
-        'fitness_goals' => ['muscle_gain'],
+        'fitness_goals' => 'muscle_gain',
         'training_days_per_week' => 4,
         'available_days' => ['Monday', 'Tuesday', 'Thursday', 'Friday'],
         'session_duration' => 60,
@@ -63,10 +63,10 @@ class AgentControllerTest extends TestCase
             ->assertJsonValidationErrors(['fitness_goals']);
     }
 
-    public function test_returns_422_when_fitness_goals_exceeds_max(): void
+    public function test_returns_422_when_fitness_goals_is_invalid(): void
     {
         $user = User::factory()->create();
-        $data = array_merge($this->validRequestData, ['fitness_goals' => ['a', 'b', 'c', 'd']]);
+        $data = array_merge($this->validRequestData, ['fitness_goals' => 'invalid_goal']);
 
         $response = $this->actingAsUser($user)->postJson('/api/v1/agent/generate-workout', $data);
 
@@ -257,7 +257,7 @@ class AgentControllerTest extends TestCase
             $state = $this->getJobWorkflowState($job);
 
             return $state['user_id'] === $user->id
-                && $state['fitness_goals'] === ['muscle_gain']
+                && $state['fitness_goals'] === 'muscle_gain'
                 && $state['schedule']['training_days_per_week'] === 4
                 && $state['equipment']['gym_access'] === true;
         });

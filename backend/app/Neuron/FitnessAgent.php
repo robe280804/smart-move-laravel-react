@@ -25,8 +25,8 @@ class FitnessAgent extends Agent
             key: config('services.claude.key'),
             model: config('services.claude.model'),
             max_tokens: 16000,
-            parameters: ['temperature' => 0.3],
-            httpClient: (new GuzzleHttpClient())->withTimeout(600.0),
+            parameters: ['temperature' => 0.4],
+            httpClient: (new GuzzleHttpClient)->withTimeout(600.0),
         );
     }
 

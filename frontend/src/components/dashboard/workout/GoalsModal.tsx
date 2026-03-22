@@ -4,12 +4,12 @@ import { FITNESS_GOALS } from "@/constants/const";
 
 interface GoalsModalProps {
     isOpen: boolean;
-    selectedGoals: string[];
+    selectedGoal: string;
     onToggle: (goal: string) => void;
     onClose: () => void;
 }
 
-export function GoalsModal({ isOpen, selectedGoals, onToggle, onClose }: GoalsModalProps) {
+export function GoalsModal({ isOpen, selectedGoal, onToggle, onClose }: GoalsModalProps) {
     if (!isOpen) return null;
 
     return (
@@ -18,24 +18,19 @@ export function GoalsModal({ isOpen, selectedGoals, onToggle, onClose }: GoalsMo
                 <div className="flex items-center justify-between p-6 border-b border-slate-200">
                     <div>
                         <h2 className="text-xl font-bold text-slate-900">All Fitness Goals</h2>
-                        <p className="text-sm text-slate-500 mt-0.5">Select up to 3 goals</p>
+                        <p className="text-sm text-slate-500 mt-0.5">Select your primary goal</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        {selectedGoals.length > 0 && (
-                            <span className="text-sm text-blue-600 font-medium">{selectedGoals.length}/3 selected</span>
-                        )}
-                        <button
-                            onClick={onClose}
-                            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
-                        >
-                            <X className="w-5 h-5 text-slate-600" />
-                        </button>
-                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                        <X className="w-5 h-5 text-slate-600" />
+                    </button>
                 </div>
                 <div className="overflow-y-auto flex-1 p-6">
                     <div className="grid md:grid-cols-2 gap-3">
                         {FITNESS_GOALS.map((goal) => {
-                            const isSelected = selectedGoals.includes(goal.value);
+                            const isSelected = selectedGoal === goal.value;
                             return (
                                 <button
                                     key={goal.value}
@@ -43,9 +38,7 @@ export function GoalsModal({ isOpen, selectedGoals, onToggle, onClose }: GoalsMo
                                     className={`p-4 border-2 rounded-xl transition-all text-left ${
                                         isSelected
                                             ? "border-blue-600 bg-blue-50"
-                                            : selectedGoals.length >= 3
-                                                ? "border-slate-200 opacity-50 cursor-not-allowed"
-                                                : "border-slate-200 hover:border-blue-600 hover:bg-blue-50"
+                                            : "border-slate-200 hover:border-blue-600 hover:bg-blue-50"
                                     }`}
                                 >
                                     <div className="flex items-start gap-3">
@@ -67,9 +60,9 @@ export function GoalsModal({ isOpen, selectedGoals, onToggle, onClose }: GoalsMo
                     <Button
                         onClick={onClose}
                         className="w-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                        disabled={selectedGoals.length === 0}
+                        disabled={!selectedGoal}
                     >
-                        Confirm {selectedGoals.length > 0 ? `(${selectedGoals.length} selected)` : ""} <Check className="w-4 h-4 ml-2" />
+                        Confirm <Check className="w-4 h-4 ml-2" />
                     </Button>
                 </div>
             </div>

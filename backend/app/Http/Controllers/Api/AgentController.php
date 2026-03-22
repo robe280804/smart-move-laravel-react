@@ -48,7 +48,7 @@ class AgentController extends Controller
         GenerateWorkoutPlanJob::dispatch($plan, $user, [
             'user_id' => $user->id,
             'user_email' => $user->email,
-            'fitness_goals' => $request->validated('fitness_goals'),
+            'fitness_goals' => $request->validated('fitness_goals'),  // single goal string
             'schedule' => [
                 'training_days_per_week' => $request->validated('training_days_per_week'),
                 'available_days' => $request->validated('available_days'),
