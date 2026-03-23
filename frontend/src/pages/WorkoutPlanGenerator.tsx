@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, Brain } from "lucide-react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { useWorkoutPlanGenerator } from "@/hooks/useWorkoutPlanGenerator";
 import { WorkoutProgressBar } from "@/components/dashboard/workout/WorkoutProgressBar";
-import { ChatMessageList } from "@/components/dashboard/workout/ChatMessageList";
 import { WorkoutStepInput } from "@/components/dashboard/workout/WorkoutStepInput";
 import { PlanInfoSidebar } from "@/components/dashboard/workout/PlanInfoSidebar";
 import { GoalsModal } from "@/components/dashboard/workout/GoalsModal";
 import { getFitnessInfo } from "@/services/user";
+import { WORKOUT_STEPS } from "@/constants/const";
 
 export function WorkoutPlanGenerator() {
     const [hasFitnessInfo, setHasFitnessInfo] = useState<boolean | null>(null);
@@ -24,14 +32,15 @@ export function WorkoutPlanGenerator() {
         step,
         showAllGoals,
         setShowAllGoals,
-        messages,
-        isGenerating,
+        showResetConfirm,
+        setShowResetConfirm,
+        generationFailed,
         planData,
         setPlanData,
         handleGoalToggle,
+        handleBack,
         handleGoals,
         handleSchedule,
-        handleConstraints,
         handleEquipment,
         handleDetails,
         handleReset,
@@ -44,7 +53,7 @@ export function WorkoutPlanGenerator() {
 
     if (!hasFitnessInfo) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="flex items-center justify-center min-h-[60vh] px-4">
                 <Card className="max-w-md w-full">
                     <CardContent className="flex flex-col items-center gap-4 pt-6 text-center">
                         <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
@@ -64,55 +73,66 @@ export function WorkoutPlanGenerator() {
         );
     }
 
+    const hasStepHeader = step < WORKOUT_STEPS.length;
+    const showStartOver = step > 0 && step < WORKOUT_STEPS.length - 1;
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
             <div className="animate-fade-in-up">
                 <WorkoutProgressBar step={step} />
             </div>
 
             <div
-                className="grid lg:grid-cols-3 gap-6 animate-fade-in-up"
+                className="grid lg:grid-cols-3 gap-5 sm:gap-6 animate-fade-in-up"
                 style={{ animationDelay: "75ms" }}
             >
-                {/* Chat Area */}
-                <Card className="lg:col-span-2 flex flex-col transition-shadow duration-200 hover:shadow-md">
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center">
-                                    <Brain className="w-6 h-6 text-white" />
+                {/* Wizard Card */}
+                <Card className="lg:col-span-2">
+                    {hasStepHeader && (
+                        <CardHeader className="pb-4">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <CardTitle className="text-lg sm:text-xl">
+                                        {WORKOUT_STEPS[step].title}
+                                    </CardTitle>
+                                    <CardDescription className="mt-1">
+                                        {WORKOUT_STEPS[step].description}
+                                    </CardDescription>
                                 </div>
-                                <div>
-                                    <CardTitle>AI Fitness Coach</CardTitle>
-                                    <CardDescription>Answer questions to build your plan</CardDescription>
-                                </div>
+                                {showStartOver && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowResetConfirm(true)}
+                                        className="flex-shrink-0 text-slate-500 hover:text-slate-700"
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                                        <span className="hidden sm:inline">Start Over</span>
+                                    </Button>
+                                )}
                             </div>
-                            {step > 0 && step < 6 && (
-                                <Button variant="ghost" size="sm" onClick={handleReset}>
-                                    Start Over
-                                </Button>
-                            )}
-                        </div>
-                    </CardHeader>
-                    <CardContent className="flex flex-col flex-1 min-h-0 p-6">
-                        <ChatMessageList messages={messages} isGenerating={isGenerating} />
+                        </CardHeader>
+                    )}
+                    <CardContent className={hasStepHeader ? "pt-0" : undefined}>
                         <WorkoutStepInput
                             step={step}
                             planData={planData}
                             setPlanData={setPlanData}
                             handleGoalToggle={handleGoalToggle}
+                            handleBack={handleBack}
                             handleGoals={handleGoals}
                             handleSchedule={handleSchedule}
-                            handleConstraints={handleConstraints}
                             handleEquipment={handleEquipment}
                             handleDetails={handleDetails}
                             handleReset={handleReset}
                             setShowAllGoals={setShowAllGoals}
                             generatedPlanId={generatedPlanId}
+                            generationFailed={generationFailed}
                         />
                     </CardContent>
                 </Card>
 
+                {/* Summary Sidebar */}
                 <PlanInfoSidebar planData={planData} />
             </div>
 
@@ -122,6 +142,29 @@ export function WorkoutPlanGenerator() {
                 onToggle={handleGoalToggle}
                 onClose={() => setShowAllGoals(false)}
             />
+
+            {/* Reset confirmation dialog */}
+            <Dialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+                <DialogContent showCloseButton={false} className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Start over?</DialogTitle>
+                        <DialogDescription>
+                            All your current progress will be lost. This cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowResetConfirm(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleReset}
+                        >
+                            Start Over
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

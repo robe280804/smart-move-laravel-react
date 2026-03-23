@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router";
-import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy, Download, Lock, Crown, X, Clock, Wrench, AlertTriangle, Settings2 } from "lucide-react";
+import { ArrowLeft, Save, Dumbbell, Calendar, Activity, Trophy, Download, Lock, Crown, X, Clock, Wrench, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FITNESS_GOALS, WORKOUT_TYPES, EXPERIENCE_LEVELS, DAYS_OF_WEEK } from "@/constants/const";
 import { useWorkoutPlan } from "@/hooks/useWorkoutPlan";
@@ -325,22 +325,39 @@ export const WorkoutPlanDetail = () => {
                     )}
 
                     {/* Equipment */}
-                    {request.equipment.items.length > 0 && (
-                        <div className="flex items-start gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 flex-shrink-0">
-                                <Wrench className="h-4 w-4 text-amber-600" />
+                    {request.equipment.items.length > 0 && (() => {
+                        const visibleItems = request.equipment.items.filter(
+                            (e) => e !== "everything" && e !== "Bodyweight Only",
+                        );
+                        const isBodyweightOnly = request.equipment.items.includes("Bodyweight Only");
+
+                        return (
+                            <div className="flex items-start gap-3">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 flex-shrink-0">
+                                    <Wrench className="h-4 w-4 text-amber-600" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-medium text-slate-500">Equipment</p>
+                                    {request.equipment.gym_access ? (
+                                        <p className="text-sm text-slate-900">Full gym access</p>
+                                    ) : isBodyweightOnly ? (
+                                        <p className="text-sm text-slate-900">Bodyweight only</p>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-1.5 mt-1">
+                                            {visibleItems.map((item) => (
+                                                <span
+                                                    key={item}
+                                                    className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-xs font-medium text-amber-800"
+                                                >
+                                                    {item}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-500">Equipment</p>
-                                <p className="text-sm text-slate-900">
-                                    {request.equipment.items.join(", ")}
-                                </p>
-                                {request.equipment.gym_access && (
-                                    <p className="text-xs text-slate-500">Gym access</p>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                        );
+                    })()}
 
                     {/* Workout Types */}
                     {request.preferences.workout_types.length > 0 && (
@@ -359,25 +376,20 @@ export const WorkoutPlanDetail = () => {
                         </div>
                     )}
 
-                    {/* Injuries / Constraints */}
-                    {request.constraints && (
-                        <div className="flex items-start gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 flex-shrink-0">
-                                <AlertTriangle className="h-4 w-4 text-red-500" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-500">Injuries / Limitations</p>
-                                <p className="text-sm text-slate-900">{request.constraints}</p>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
-                {/* Additional notes row */}
-                {(request.preferences.sports ||
+                {/* Full-width text details row */}
+                {(request.constraints ||
+                    request.preferences.sports ||
                     request.preferences.preferred_exercises ||
                     request.preferences.additional_notes) && (
                     <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                        {request.constraints && (
+                            <p className="text-sm text-slate-600">
+                                <span className="font-medium text-slate-700">Injuries / Limitations:</span>{" "}
+                                {request.constraints}
+                            </p>
+                        )}
                         {request.preferences.sports && (
                             <p className="text-sm text-slate-600">
                                 <span className="font-medium text-slate-700">Sports:</span>{" "}

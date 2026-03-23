@@ -69,5 +69,20 @@ export const GOAL_TO_WORKOUT_TYPES: Record<string, string[]> = {
     functional_fitness: ["functional", "bodyweight"],
 };
 
+export const WORKOUT_STEPS = [
+    { label: "Goal",        title: "What's your fitness goal?",       description: "Select the primary goal you want to achieve" },
+    { label: "Schedule",    title: "Plan your schedule",              description: "Set how often and how long you want to train" },
+    { label: "Equipment",   title: "Available equipment",             description: "Select all the equipment you have access to" },
+    { label: "Preferences", title: "Constraints & preferences",       description: "Injuries, sports, and anything else to personalize your plan" },
+    { label: "Generate",    title: "Generating your plan",            description: "Building your personalized workout" },
+] as const;
+
+/** Goals where bodyweight-only equipment produces a plan different from the user's expectation. */
+export const STRENGTH_FOCUSED_GOALS = [
+    "strength_building",
+    "muscle_gain",
+    "body_recomposition",
+] as const;
+
 export type ExperienceLevel = typeof EXPERIENCE_LEVELS[number];
 export type Gender = typeof GENDERS[number];

@@ -1,18 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { notify } from "@/lib/toast";
-import { FITNESS_GOALS } from "@/constants/const";
-import type { MessageType, WorkoutPlanData } from "@/types/workout";
+import type { WorkoutPlanData } from "@/types/workout";
 import { findSuspiciousField } from "@/lib/sanitize";
 import { generateWorkoutPlan, getWorkoutPlan } from "@/services/workoutPlan";
 import { trackGeneratingPlan, updateGeneratingPlanStatus } from "@/hooks/useGeneratingPlans";
 import { ApiError } from "@/lib/apiError";
-
-const INITIAL_MESSAGE: MessageType = {
-    id: "1",
-    role: "assistant",
-    content: "Hello! I'm your AI fitness coach. I'll help you create a personalized workout plan tailored to your goals, schedule, and preferences. Let's get started! 🎯",
-    timestamp: new Date()
-};
 
 const INITIAL_PLAN_DATA: WorkoutPlanData = {
     fitnessGoals: "",
@@ -28,11 +20,20 @@ const INITIAL_PLAN_DATA: WorkoutPlanData = {
     additionalNotes: "",
 };
 
+// Step map:
+//  0 → Goal
+//  1 → Schedule
+//  2 → Equipment
+//  3 → Preferences (injuries + optional details)
+//  4 → Generating (auto)
+//  5 → Done
+
 export function useWorkoutPlanGenerator() {
     const [step, setStep] = useState(0);
     const [showAllGoals, setShowAllGoals] = useState(false);
-    const [messages, setMessages] = useState<MessageType[]>([INITIAL_MESSAGE]);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [generationFailed, setGenerationFailed] = useState(false);
     const [planData, setPlanData] = useState<WorkoutPlanData>(INITIAL_PLAN_DATA);
     const [generatedPlanId, setGeneratedPlanId] = useState<number | null>(null);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -45,37 +46,23 @@ export function useWorkoutPlanGenerator() {
         };
     }, []);
 
-    const addMessage = (role: "user" | "assistant", content: string) => {
-        const newMessage: MessageType = {
-            id: Date.now().toString(),
-            role,
-            content,
-            timestamp: new Date()
-        };
-        setMessages(prev => [...prev, newMessage]);
+    const handleGoalToggle = (goal: string) => {
+        setPlanData(prev => ({
+            ...prev,
+            fitnessGoals: prev.fitnessGoals === goal ? "" : goal,
+        }));
     };
 
-    const handleGoalToggle = (goal: string) => {
-        if (planData.fitnessGoals === goal) {
-            setPlanData({ ...planData, fitnessGoals: "" });
-        } else {
-            setPlanData({ ...planData, fitnessGoals: goal });
-        }
+    const handleBack = () => {
+        setStep(prev => Math.max(0, prev - 1));
     };
 
     const handleGoals = () => {
         if (!planData.fitnessGoals) {
-            notify.info("Please select a goal.");
+            notify.info("Please select a fitness goal.");
             return;
         }
-
-        const goalLabel = FITNESS_GOALS.find(fg => fg.value === planData.fitnessGoals)?.label ?? planData.fitnessGoals;
-        addMessage("user", `My goal: ${goalLabel}`);
-
-        setTimeout(() => {
-            addMessage("assistant", "Great choice! Now, let's talk about your schedule. How many days per week can you commit to training?");
-            setStep(1);
-        }, 500);
+        setStep(1);
     };
 
     const handleSchedule = () => {
@@ -83,40 +70,9 @@ export function useWorkoutPlanGenerator() {
             notify.info("Please select at least one available day.");
             return;
         }
-
-        // Convert + clamp between 15 and 180
-        const sessionDuration = Math.min(
-            180,
-            Math.max(15, Number(planData.sessionDuration))
-        );
-
-        addMessage(
-            "user",
-            `I can train ${planData.trainingDaysPerWeek} days per week on ${planData.availableDays.join(", ")} for ${sessionDuration} minutes per session.`
-        );
-
-        setTimeout(() => {
-            addMessage(
-                "assistant",
-                "Perfect! Do you have any injuries or physical limitations I should be aware of? This helps me create a safe and effective plan."
-            );
-            setStep(2);
-        }, 500);
-    };
-
-    const handleConstraints = () => {
-        if (planData.injuries && findSuspiciousField({ injuries: planData.injuries })) {
-            notify.error("Please describe your injuries in plain language only.");
-            return;
-        }
-
-        const injuryText = planData.injuries.trim() || "No injuries or limitations";
-        addMessage("user", injuryText);
-
-        setTimeout(() => {
-            addMessage("assistant", "Thanks for sharing that. What equipment do you have access to? Select all that apply.");
-            setStep(3);
-        }, 500);
+        const sessionDuration = Math.min(180, Math.max(15, Number(planData.sessionDuration)));
+        setPlanData(prev => ({ ...prev, sessionDuration }));
+        setStep(2);
     };
 
     const handleEquipment = () => {
@@ -124,45 +80,27 @@ export function useWorkoutPlanGenerator() {
             notify.info("Please select at least one equipment option.");
             return;
         }
-
-        const equipmentText = planData.equipment.join(", ");
-        const gymText = planData.gymAccess ? "I have gym access" : "Home workout";
-        addMessage("user", `${gymText}. Available equipment: ${equipmentText}`);
-
-        setTimeout(() => {
-            addMessage("assistant", "Almost done! Do you have any additional details to share? You can mention sports you practice, specific exercises you'd like to include, or any other requests. This step is optional.");
-            setStep(4);
-        }, 500);
+        setStep(3);
     };
 
     const handleDetails = () => {
         const suspiciousField = findSuspiciousField({
+            injuries: planData.injuries,
             sports: planData.sports,
             preferredExercises: planData.preferredExercises,
             additionalNotes: planData.additionalNotes,
         });
         if (suspiciousField) {
-            notify.error("Please use plain language to describe your fitness preferences.");
+            notify.error("Please use plain language to describe your preferences.");
             return;
         }
-
-        const parts: string[] = [];
-        if (planData.sports.trim()) parts.push(`Sports/activities: ${planData.sports.trim()}`);
-        if (planData.preferredExercises.trim()) parts.push(`Preferred exercises: ${planData.preferredExercises.trim()}`);
-        if (planData.additionalNotes.trim()) parts.push(`Additional notes: ${planData.additionalNotes.trim()}`);
-
-        const message = parts.length > 0 ? parts.join(". ") : "No additional details.";
-        addMessage("user", message);
-
-        setTimeout(() => {
-            addMessage("assistant", "Excellent! I have all the information I need. Let me generate your personalized workout plan...");
-            setStep(5);
-            generatePlan();
-        }, 500);
+        setStep(4);
+        generatePlan();
     };
 
     const generatePlan = async () => {
         setIsGenerating(true);
+        setGenerationFailed(false);
         setGeneratedPlanId(null);
 
         try {
@@ -178,29 +116,24 @@ export function useWorkoutPlanGenerator() {
                         pollingRef.current = null;
                         updateGeneratingPlanStatus(pendingPlan.id, "completed");
                         setGeneratedPlanId(plan.id);
-                        addMessage("assistant",
-                            "Your personalized workout plan has been generated successfully! Click below to view your complete plan."
-                        );
                         setIsGenerating(false);
-                        setStep(6);
+                        setStep(5);
                     }
 
                     if (plan.status === "failed") {
                         clearInterval(pollingRef.current!);
                         pollingRef.current = null;
                         updateGeneratingPlanStatus(pendingPlan.id, "failed");
-                        addMessage("assistant",
-                            "Sorry, something went wrong while generating your plan. Please try again."
-                        );
                         setIsGenerating(false);
-                        setStep(6);
+                        setGenerationFailed(true);
+                        setStep(5);
                     }
                 } catch {
                     clearInterval(pollingRef.current!);
                     pollingRef.current = null;
                     notify.error("Connection lost while checking plan status. Please try again.");
                     setIsGenerating(false);
-                    setStep(4);
+                    setStep(3);
                 }
             }, 3000);
         } catch (error) {
@@ -208,26 +141,26 @@ export function useWorkoutPlanGenerator() {
 
             if (error instanceof ApiError && error.statusCode === 403) {
                 notify.error(error.message);
-                addMessage("assistant", error.message);
-                setStep(6);
+                setGenerationFailed(true);
+                setStep(5);
                 return;
             }
 
             if (error instanceof ApiError && error.statusCode === 422) {
                 notify.error(error.message);
-                addMessage("assistant", error.message);
-                setStep(6);
+                setGenerationFailed(true);
+                setStep(5);
                 return;
             }
 
             if (error instanceof ApiError && error.statusCode === 429) {
                 notify.error("Too many requests. Please wait a moment and try again.");
-                setStep(4);
+                setStep(3);
                 return;
             }
 
             notify.error("Failed to generate workout plan. Please try again.");
-            setStep(4);
+            setStep(3);
         }
     };
 
@@ -237,23 +170,27 @@ export function useWorkoutPlanGenerator() {
             pollingRef.current = null;
         }
         setStep(0);
-        setMessages([{ ...INITIAL_MESSAGE, timestamp: new Date() }]);
         setPlanData(INITIAL_PLAN_DATA);
         setGeneratedPlanId(null);
+        setGenerationFailed(false);
+        setShowResetConfirm(false);
+        setIsGenerating(false);
     };
 
     return {
         step,
         showAllGoals,
         setShowAllGoals,
-        messages,
+        showResetConfirm,
+        setShowResetConfirm,
         isGenerating,
+        generationFailed,
         planData,
         setPlanData,
         handleGoalToggle,
+        handleBack,
         handleGoals,
         handleSchedule,
-        handleConstraints,
         handleEquipment,
         handleDetails,
         handleReset,
