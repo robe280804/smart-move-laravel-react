@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\SecurityEventType;
+use App\Events\SecurityAlert;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Responses\ApiSuccess;
@@ -26,6 +28,13 @@ class ChangePasswordController extends Controller
             $request->validated('password'),
             $currentTokenId,
         );
+
+        event(new SecurityAlert(
+            type: SecurityEventType::PasswordChange,
+            ip: $request->ip() ?? 'unknown',
+            userId: $request->user()->id,
+            details: 'User changed their password.',
+        ));
 
         return new ApiSuccess(
             data: null,

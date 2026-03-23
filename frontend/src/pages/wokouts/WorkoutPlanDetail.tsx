@@ -133,7 +133,7 @@ export const WorkoutPlanDetail = () => {
     return (
         <div>
             {/* Header banner */}
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 p-6 mb-6">
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 p-4 sm:p-6 mb-6">
                 {/* Decorative blobs */}
                 <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
                 <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-blue-500/10 rounded-full translate-y-1/2 pointer-events-none" />
@@ -175,7 +175,7 @@ export const WorkoutPlanDetail = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex flex-wrap items-center gap-2">
                             {canExportPdf ? (
                                 <Button
                                     variant="outline"
@@ -211,7 +211,7 @@ export const WorkoutPlanDetail = () => {
                     </div>
 
                     {/* Stats row */}
-                    <div className="flex flex-wrap items-center gap-5 mt-5 pt-5 border-t border-white/10">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-5 pt-5 border-t border-white/10">
                         <div className="flex items-center gap-2 text-slate-300">
                             <Calendar className="w-4 h-4 text-indigo-400" />
                             <span className="text-sm">

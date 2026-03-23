@@ -195,21 +195,15 @@ export const CTA_BENEFITS = [
 
 export const FOOTER_LINKS = {
     product: [
-        { label: "Features", href: "#" },
-        { label: "Pricing", href: "#" },
-        { label: "How It Works", href: "#" },
-        { label: "Success Stories", href: "#" },
+        { label: "Features", href: "#features" },
+        { label: "Pricing", href: "#pricing" },
+        { label: "How It Works", href: "#how-it-works" },
     ],
     company: [
-        { label: "About Us", href: "#" },
-        { label: "Blog", href: "#" },
-        { label: "Careers", href: "#" },
-        { label: "Contact", href: "#" },
+        { label: "Contact", href: "mailto:hello@smartmoveai.com" },
     ],
-    support: [
-        { label: "Help Center", href: "#" },
-        { label: "Privacy Policy", href: "#" },
-        { label: "Terms of Service", href: "#" },
-        { label: "FAQ", href: "#" },
+    legal: [
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms of Service", href: "/terms" },
     ],
 } as const;

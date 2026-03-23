@@ -278,6 +278,7 @@ This is a React TypeScript frontend application built with Vite, featuring a fit
 - Use design tokens for consistent spacing and colors
 - Avoid custom CSS unless necessary
 - Use `tailwind-merge` and `clsx` for conditional classes
+- Make everything always responsive for phone, tablet ...
 
 ## Theme Support
 

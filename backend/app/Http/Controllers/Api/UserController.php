@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Dto\UserDto;
+use App\Enums\SecurityEventType;
+use App\Events\SecurityAlert;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
@@ -49,6 +51,13 @@ class UserController extends Controller
     public function destroy(User $user): JsonResponse
     {
         $this->authorize('delete', $user);
+
+        event(new SecurityAlert(
+            type: SecurityEventType::AccountDeletion,
+            ip: request()->ip() ?? 'unknown',
+            userId: $user->id,
+            details: "User account deleted (email: {$user->email}).",
+        ));
 
         $this->userService->delete($user);
 

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\SecurityEventType;
 use App\Enums\WorkoutPlanStatus;
+use App\Events\SecurityAlert;
 use App\Models\User;
 use App\Models\WorkoutPlan;
 use App\Services\WorkoutGenerationService;
@@ -61,5 +63,12 @@ class GenerateWorkoutPlanJob implements ShouldQueue
             'plan_id' => $this->plan->id,
             'error' => $e->getMessage(),
         ]);
+
+        event(new SecurityAlert(
+            type: SecurityEventType::AiGenerationFailure,
+            ip: 'queue',
+            userId: $this->user->id,
+            details: "Workout plan {$this->plan->id} generation failed: {$e->getMessage()}",
+        ));
     }
 }

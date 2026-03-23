@@ -301,15 +301,7 @@ export const Workouts = () => {
 
                                     {/* Actions */}
                                     <div className="mt-auto">
-                                        {isGenerating ? (
-                                            <Button
-                                                variant="outline"
-                                                className="w-full text-xs h-9"
-                                                disabled
-                                            >
-                                                Generating…
-                                            </Button>
-                                        ) : isConfirming ? (
+                                        {isConfirming ? (
                                             <div className="flex items-center gap-2">
                                                 <p className="text-xs text-slate-500 flex-1">
                                                     Delete this plan?
@@ -331,6 +323,25 @@ export const Workouts = () => {
                                                     className="text-xs h-8"
                                                 >
                                                     {isDeleting ? "Deleting…" : "Delete"}
+                                                </Button>
+                                            </div>
+                                        ) : isGenerating ? (
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    className="flex-1 text-xs h-9"
+                                                    disabled
+                                                >
+                                                    Generating…
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setConfirmDeleteId(plan.id)}
+                                                    className="h-9 w-9 text-red-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0"
+                                                    title="Remove stuck plan"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
                                                 </Button>
                                             </div>
                                         ) : (

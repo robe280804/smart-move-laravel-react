@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Dto\UserDto;
+use App\Events\FailedLogin;
 use App\Events\UserRegistration;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
@@ -48,6 +49,11 @@ class AuthController extends Controller
         $user = $this->authService->attemptLogin($request->validated());
 
         if (! $user) {
+            event(new FailedLogin(
+                email: $request->validated('email'),
+                ip: $request->ip() ?? 'unknown',
+            ));
+
             return new ApiError(null, 'Wrong credentials', Response::HTTP_UNAUTHORIZED);
         }
 

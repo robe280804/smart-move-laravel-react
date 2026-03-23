@@ -206,12 +206,18 @@ export const Login = () => {
                     */}
                 </CardContent>
 
-                <CardFooter>
+                <CardFooter className="flex flex-col gap-3">
                     <p className="text-sm text-center w-full text-slate-600">
                         Don't have an account?{" "}
                         <Link to="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
                             Sign up
                         </Link>
+                    </p>
+                    <p className="text-xs text-center text-slate-500">
+                        By signing in, you agree to our{" "}
+                        <Link to="/terms" className="text-blue-600 hover:underline">Terms</Link>
+                        {" "}and{" "}
+                        <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
                     </p>
                 </CardFooter>
             </Card>

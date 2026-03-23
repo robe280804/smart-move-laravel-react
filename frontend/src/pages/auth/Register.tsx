@@ -292,9 +292,9 @@ export const Register = () => {
                             </p>
                             <p className="text-xs text-center text-slate-500">
                                 By creating an account, you agree to our{" "}
-                                <a href="#" className="text-blue-600 hover:underline">Terms</a>
+                                <Link to="/terms" className="text-blue-600 hover:underline">Terms</Link>
                                 {" "}and{" "}
-                                <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+                                <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
                             </p>
                             <Link to="/" className="text-sm text-slate-600 hover:text-slate-900 mx-auto">
                                 ← Back to home

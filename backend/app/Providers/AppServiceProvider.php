@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Enums\TokenAbility;
+use App\Events\AdminAction;
+use App\Events\FailedLogin;
+use App\Events\SecurityAlert;
+use App\Listeners\HandleSecurityEvent;
 use App\Repositories\Contracts\FeedbackRepositoryInterface;
 use App\Repositories\Contracts\FitnessInfoRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
@@ -13,6 +17,7 @@ use App\Repositories\UserRepository;
 use App\Repositories\WorkoutPlanRepository;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -41,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->configureRateLimiting();
+        $this->configureSecurityEventListeners();
         $this->overrideSanctumConfigurationToSupportRefreshToken();
     }
 
@@ -80,6 +86,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('email-resend', function (Request $request): Limit {
             return Limit::perMinute(3)->by($request->user()?->id ?? $request->ip());
         });
+    }
+
+    private function configureSecurityEventListeners(): void
+    {
+        Event::listen(FailedLogin::class, HandleSecurityEvent::class);
+        Event::listen(SecurityAlert::class, HandleSecurityEvent::class);
+        Event::listen(AdminAction::class, HandleSecurityEvent::class);
     }
 
     private function overrideSanctumConfigurationToSupportRefreshToken(): void

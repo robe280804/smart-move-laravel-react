@@ -1,12 +1,16 @@
 <?php
 
+use App\Enums\SecurityEventType;
+use App\Events\SecurityAlert;
 use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\HandleCors;
 use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
 use Spatie\Permission\Middleware\RoleMiddleware;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+        $middleware->prepend(HandleCors::class);
         $middleware->append(SecurityHeadersMiddleware::class);
         $middleware->alias([
             'ability' => CheckForAnyAbility::class,
@@ -28,5 +32,27 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->reportable(function (HttpException $e) {
+            if ($e->getStatusCode() === 403) {
+                event(new SecurityAlert(
+                    type: SecurityEventType::ForbiddenAccess,
+                    ip: request()->ip() ?? 'unknown',
+                    userId: request()->user()?->id,
+                    details: "403 Forbidden: {$e->getMessage()} | URL: ".request()->fullUrl(),
+                ));
+            }
+        });
+
+        $exceptions->reportable(function (Throwable $e) {
+            if ($e instanceof HttpException) {
+                return;
+            }
+
+            event(new SecurityAlert(
+                type: SecurityEventType::UnhandledException,
+                ip: request()->ip() ?? 'unknown',
+                userId: request()->user()?->id,
+                details: get_class($e).': '.$e->getMessage(),
+            ));
+        });
     })->create();

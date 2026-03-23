@@ -83,10 +83,10 @@ export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate, canEd
             {/* Day header */}
             <button
                 onClick={onToggle}
-                className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
+                className="w-full p-4 sm:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
             >
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex flex-col items-center justify-center flex-shrink-0 leading-none">
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex flex-col items-center justify-center flex-shrink-0 leading-none">
                         <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider">
                             {getDayName(day.day_of_week).slice(0, 3)}
                         </span>
@@ -94,21 +94,21 @@ export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate, canEd
                             {day.day_of_week}
                         </span>
                     </div>
-                    <div>
-                        <h3 className="font-semibold text-slate-900 text-lg">
+                    <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 text-base sm:text-lg truncate">
                             {day.workout_name ?? "Session"}
                         </h3>
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600 mt-1">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-600 mt-1">
                             <span className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
+                                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 {getDayName(day.day_of_week)}
                             </span>
                             <span className="flex items-center gap-1">
-                                <Clock className="w-4 h-4" />
+                                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 {day.duration_minutes} min
                             </span>
                             <span className="flex items-center gap-1">
-                                <TrendingUp className="w-4 h-4" />
+                                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 {day.workout_blocks.length} blocks
                             </span>
                         </div>
@@ -116,15 +116,15 @@ export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate, canEd
                 </div>
 
                 {isExpanded ? (
-                    <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0 ml-2" />
                 ) : (
-                    <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0 ml-2" />
                 )}
             </button>
 
             {/* Expanded content */}
             {isExpanded && (
-                <div className="border-t border-slate-200 p-6 bg-slate-50 space-y-3">
+                <div className="border-t border-slate-200 p-3 sm:p-6 bg-slate-50 space-y-3">
                     {day.workout_blocks.map((block) => {
                         const isBlockOpen = openBlocks.has(block.id);
                         const blockColor = BLOCK_COLORS[block.name] ?? "bg-slate-50 border-slate-200";
@@ -157,7 +157,7 @@ export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate, canEd
 
                                 {/* Exercises */}
                                 {isBlockOpen && (
-                                    <div className="p-4 space-y-3">
+                                    <div className="p-3 sm:p-4 space-y-3">
                                         {block.block_exercises.map((blockExercise) => (
                                             <ExerciseCard
                                                 key={blockExercise.id}

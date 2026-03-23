@@ -83,7 +83,7 @@ export const ExerciseCard = ({ exercise, dayId, blockId, accentClass, canEdit, e
             </div>
 
             {/* Parameters */}
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
                 {exercise.sets !== null && (
                     <FieldInput
                         field="sets"

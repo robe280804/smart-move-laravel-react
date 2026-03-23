@@ -17,11 +17,21 @@ import { NotFound } from "@/pages/NotFound";
 import { AdminRoute } from "@/layouts/AdminRoute";
 import { AdminUsers } from "@/pages/admin/AdminUsers";
 import { AdminFeedbacks } from "@/pages/admin/AdminFeedbacks";
+import { PrivacyPolicy } from "@/pages/legal/PrivacyPolicy";
+import { TermsOfService } from "@/pages/legal/TermsOfService";
 
 export const router = createBrowserRouter([
     {
         path: "/",
         element: <WelcomePage />,
+    },
+    {
+        path: "/privacy",
+        element: <PrivacyPolicy />,
+    },
+    {
+        path: "/terms",
+        element: <TermsOfService />,
     },
     {
         element: <AuthLayout />,

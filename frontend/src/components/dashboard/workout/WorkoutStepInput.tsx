@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     AlertTriangle,
@@ -122,6 +123,12 @@ function ScheduleStep({
     handleBack,
     handleSchedule,
 }: Pick<WorkoutStepInputProps, "planData" | "setPlanData" | "handleBack" | "handleSchedule">) {
+    const [daysInputValue, setDaysInputValue] = useState(String(planData.trainingDaysPerWeek));
+
+    useEffect(() => {
+        setDaysInputValue(String(planData.trainingDaysPerWeek));
+    }, [planData.trainingDaysPerWeek]);
+
     return (
         <div className="space-y-5">
             <div className="grid sm:grid-cols-2 gap-4">
@@ -130,15 +137,20 @@ function ScheduleStep({
                     <Input
                         id="trainingDays"
                         type="number"
+                        inputMode="numeric"
                         min="1"
                         max="7"
-                        value={planData.trainingDaysPerWeek}
+                        value={daysInputValue}
                         onChange={(e) => {
+                            setDaysInputValue(e.target.value);
                             const val = parseInt(e.target.value);
-                            if (!isNaN(val)) setPlanData({ ...planData, trainingDaysPerWeek: val });
+                            if (!isNaN(val) && val >= 1 && val <= 7) {
+                                setPlanData({ ...planData, trainingDaysPerWeek: val });
+                            }
                         }}
-                        onBlur={(e) => {
-                            const val = Math.max(1, Math.min(7, parseInt(e.target.value) || 1));
+                        onBlur={() => {
+                            const val = Math.max(1, Math.min(7, parseInt(daysInputValue) || 1));
+                            setDaysInputValue(String(val));
                             setPlanData({ ...planData, trainingDaysPerWeek: val });
                         }}
                     />
