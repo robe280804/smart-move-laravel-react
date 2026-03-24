@@ -39,6 +39,14 @@ export const redirectToStripeCheckout = async (planKey: Exclude<PlanKey, "free">
             return { swapped: true };
         }
 
+        // Clear cached plan before leaving the app — when the user returns
+        // from Stripe Checkout, the plan will have changed.
+        try {
+            sessionStorage.removeItem("sm_subscription_plan");
+        } catch {
+            // ignore
+        }
+
         window.location.href = checkoutUrl;
         return { swapped: false, checkoutUrl };
     } catch (error) {

@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php.bat vendor/bin/pint app/Http/Requests/ResetPasswordRequest.php app/Http/Controllers/Api/AuthController.php app/Services/AuthService.php bootstrap/app.php config/cors.php --format agent)"
+      "Bash(php.bat vendor/bin/pint app/Http/Requests/ResetPasswordRequest.php app/Http/Controllers/Api/AuthController.php app/Services/AuthService.php bootstrap/app.php config/cors.php --format agent)",
+      "Bash(grep -E \"\\(routes|config\\)$\")",
+      "Bash(grep -r \"payment\\\\|subscription\\\\|checkout\" /c/Users/UTENTE/IdeaProjects/laravel/smart-move-laravel-react/backend/tests/ --include=*.php)"
     ]
   }
 }

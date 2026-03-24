@@ -11,6 +11,7 @@ use App\Http\Responses\ApiError;
 use App\Http\Responses\ApiSuccess;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
 class PaymentController extends Controller
@@ -32,6 +33,8 @@ class PaymentController extends Controller
             $checkout = $this->paymentService->checkout($request->user(), $request->validated('plan'));
         } catch (AlreadySubscribedException $e) {
             return new ApiError($e, $e->getMessage(), Response::HTTP_CONFLICT);
+        } catch (InvalidArgumentException $e) {
+            return new ApiError($e, 'Payment configuration error. Please try again later.', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         // Swap was performed — no redirect needed
