@@ -90,8 +90,8 @@ export const AdminUsers = () => {
 
             {/* Table */}
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                {/* Table header */}
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-200">
+                {/* Table header — hidden on mobile */}
+                <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-200">
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">User</span>
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Verified</span>
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Plan</span>
@@ -110,76 +110,136 @@ export const AdminUsers = () => {
                             const role = ROLE_CONFIG[user.role ?? "user"] ?? ROLE_CONFIG.user;
 
                             return (
-                                <div
-                                    key={user.id}
-                                    className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-4 hover:bg-slate-50 transition-colors"
-                                >
-                                    {/* User info */}
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-9 h-9 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <div key={user.id} className="hover:bg-slate-50 transition-colors">
+                                    {/* Mobile layout */}
+                                    <div className="flex md:hidden items-start gap-3 px-4 py-4">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
                                             <span className="text-sm font-bold text-white">
                                                 {user.name.charAt(0).toUpperCase()}
                                             </span>
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-slate-900 truncate">
-                                                {user.name} {user.surname}
-                                            </p>
-                                            <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-semibold text-slate-900 truncate">
+                                                        {user.name} {user.surname}
+                                                    </p>
+                                                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                                                </div>
+                                                <div className="flex items-center gap-1 flex-shrink-0">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        onClick={() => openEdit(user)}
+                                                        title="Edit user"
+                                                    >
+                                                        <Pencil className="w-4 h-4 text-slate-500" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        onClick={() => openDelete(user)}
+                                                        title="Delete user"
+                                                    >
+                                                        <Trash2 className="w-4 h-4 text-red-500" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                {user.email_verified ? (
+                                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                                        <CheckCircle className="w-3.5 h-3.5" />
+                                                        Verified
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-400">
+                                                        <XCircle className="w-3.5 h-3.5" />
+                                                        Unverified
+                                                    </span>
+                                                )}
+                                                <Badge className={`text-xs font-semibold ${plan.className}`}>
+                                                    {plan.label}
+                                                </Badge>
+                                                <Badge
+                                                    variant="secondary"
+                                                    className={`flex w-fit items-center gap-1 text-xs font-semibold ${role.className}`}
+                                                >
+                                                    {role.icon}
+                                                    {role.label}
+                                                </Badge>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Verified */}
-                                    <div className="flex items-center gap-1.5">
-                                        {user.email_verified ? (
-                                            <>
-                                                <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                                                <span className="text-xs font-medium text-emerald-600">Verified</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                                                <span className="text-xs font-medium text-rose-400">Unverified</span>
-                                            </>
-                                        )}
-                                    </div>
+                                    {/* Desktop layout */}
+                                    <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-4">
+                                        {/* User info */}
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-9 h-9 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                <span className="text-sm font-bold text-white">
+                                                    {user.name.charAt(0).toUpperCase()}
+                                                </span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-slate-900 truncate">
+                                                    {user.name} {user.surname}
+                                                </p>
+                                                <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                                            </div>
+                                        </div>
 
-                                    {/* Plan */}
-                                    <div>
-                                        <Badge className={`text-xs font-semibold ${plan.className}`}>
-                                            {plan.label}
-                                        </Badge>
-                                    </div>
+                                        {/* Verified */}
+                                        <div className="flex items-center gap-1.5">
+                                            {user.email_verified ? (
+                                                <>
+                                                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                                                    <span className="text-xs font-medium text-emerald-600">Verified</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                                                    <span className="text-xs font-medium text-rose-400">Unverified</span>
+                                                </>
+                                            )}
+                                        </div>
 
-                                    {/* Role */}
-                                    <div>
-                                        <Badge
-                                            variant="secondary"
-                                            className={`flex w-fit items-center gap-1 text-xs font-semibold ${role.className}`}
-                                        >
-                                            {role.icon}
-                                            {role.label}
-                                        </Badge>
-                                    </div>
+                                        {/* Plan */}
+                                        <div>
+                                            <Badge className={`text-xs font-semibold ${plan.className}`}>
+                                                {plan.label}
+                                            </Badge>
+                                        </div>
 
-                                    {/* Actions */}
-                                    <div className="flex items-center justify-end gap-1 w-24">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon-sm"
-                                            onClick={() => openEdit(user)}
-                                            title="Edit user"
-                                        >
-                                            <Pencil className="w-4 h-4 text-slate-500" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon-sm"
-                                            onClick={() => openDelete(user)}
-                                            title="Delete user"
-                                        >
-                                            <Trash2 className="w-4 h-4 text-red-500" />
-                                        </Button>
+                                        {/* Role */}
+                                        <div>
+                                            <Badge
+                                                variant="secondary"
+                                                className={`flex w-fit items-center gap-1 text-xs font-semibold ${role.className}`}
+                                            >
+                                                {role.icon}
+                                                {role.label}
+                                            </Badge>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center justify-end gap-1 w-24">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                onClick={() => openEdit(user)}
+                                                title="Edit user"
+                                            >
+                                                <Pencil className="w-4 h-4 text-slate-500" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                onClick={() => openDelete(user)}
+                                                title="Delete user"
+                                            >
+                                                <Trash2 className="w-4 h-4 text-red-500" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             );

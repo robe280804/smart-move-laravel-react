@@ -35,20 +35,20 @@ export function ProfileAndSettings() {
             <Tabs defaultValue={initialTab}>
                 <TabsList className="grid grid-cols-4 w-full">
                     <TabsTrigger value="personal" className="flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5" />
-                        Personal
+                        <User className="w-4 h-4 flex-shrink-0" />
+                        <span className="hidden sm:inline">Personal</span>
                     </TabsTrigger>
                     <TabsTrigger value="fitness" className="flex items-center gap-1.5">
-                        <Dumbbell className="w-3.5 h-3.5" />
-                        Fitness
+                        <Dumbbell className="w-4 h-4 flex-shrink-0" />
+                        <span className="hidden sm:inline">Fitness</span>
                     </TabsTrigger>
                     <TabsTrigger value="subscription" className="flex items-center gap-1.5">
-                        <CreditCard className="w-3.5 h-3.5" />
-                        Plan
+                        <CreditCard className="w-4 h-4 flex-shrink-0" />
+                        <span className="hidden sm:inline">Plan</span>
                     </TabsTrigger>
                     <TabsTrigger value="security" className="flex items-center gap-1.5">
-                        <Shield className="w-3.5 h-3.5" />
-                        Security
+                        <Shield className="w-4 h-4 flex-shrink-0" />
+                        <span className="hidden sm:inline">Security</span>
                     </TabsTrigger>
                 </TabsList>
 

@@ -14,7 +14,7 @@ interface StatCardProps {
 export function StatCard({ icon, iconBg, label, value, link }: StatCardProps) {
     const inner = (
         <Card
-            className={`py-0 group transition-all duration-200 hover:shadow-md ${
+            className={`py-0 group transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
                 link ? "cursor-pointer" : ""
             }`}
         >
@@ -29,7 +29,7 @@ export function StatCard({ icon, iconBg, label, value, link }: StatCardProps) {
                         <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                     )}
                 </div>
-                <p className="text-2xl font-bold text-slate-900">{value}</p>
+                <p className="text-xl sm:text-2xl font-bold text-slate-900 truncate">{value}</p>
                 <p className="text-xs text-slate-500 mt-0.5">{label}</p>
             </CardContent>
         </Card>

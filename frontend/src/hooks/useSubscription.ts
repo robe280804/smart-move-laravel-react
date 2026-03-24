@@ -3,14 +3,44 @@ import { getSubscriptionPlan, getBillingPortalUrl, redirectToStripeCheckout } fr
 import type { PlanKey } from "@/constants/welcome";
 import { notify } from "@/lib/toast";
 
+const PLAN_CACHE_KEY = "sm_subscription_plan";
+
+function getCachedPlan(): PlanKey | null {
+    try {
+        return sessionStorage.getItem(PLAN_CACHE_KEY) as PlanKey | null;
+    } catch {
+        return null;
+    }
+}
+
+function setCachedPlan(plan: PlanKey) {
+    try {
+        sessionStorage.setItem(PLAN_CACHE_KEY, plan);
+    } catch {
+        // ignore
+    }
+}
+
+function clearCachedPlan() {
+    try {
+        sessionStorage.removeItem(PLAN_CACHE_KEY);
+    } catch {
+        // ignore
+    }
+}
+
 export function useSubscription() {
-    const [currentPlan, setCurrentPlan] = useState<PlanKey | null>(null);
+    const [currentPlan, setCurrentPlan] = useState<PlanKey | null>(getCachedPlan);
     const [isPlanLoading, setIsPlanLoading] = useState(false);
     const [checkoutLoadingPlan, setCheckoutLoadingPlan] = useState<PlanKey | null>(null);
 
-    const fetchPlan = () => {
+    const fetchPlan = (force = false) => {
+        if (!force && getCachedPlan()) return;
         getSubscriptionPlan()
-            .then(setCurrentPlan)
+            .then((plan) => {
+                setCurrentPlan(plan);
+                setCachedPlan(plan);
+            })
             .catch(() => setCurrentPlan("free"));
     };
 
@@ -24,6 +54,7 @@ export function useSubscription() {
             const result = await redirectToStripeCheckout(planKey);
             if (result.swapped) {
                 setCurrentPlan(planKey);
+                setCachedPlan(planKey);
                 notify.success("Plan updated successfully.");
             }
         } catch (error) {
@@ -35,6 +66,7 @@ export function useSubscription() {
 
     const handleManageBilling = async () => {
         setIsPlanLoading(true);
+        clearCachedPlan();
         try {
             const url = await getBillingPortalUrl();
             window.location.href = url;
@@ -48,5 +80,10 @@ export function useSubscription() {
     const canExportPdf = currentPlan !== null && currentPlan !== "free";
     const canEditExercises = currentPlan !== null && currentPlan !== "free";
 
-    return { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling, canExportPdf, canEditExercises, refetchPlan: fetchPlan };
+    const refetchPlan = () => {
+        clearCachedPlan();
+        fetchPlan(true);
+    };
+
+    return { currentPlan, isPlanLoading, checkoutLoadingPlan, handleSelectPlan, handleManageBilling, canExportPdf, canEditExercises, refetchPlan };
 }

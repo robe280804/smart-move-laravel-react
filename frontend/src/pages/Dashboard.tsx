@@ -178,7 +178,7 @@ export const Dashboard = () => {
                 style={{ animationDelay: "150ms" }}
             >
                 <Link to="/dashboard/workout-generate">
-                    <div className="group relative rounded-xl overflow-hidden bg-gradient-to-br from-indigo-600 to-blue-700 p-5 cursor-pointer hover:shadow-lg hover:shadow-indigo-900/30 transition-all duration-200 h-full">
+                    <div className="group relative rounded-xl overflow-hidden bg-gradient-to-br from-indigo-600 to-blue-700 p-5 cursor-pointer hover:shadow-lg hover:shadow-indigo-900/30 hover:-translate-y-0.5 transition-all duration-200 h-full">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
                         <div className="relative">
                             <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center mb-3">
@@ -199,7 +199,7 @@ export const Dashboard = () => {
                 </Link>
 
                 <Link to="/dashboard/workouts">
-                    <div className="group rounded-xl border border-slate-200 bg-white p-5 cursor-pointer hover:shadow-md hover:border-slate-300 transition-all duration-200 h-full">
+                    <div className="group rounded-xl border border-slate-200 bg-white p-5 cursor-pointer hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-200 h-full">
                         <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mb-3">
                             <Dumbbell className="w-5 h-5 text-slate-700" />
                         </div>
@@ -241,7 +241,7 @@ export const Dashboard = () => {
                                         key={plan.id}
                                         to={`/dashboard/workouts/${plan.id}`}
                                     >
-                                        <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3.5 hover:shadow-sm hover:border-slate-300 transition-all duration-200 cursor-pointer">
+                                        <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3.5 hover:shadow-sm hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
                                             <div
                                                 className={`w-9 h-9 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center text-base flex-shrink-0`}
                                             >
