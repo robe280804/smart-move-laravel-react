@@ -1,7 +1,8 @@
-import { createContext, useState, useContext, type ReactNode, useEffect } from "react";
+import { createContext, useState, useContext, type ReactNode, useEffect, useRef } from "react";
 import type { User, AuthResponse, AuthContextValue, AccessToken } from "../types/auth";
 import { tokenStore } from "../lib/tokenStore";
 import { refresh, logoutUser } from "../services/authentication";
+import { notify } from "../lib/toast";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -9,9 +10,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [accessToken, setAccessToken] = useState<AccessToken | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const expiryWarningTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const isAuthenticated = !!accessToken && new Date(accessToken.expires_at) > new Date();
     const isAdmin = user?.role === "admin";
+
+    // Warn the user 5 minutes before their session expires
+    useEffect(() => {
+        if (expiryWarningTimer.current) clearTimeout(expiryWarningTimer.current);
+
+        if (!accessToken) return;
+
+        const msUntilWarning = new Date(accessToken.expires_at).getTime() - Date.now() - 5 * 60 * 1000;
+
+        if (msUntilWarning <= 0) return;
+
+        expiryWarningTimer.current = setTimeout(() => {
+            notify.warning("Your session expires in 5 minutes. Save your work.");
+        }, msUntilWarning);
+
+        return () => {
+            if (expiryWarningTimer.current) clearTimeout(expiryWarningTimer.current);
+        };
+    }, [accessToken]);
 
     /**
      * On app start, silently exchange the HttpOnly refresh-token cookie for a

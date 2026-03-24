@@ -4,12 +4,15 @@ import "./index.css";
 import App from "./App.tsx";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-    <Toaster richColors />
+    <ErrorBoundary>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+      <Toaster richColors />
+    </ErrorBoundary>
   </StrictMode>,
 );

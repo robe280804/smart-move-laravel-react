@@ -52,6 +52,7 @@ export const Register = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isLoading) return;
         const result = registerSchema.safeParse(form);
         if (!result.success) {
             const fieldErrors = result.error.flatten().fieldErrors;

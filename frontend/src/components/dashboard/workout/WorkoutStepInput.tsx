@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     AlertTriangle,
@@ -124,10 +124,6 @@ function ScheduleStep({
     handleSchedule,
 }: Pick<WorkoutStepInputProps, "planData" | "setPlanData" | "handleBack" | "handleSchedule">) {
     const [daysInputValue, setDaysInputValue] = useState(String(planData.trainingDaysPerWeek));
-
-    useEffect(() => {
-        setDaysInputValue(String(planData.trainingDaysPerWeek));
-    }, [planData.trainingDaysPerWeek]);
 
     return (
         <div className="space-y-5">
