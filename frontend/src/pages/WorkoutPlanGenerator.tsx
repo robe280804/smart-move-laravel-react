@@ -65,7 +65,7 @@ export function WorkoutPlanGenerator() {
                             with your physical information (height, weight, age, etc.).
                         </CardDescription>
                         <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-indigo-600">
-                            <Link to="/dashboard/profile">Complete Fitness Profile</Link>
+                            <Link to="/dashboard/profile?tab=fitness">Complete Fitness Profile</Link>
                         </Button>
                     </CardContent>
                 </Card>
