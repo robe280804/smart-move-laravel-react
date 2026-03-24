@@ -8,16 +8,16 @@ import { ExerciseCard } from "./ExerciseCard";
 // day_of_week: 1 = Monday … 7 = Sunday  →  DAYS_OF_WEEK is 0-indexed from Monday
 const getDayName = (day: number): string => DAYS_OF_WEEK[day - 1] ?? "Unknown";
 
-const BLOCK_COLORS: Record<string, string> = {
-    Warmup: "bg-green-50 border-green-200",
-    Main: "bg-indigo-50 border-indigo-200",
-    "Cool-down": "bg-amber-50 border-amber-200",
-    "Mobility Flow": "bg-teal-50 border-teal-200",
-    Strength: "bg-blue-50 border-blue-200",
-    Accessory: "bg-purple-50 border-purple-200",
-    Core: "bg-orange-50 border-orange-200",
-    Circuit: "bg-pink-50 border-pink-200",
-    Conditioning: "bg-cyan-50 border-cyan-200",
+const BLOCK_TOP_COLOR: Record<string, string> = {
+    Warmup: "bg-green-400",
+    Main: "bg-indigo-400",
+    "Cool-down": "bg-amber-400",
+    "Mobility Flow": "bg-teal-400",
+    Strength: "bg-blue-400",
+    Accessory: "bg-purple-400",
+    Core: "bg-orange-400",
+    Circuit: "bg-pink-400",
+    Conditioning: "bg-cyan-400",
 };
 
 const BLOCK_ICON_COLORS: Record<string, string> = {
@@ -127,18 +127,21 @@ export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate, canEd
                 <div className="border-t border-slate-200 p-3 sm:p-6 bg-slate-50 space-y-3">
                     {day.workout_blocks.map((block) => {
                         const isBlockOpen = openBlocks.has(block.id);
-                        const blockColor = BLOCK_COLORS[block.name] ?? "bg-slate-50 border-slate-200";
+                        const topColor = BLOCK_TOP_COLOR[block.name] ?? "bg-slate-300";
                         const iconColor = BLOCK_ICON_COLORS[block.name] ?? "text-slate-700";
 
                         return (
                             <div
                                 key={block.id}
-                                className={`border-2 rounded-lg overflow-hidden ${blockColor}`}
+                                className="rounded-xl overflow-hidden bg-white border border-slate-200 shadow-sm"
                             >
+                                {/* Colored top accent bar */}
+                                <div className={`h-1 w-full ${topColor}`} />
+
                                 {/* Block header — clickable */}
                                 <button
                                     onClick={() => toggleBlock(block.id)}
-                                    className="w-full px-4 py-3 bg-white border-b-2 border-inherit flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
+                                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
                                 >
                                     <div className="flex items-center gap-2">
                                         <h4 className={`font-semibold ${iconColor}`}>
@@ -157,7 +160,7 @@ export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate, canEd
 
                                 {/* Exercises */}
                                 {isBlockOpen && (
-                                    <div className="p-3 sm:p-4 space-y-3">
+                                    <div className="border-t border-slate-100 divide-y divide-slate-100">
                                         {block.block_exercises.map((blockExercise) => (
                                             <ExerciseCard
                                                 key={blockExercise.id}

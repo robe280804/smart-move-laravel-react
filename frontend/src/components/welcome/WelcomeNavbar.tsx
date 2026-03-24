@@ -44,7 +44,7 @@ export function WelcomeNavbar({ onGetStarted, onLogin }: WelcomeNavbarProps) {
                         <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
                             <Dumbbell className="w-4 h-4 text-white" />
                         </div>
-                        <span className="font-bold text-lg text-slate-900">
+                        <span className="font-bold text-lg text-slate-900" translate="no">
                             Smart Move AI
                         </span>
                     </div>

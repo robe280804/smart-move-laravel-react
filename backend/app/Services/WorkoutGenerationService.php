@@ -114,7 +114,7 @@ class WorkoutGenerationService
         }
 
         if ($constraints !== '') {
-            $requestLines[] = sprintf('  injuries/limitations: %s', $constraints);
+            $requestLines[] = sprintf('  injuries/limitations: <user_input>%s</user_input>', $constraints);
         }
 
         if (! empty($preferences['workout_types'])) {
@@ -122,15 +122,15 @@ class WorkoutGenerationService
         }
 
         if (! empty($preferences['sports'])) {
-            $requestLines[] = sprintf('  sports/activities: %s', (string) $preferences['sports']);
+            $requestLines[] = sprintf('  sports/activities: <user_input>%s</user_input>', (string) $preferences['sports']);
         }
 
         if (! empty($preferences['preferred_exercises'])) {
-            $requestLines[] = sprintf('  preferred exercises: %s', (string) $preferences['preferred_exercises']);
+            $requestLines[] = sprintf('  preferred exercises: <user_input>%s</user_input>', (string) $preferences['preferred_exercises']);
         }
 
         if (! empty($preferences['additional_notes'])) {
-            $requestLines[] = sprintf('  additional notes: %s', (string) $preferences['additional_notes']);
+            $requestLines[] = sprintf('  additional notes: <user_input>%s</user_input>', (string) $preferences['additional_notes']);
         }
 
         if ($requestLines !== []) {

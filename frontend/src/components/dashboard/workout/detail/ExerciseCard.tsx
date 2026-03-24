@@ -61,29 +61,29 @@ export const ExerciseCard = ({ exercise, dayId, blockId, accentClass, canEdit, e
     };
 
     return (
-        <div className={`bg-white rounded-lg border border-slate-200 border-l-4 ${accentClass} p-4`}>
+        <div className={`bg-white border-l-4 ${accentClass} p-4`}>
             {/* Name & metadata */}
             <div className="mb-3">
-                <h5 className="font-semibold text-slate-900">{ex.name}</h5>
+                <h5 className="font-semibold text-slate-900" translate="no">{ex.name}</h5>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-1">
-                    <span className="capitalize">{ex.category}</span>
+                    <span className="capitalize" translate="no">{ex.category}</span>
                     {ex.muscle_group && (
                         <>
                             <span>•</span>
-                            <span className="capitalize">{ex.muscle_group}</span>
+                            <span className="capitalize" translate="no">{ex.muscle_group}</span>
                         </>
                     )}
                     {ex.equipment && (
                         <>
                             <span>•</span>
-                            <span className="capitalize">{ex.equipment}</span>
+                            <span className="capitalize" translate="no">{ex.equipment}</span>
                         </>
                     )}
                 </div>
             </div>
 
             {/* Parameters */}
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                 {exercise.sets !== null && (
                     <FieldInput
                         field="sets"
