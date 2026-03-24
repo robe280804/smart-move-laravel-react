@@ -127,4 +127,6 @@ return [
 
     'admin_email' => env('ADMIN_EMAIL'),
 
+    'max_users' => env('APP_MAX_USERS') !== null ? (int) env('APP_MAX_USERS') : null,
+
 ];

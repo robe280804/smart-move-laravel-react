@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Dto\UserDto;
 use App\Enums\Role;
+use App\Exceptions\RegistrationClosedException;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -32,6 +33,12 @@ class UserService
 
     public function create(UserDto $dto): User
     {
+        $maxUsers = config('app.max_users');
+
+        if ($maxUsers !== null && User::query()->count() >= $maxUsers) {
+            throw new RegistrationClosedException('Registration is currently closed. We have reached our user capacity.');
+        }
+
         $user = $this->userRepository->create([
             'name' => $dto->name,
             'surname' => $dto->surname,

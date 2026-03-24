@@ -2,6 +2,7 @@
 
 use App\Enums\SecurityEventType;
 use App\Events\SecurityAlert;
+use App\Exceptions\RegistrationClosedException;
 use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Foundation\Application;
@@ -32,6 +33,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (RegistrationClosedException $e) {
+            return response()->json(['message' => $e->getMessage()], 503);
+        });
+
         $exceptions->reportable(function (HttpException $e) {
             if ($e->getStatusCode() === 403) {
                 event(new SecurityAlert(
