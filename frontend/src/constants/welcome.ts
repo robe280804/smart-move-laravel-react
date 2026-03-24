@@ -1,4 +1,4 @@
-import { Brain, Target, Zap, Calendar, TrendingUp, Users, ClipboardList, Cpu, Dumbbell, Trophy, Check, X } from "lucide-react";
+import { Brain, Target, FileDown, Calendar, BarChart3, Users, ClipboardList, Cpu, Dumbbell, Trophy, Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
@@ -32,21 +32,21 @@ export const FEATURES: Feature[] = [
         gradient: "from-indigo-500 to-purple-500",
     },
     {
-        icon: Zap,
-        title: "Adaptive Workouts",
-        description: "Plans that evolve with your progress, automatically adjusting intensity and exercises.",
+        icon: FileDown,
+        title: "PDF Export",
+        description: "Download your workout plan as a PDF and take it anywhere — gym, home, or outdoors.",
         gradient: "from-purple-500 to-pink-500",
     },
     {
         icon: Calendar,
         title: "Flexible Scheduling",
-        description: "Fit workouts into your busy life with plans that adapt to your available time.",
+        description: "Fit workouts into your busy life with plans built around your available days and equipment.",
         gradient: "from-orange-500 to-red-500",
     },
     {
-        icon: TrendingUp,
-        title: "Progress Tracking",
-        description: "Visualize your improvements with detailed analytics and milestone celebrations.",
+        icon: BarChart3,
+        title: "Training Overview",
+        description: "See your plans, sessions, and goal distribution at a glance from your personal dashboard.",
         gradient: "from-green-500 to-emerald-500",
     },
     {
@@ -83,13 +83,13 @@ export const STEPS: Step[] = [
         number: "03",
         icon: Dumbbell,
         title: "Start Training",
-        description: "Follow your personalized plan with guided exercises and progress tracking.",
+        description: "Access your personalized plan anytime and start working out at your own pace.",
     },
     {
         number: "04",
         icon: Trophy,
         title: "Achieve Your Goals",
-        description: "Watch as your plan adapts to your progress and celebrates your milestones.",
+        description: "Generate new plans whenever you need and keep building toward your fitness goals.",
     },
 ];
 
@@ -149,7 +149,7 @@ export const PRICING_TIERS: PricingTier[] = [
         cardStyle: "bg-gradient-to-b from-indigo-600 to-blue-700 border-0 text-white",
         ctaStyle: "bg-white text-indigo-600 hover:bg-indigo-50",
         features: [
-            { label: "Workout plan generations", included: true, highlight: "10 / month" },
+            { label: "Workout plan generations", included: true, highlight: "5 / month" },
             { label: "Saved plans", included: true, highlight: "10 max" },
             { label: "PDF export", included: true },
             { label: "Exercise editing", included: true },
@@ -168,7 +168,7 @@ export const PRICING_TIERS: PricingTier[] = [
         cardStyle: "bg-slate-900 border border-slate-700 text-white",
         ctaStyle: "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700",
         features: [
-            { label: "Workout plan generations", included: true, highlight: "20" },
+            { label: "Workout plan generations", included: true, highlight: "10 / month" },
             { label: "Saved plans", included: true, highlight: "Unlimited" },
             { label: "PDF export", included: true },
             { label: "Exercise editing", included: true },
@@ -185,10 +185,10 @@ export { Check, X };
 
 export const CTA_BENEFITS = [
     "Personalized AI-generated workout plans",
-    "Progress tracking and analytics",
-    "Exercise library with detailed guides",
-    "Adaptive difficulty adjustments",
-    "Nutritional recommendations",
+    "Dashboard with training stats and goal analytics",
+    "PDF export to take your plan anywhere",
+    "Equipment-aware and schedule-flexible plans",
+    "Plan history and workout management",
 ] as const;
 
 // ── Footer ────────────────────────────────────────────────────────────────────

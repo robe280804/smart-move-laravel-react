@@ -18,6 +18,17 @@ export function WelcomePage() {
     const [pendingNavigation, setPendingNavigation] = useState(false);
     const [pendingPlan, setPendingPlan] = useState<Exclude<PlanKey, "free"> | null>(null);
 
+    const startCheckout = async (planKey: Exclude<PlanKey, "free">) => {
+        try {
+            const result = await redirectToStripeCheckout(planKey);
+            if (result.swapped) {
+                navigate("/dashboard");
+            }
+        } catch (error) {
+            notify.error(error instanceof Error ? error.message : "Payment failed. Please try again.");
+        }
+    };
+
     // Resolve the navigation once the auth check completes
     useEffect(() => {
         if (pendingNavigation && !isLoading) {
@@ -36,17 +47,6 @@ export function WelcomePage() {
             setPendingPlan(null);
         }
     }, [isLoading, pendingPlan, isAuthenticated, navigate]);
-
-    const startCheckout = async (planKey: Exclude<PlanKey, "free">) => {
-        try {
-            const result = await redirectToStripeCheckout(planKey);
-            if (result.swapped) {
-                navigate("/dashboard");
-            }
-        } catch (error) {
-            notify.error(error instanceof Error ? error.message : "Payment failed. Please try again.");
-        }
-    };
 
     const handleGetStarted = () => {
         if (isLoading) {

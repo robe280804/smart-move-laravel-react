@@ -14,8 +14,8 @@ enum SubscriptionPlan: string
     {
         return match ($this) {
             self::Free => 1,
-            self::Advanced => 10,
-            self::Pro => 20,
+            self::Advanced => 5,
+            self::Pro => 10,
         };
     }
 
