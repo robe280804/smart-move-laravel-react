@@ -16,7 +16,6 @@
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
-        "neuron-core/neuron-ai": "^3.0",
         "spatie/laravel-data": "^4.20",
         "spatie/laravel-permission": "^7.2"
     },
