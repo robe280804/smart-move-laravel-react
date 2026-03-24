@@ -39,8 +39,13 @@ class PaymentService
             throw new AlreadySubscribedException('You are already subscribed to this plan.');
         }
 
-        if ($user->subscribed('default')) {
-            $user->subscription('default')->swap($priceId);
+        $existingSubscription = $user->subscriptions()
+            ->whereIn('stripe_status', ['active', 'trialing', 'incomplete', 'past_due'])
+            ->latest()
+            ->first();
+
+        if ($existingSubscription !== null) {
+            $existingSubscription->swap($priceId);
 
             return null;
         }

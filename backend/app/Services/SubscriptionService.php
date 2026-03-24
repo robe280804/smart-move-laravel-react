@@ -13,7 +13,7 @@ class SubscriptionService
 {
     public function getPlan(User $user): SubscriptionPlan
     {
-        $subscription = $user->subscriptions()->active()->first();
+        $subscription = $user->subscriptions()->active()->latest()->first();
 
         if ($subscription === null) {
             return SubscriptionPlan::Free;

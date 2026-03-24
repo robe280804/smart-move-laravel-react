@@ -20,6 +20,7 @@ class UserResource extends JsonResource
             'plan' => $this->whenLoaded('subscriptions', function (): string {
                 $active = $this->subscriptions
                     ->whereIn('stripe_status', ['active', 'trialing'])
+                    ->sortByDesc('created_at')
                     ->first();
 
                 if ($active === null) {
