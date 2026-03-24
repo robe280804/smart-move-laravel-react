@@ -38,7 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     type: SecurityEventType::ForbiddenAccess,
                     ip: request()->ip() ?? 'unknown',
                     userId: request()->user()?->id,
-                    details: "403 Forbidden: {$e->getMessage()} | URL: ".request()->fullUrl(),
+                    details: "403 Forbidden: {$e->getMessage()} | URL: ".request()->url(),
                 ));
             }
         });

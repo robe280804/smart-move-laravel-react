@@ -1,26 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -r Handler /c/Users/UTENTE/IdeaProjects/laravel/smart-move-laravel-react/backend/app --include=*.php -l)",
-      "Bash(npx tsc:*)",
-      "Bash(find /c/Users/UTENTE/IdeaProjects/laravel/smart-move-laravel-react/frontend/src -type f -name *tokenStore* -o -name *token*)",
-      "Bash(php artisan:*)",
-      "Bash(php.bat vendor/bin/pint --dirty --format agent)",
-      "Bash(php.bat artisan:*)",
-      "Bash(npm run:*)",
-      "Bash(find /c/Users/UTENTE/IdeaProjects/laravel/smart-move-laravel-react/frontend/src -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
-      "Bash(xargs grep:*)",
-      "Bash(php.bat composer.phar require barryvdh/laravel-dompdf --no-interaction)",
-      "Bash(where composer:*)",
-      "Bash(where composer.bat)",
-      "Bash(composer require:*)",
-      "Bash(php.bat \"C:\\\\Users\\\\UTENTE\\\\.config\\\\herd\\\\bin\\\\composer.bat\" require barryvdh/laravel-dompdf --no-interaction)",
-      "Bash(find C:UsersUTENTEIdeaProjectslaravelsmart-move-laravel-reactbackenddatabasemigrations -name *.php)",
-      "Bash(grep -r \"Billable\\\\|billingPortalUrl\\\\|subscription\\\\|newSubscription\\\\|swap\" C:UsersUTENTEIdeaProjectslaravelsmart-move-laravel-reactbackendapp --include=*.php)",
-      "Bash(vendor/bin/pint --dirty --format agent)",
-      "Bash(find /c/Users/UTENTE/IdeaProjects/laravel/smart-move-laravel-react/backend -type f -name *webhook* -o -name *Webhook*)",
-      "Bash(php vendor/bin/pint --dirty --format agent)",
-      "Bash(php.bat vendor/bin/pint tests/Feature/SecurityEventTest.php --format agent)"
+      "Bash(php.bat vendor/bin/pint app/Http/Requests/ResetPasswordRequest.php app/Http/Controllers/Api/AuthController.php app/Services/AuthService.php bootstrap/app.php config/cors.php --format agent)"
     ]
   }
 }

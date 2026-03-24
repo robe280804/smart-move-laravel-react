@@ -9,6 +9,7 @@ use App\Events\UserRegistration;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 
@@ -52,8 +53,42 @@ class AuthService
         $status = Password::sendResetLink(['email' => $email]);
 
         if ($status !== Password::RESET_LINK_SENT) {
-            Log::error('Send reset password link failed', ['email' => $email]);
+            Log::error('Send reset password link failed');
         }
+    }
+
+    public function isLockedOut(string $email): bool
+    {
+        return Cache::has($this->lockoutKey($email));
+    }
+
+    public function recordFailedAttempt(string $email): void
+    {
+        $attemptsKey = $this->attemptsKey($email);
+        $attempts = (int) Cache::get($attemptsKey, 0) + 1;
+
+        Cache::put($attemptsKey, $attempts, now()->addMinutes(30));
+
+        if ($attempts >= 5) {
+            Cache::put($this->lockoutKey($email), true, now()->addMinutes(15));
+            Cache::forget($attemptsKey);
+        }
+    }
+
+    public function clearFailedAttempts(string $email): void
+    {
+        Cache::forget($this->attemptsKey($email));
+        Cache::forget($this->lockoutKey($email));
+    }
+
+    private function lockoutKey(string $email): string
+    {
+        return 'login_locked:'.hash('sha256', $email);
+    }
+
+    private function attemptsKey(string $email): string
+    {
+        return 'login_attempts:'.hash('sha256', $email);
     }
 
     public function resendVerificationEmail(User $user): void

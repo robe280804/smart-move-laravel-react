@@ -9,6 +9,7 @@ use App\Events\FailedLogin;
 use App\Events\UserRegistration;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Resources\UserResource;
@@ -46,16 +47,26 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): JsonResponse|Responsable
     {
+        $email = $request->validated('email');
+
+        if ($this->authService->isLockedOut($email)) {
+            return new ApiError(null, 'Too many failed login attempts. Please try again later.', Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
         $user = $this->authService->attemptLogin($request->validated());
 
         if (! $user) {
+            $this->authService->recordFailedAttempt($email);
+
             event(new FailedLogin(
-                email: $request->validated('email'),
+                email: $email,
                 ip: $request->ip() ?? 'unknown',
             ));
 
             return new ApiError(null, 'Wrong credentials', Response::HTTP_UNAUTHORIZED);
         }
+
+        $this->authService->clearFailedAttempts($email);
 
         $tokens = $this->authService->generateTokens($user);
 
@@ -117,7 +128,7 @@ class AuthController extends Controller
                 return new ApiSuccess(data: null, metaData: ['message' => 'Email already verified.'], statusCode: Response::HTTP_OK);
             }
 
-            return redirect(config('app.frontend_url').'/email-verify?status=alredy');
+            return redirect(config('app.frontend_url').'/email-verify?status=already');
         }
 
         $user->markEmailAsVerified();
@@ -132,13 +143,11 @@ class AuthController extends Controller
     /**
      * Send a password reset link to the given email.
      *
-     * @param  $request  email
+     * @param  ResetPasswordRequest  $request  email
      */
-    public function resetPassword(Request $request): Responsable
+    public function resetPassword(ResetPasswordRequest $request): Responsable
     {
-        $request->validate(['email' => 'required|email|max:255']);
-
-        $this->authService->sendResetLink($request->input('email'));
+        $this->authService->sendResetLink($request->validated('email'));
 
         return new ApiSuccess(
             data: null,
