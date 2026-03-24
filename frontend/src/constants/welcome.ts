@@ -129,8 +129,8 @@ export const PRICING_TIERS: PricingTier[] = [
         cardStyle: "bg-white border border-slate-200",
         ctaStyle: "border border-slate-300 text-slate-700 hover:bg-slate-50",
         features: [
-            { label: "Workout plan generations", included: true, highlight: "3 total" },
-            { label: "Saved plans", included: true, highlight: "2 max" },
+            { label: "Workout plan generations", included: true, highlight: "1 total" },
+            { label: "Saved plans", included: true, highlight: "1 max" },
             { label: "PDF export", included: false },
             { label: "Exercise editing", included: false },
             { label: "Plan history", included: true, highlight: "Last 30 days" },

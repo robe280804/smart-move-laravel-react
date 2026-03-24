@@ -13,27 +13,27 @@ enum SubscriptionPlan: string
     public function generationLimit(): ?int
     {
         return match ($this) {
-            self::Free     => 3,
+            self::Free => 1,
             self::Advanced => 10,
-            self::Pro      => 20,
+            self::Pro => 20,
         };
     }
 
     public function activePlansLimit(): ?int
     {
         return match ($this) {
-            self::Free     => 2,
+            self::Free => 1,
             self::Advanced => 10,
-            self::Pro      => null,
+            self::Pro => null,
         };
     }
 
     public function historyDaysLimit(): ?int
     {
         return match ($this) {
-            self::Free     => 30,
+            self::Free => 30,
             self::Advanced => null,
-            self::Pro      => null,
+            self::Pro => null,
         };
     }
 
