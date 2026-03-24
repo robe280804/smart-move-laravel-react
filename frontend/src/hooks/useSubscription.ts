@@ -50,6 +50,7 @@ export function useSubscription() {
 
     const handleSelectPlan = async (planKey: Exclude<PlanKey, "free">) => {
         setCheckoutLoadingPlan(planKey);
+        clearCachedPlan();
         try {
             const result = await redirectToStripeCheckout(planKey);
             if (result.swapped) {
