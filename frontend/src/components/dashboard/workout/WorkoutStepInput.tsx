@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DAYS_OF_WEEK, EQUIPMENT_OPTIONS, FITNESS_GOALS, STRENGTH_FOCUSED_GOALS } from "@/constants/const";
+import { EquipmentModal } from "@/components/dashboard/workout/EquipmentModal";
 import type { WorkoutPlanData } from "@/types/workout";
 import { sanitizeTextInput, TEXT_MAX_LENGTHS } from "@/lib/sanitize";
 import { WorkoutGeneratingStatus } from "@/components/dashboard/workout/WorkoutGeneratingStatus";
@@ -201,12 +202,26 @@ function ScheduleStep({
 
 // ─── Step 2: Equipment ───────────────────────────────────────────────────────
 
+const EQUIPMENT_ICONS: Record<string, string> = {
+    "Dumbbells": "🏋️",
+    "Barbells": "🪜",
+    "Resistance Bands": "🔗",
+    "Pull-up Bar": "🤸",
+    "Bench": "🪑",
+    "Kettlebells": "⚫",
+    "Cable Machine": "⚙️",
+    "Cardio Equipment": "🚴",
+    "Bodyweight Only": "🏃",
+};
+
 function EquipmentStep({
     planData,
     setPlanData,
     handleBack,
     handleEquipment,
 }: Pick<WorkoutStepInputProps, "planData" | "setPlanData" | "handleBack" | "handleEquipment">) {
+    const [showAllEquipment, setShowAllEquipment] = useState(false);
+
     const isBodyweightOnly =
         planData.equipment.length > 0 &&
         planData.equipment.every(e => e === BODYWEIGHT_ONLY);
@@ -218,6 +233,7 @@ function EquipmentStep({
     const equipmentLocked = planData.gymAccess || hasEverything;
 
     const nonBodyweightOptions = EQUIPMENT_OPTIONS.filter(e => e !== BODYWEIGHT_ONLY);
+    const visibleEquipment = nonBodyweightOptions.slice(0, 4);
 
     const handleGymAccessChange = (checked: boolean) => {
         if (checked) {
@@ -260,6 +276,14 @@ function EquipmentStep({
         }
     };
 
+    const handleModalToggle = (equipment: string) => {
+        if (equipment === BODYWEIGHT_ONLY) {
+            handleBodyweightToggle(!isBodyweightOnly);
+        } else {
+            handleItemToggle(equipment, !planData.equipment.includes(equipment));
+        }
+    };
+
     return (
         <div className="space-y-4">
             {/* Gym access shortcut */}
@@ -275,67 +299,87 @@ function EquipmentStep({
                 </div>
             </label>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
                 <Label>Available equipment</Label>
-                <div className="grid sm:grid-cols-2 gap-2">
-                    {/* "Everything" shortcut */}
-                    <label
-                        className={`flex items-center gap-2 p-3 border-2 rounded-lg sm:col-span-2 transition-all ${
-                            hasEverything || planData.gymAccess
-                                ? "border-blue-600 bg-blue-50 cursor-not-allowed"
-                                : "border-blue-300 bg-blue-50/50 hover:border-blue-500 cursor-pointer"
-                        }`}
-                    >
-                        <Checkbox
-                            checked={hasEverything || planData.gymAccess}
-                            disabled={planData.gymAccess}
-                            onCheckedChange={(checked) => handleEverythingToggle(checked as boolean)}
-                        />
-                        <span className="text-sm font-semibold text-blue-700">Everything (all equipment)</span>
-                    </label>
 
-                    {/* Regular equipment items (excluding Bodyweight Only) */}
-                    {nonBodyweightOptions.map((equipment) => (
-                        <label
-                            key={equipment}
-                            className={`flex items-center gap-2 p-3 border-2 rounded-lg transition-all ${
-                                equipmentLocked
-                                    ? "border-blue-600 bg-blue-50 cursor-not-allowed opacity-70"
-                                    : planData.equipment.includes(equipment)
-                                        ? "border-blue-600 bg-blue-50 cursor-pointer"
-                                        : "border-slate-200 hover:border-slate-300 cursor-pointer"
-                            }`}
-                        >
-                            <Checkbox
-                                checked={equipmentLocked || planData.equipment.includes(equipment)}
+                {/* "Everything" shortcut */}
+                <label
+                    className={`flex items-center gap-2 p-3 border-2 rounded-lg w-full transition-all ${
+                        hasEverything || planData.gymAccess
+                            ? "border-blue-600 bg-blue-50 cursor-not-allowed"
+                            : "border-blue-300 bg-blue-50/50 hover:border-blue-500 cursor-pointer"
+                    }`}
+                >
+                    <Checkbox
+                        checked={hasEverything || planData.gymAccess}
+                        disabled={planData.gymAccess}
+                        onCheckedChange={(checked) => handleEverythingToggle(checked as boolean)}
+                    />
+                    <span className="text-sm font-semibold text-blue-700">Everything (all equipment)</span>
+                </label>
+
+                {/* First 4 equipment as cards */}
+                <div className="grid grid-cols-2 gap-3">
+                    {visibleEquipment.map((equipment) => {
+                        const isSelected = equipmentLocked || planData.equipment.includes(equipment);
+                        return (
+                            <button
+                                key={equipment}
+                                onClick={() => !equipmentLocked && handleItemToggle(equipment, !planData.equipment.includes(equipment))}
                                 disabled={equipmentLocked}
-                                onCheckedChange={(checked) => handleItemToggle(equipment, checked as boolean)}
-                            />
-                            <span className="text-sm font-medium">{equipment}</span>
-                        </label>
-                    ))}
-
-                    {/* Bodyweight Only — mutually exclusive with all others */}
-                    <label
-                        className={`flex items-center gap-2 p-3 border-2 rounded-lg sm:col-span-2 transition-all ${
-                            equipmentLocked
-                                ? "border-slate-200 bg-slate-50 cursor-not-allowed opacity-50"
-                                : isBodyweightOnly
-                                    ? "border-slate-600 bg-slate-50 cursor-pointer"
-                                    : "border-slate-200 hover:border-slate-400 cursor-pointer"
-                        }`}
-                    >
-                        <Checkbox
-                            checked={isBodyweightOnly}
-                            disabled={equipmentLocked}
-                            onCheckedChange={(checked) => handleBodyweightToggle(checked as boolean)}
-                        />
-                        <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium">{BODYWEIGHT_ONLY}</span>
-                            <span className="text-xs text-slate-500 ml-2">— no equipment available</span>
-                        </div>
-                    </label>
+                                className={`p-3 sm:p-4 border-2 rounded-xl transition-all text-left ${
+                                    isSelected
+                                        ? equipmentLocked
+                                            ? "border-blue-400 bg-blue-50 cursor-not-allowed opacity-70"
+                                            : "border-blue-600 bg-blue-50"
+                                        : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                                }`}
+                            >
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <span className="text-xl sm:text-2xl">{EQUIPMENT_ICONS[equipment]}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`font-semibold text-xs sm:text-sm truncate ${isSelected && !equipmentLocked ? "text-blue-600" : "text-slate-900"}`}>
+                                            {equipment}
+                                        </p>
+                                    </div>
+                                    {isSelected && (
+                                        <Check className={`w-3.5 h-3.5 flex-shrink-0 ${equipmentLocked ? "text-blue-400" : "text-blue-600"}`} />
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
                 </div>
+
+                {/* View all equipment button */}
+                <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowAllEquipment(true)}
+                >
+                    View all equipment <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+
+                {/* Bodyweight Only — mutually exclusive with all others */}
+                <label
+                    className={`flex items-center gap-2 p-3 border-2 rounded-lg w-full transition-all ${
+                        equipmentLocked
+                            ? "border-slate-200 bg-slate-50 cursor-not-allowed opacity-50"
+                            : isBodyweightOnly
+                                ? "border-slate-600 bg-slate-50 cursor-pointer"
+                                : "border-slate-200 hover:border-slate-400 cursor-pointer"
+                    }`}
+                >
+                    <Checkbox
+                        checked={isBodyweightOnly}
+                        disabled={equipmentLocked}
+                        onCheckedChange={(checked) => handleBodyweightToggle(checked as boolean)}
+                    />
+                    <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium">{BODYWEIGHT_ONLY}</span>
+                        <span className="text-xs text-slate-500 ml-2">— no equipment available</span>
+                    </div>
+                </label>
             </div>
 
             {/* Conflict warning: strength goal + bodyweight only */}
@@ -355,6 +399,14 @@ function EquipmentStep({
             )}
 
             <StepNav onBack={handleBack} onContinue={handleEquipment} />
+
+            <EquipmentModal
+                isOpen={showAllEquipment}
+                selectedEquipment={planData.equipment}
+                isLocked={equipmentLocked}
+                onToggle={handleModalToggle}
+                onClose={() => setShowAllEquipment(false)}
+            />
         </div>
     );
 }
