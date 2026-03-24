@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlockExerciseController;
 use App\Http\Controllers\Api\ChangePasswordController;
+use App\Http\Controllers\Api\ExportUserDataController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\FitnessInfoController;
 use App\Http\Controllers\Api\PaymentController;
@@ -67,6 +68,7 @@ Route::prefix('v1')
                 Route::post('feedbacks', [FeedbackController::class, 'store']);
 
                 Route::apiResource('users', UserController::class)->only(['show', 'update', 'destroy']);
+                Route::get('users/{user}/export', ExportUserDataController::class);
                 Route::apiResource('fitness-info', FitnessInfoController::class);
 
                 Route::get('workout-plans', [WorkoutPlanController::class, 'index']);

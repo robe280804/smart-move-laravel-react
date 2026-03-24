@@ -68,3 +68,12 @@ export const deleteAccount = async (id: number): Promise<void> => {
         return handleApiError(error);
     }
 }
+
+export const exportUserData = async (id: number): Promise<Blob> => {
+    try {
+        const response = await api.get(`/users/${id}/export`, { responseType: "blob" });
+        return response.data as Blob;
+    } catch (error) {
+        return handleApiError(error);
+    }
+}

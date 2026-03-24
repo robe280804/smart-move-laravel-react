@@ -11,10 +11,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, Download, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { resendVerificationEmail } from "@/services/authentication";
-import { deleteAccount } from "@/services/user";
+import { deleteAccount, exportUserData } from "@/services/user";
 import { notify } from "@/lib/toast";
 import type { SecurityFormState } from "@/hooks/useSecurityForm";
 import type { ChangePasswordFormErrors } from "@/types/forms";
@@ -30,6 +30,7 @@ type Props = {
 export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }: Props) {
     const { user, logout } = useAuth();
     const [isResending, setIsResending] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -46,6 +47,24 @@ export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }:
             notify.error("Failed to delete account. Please try again.");
             setIsDeleting(false);
             setShowDeleteDialog(false);
+        }
+    };
+
+    const handleExport = async () => {
+        if (!user) return;
+        setIsExporting(true);
+        try {
+            const blob = await exportUserData(user.id);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "user-data-export.json";
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch {
+            notify.error("Failed to export data. Please try again.");
+        } finally {
+            setIsExporting(false);
         }
     };
 
@@ -158,6 +177,29 @@ export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }:
                                 {isResending ? "Sending…" : "Resend email"}
                             </Button>
                         )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Your Data</CardTitle>
+                    <CardDescription>Download a copy of all personal data we hold about you (GDPR Article 20)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                            <p className="font-medium text-slate-900">Download My Data</p>
+                            <p className="text-sm text-slate-500">Exports your profile, fitness info, workout plans, and feedback as a JSON file</p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            disabled={isExporting}
+                            onClick={handleExport}
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            {isExporting ? "Exporting…" : "Export"}
+                        </Button>
                     </div>
                 </CardContent>
             </Card>

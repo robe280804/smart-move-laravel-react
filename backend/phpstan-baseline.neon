@@ -1,0 +1,571 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to static method make\(\) on an unknown class App\\Neuron\\FitnessAgent\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Console/Commands/Agent/ChatFitnessAgent.php
+
+		-
+			message: '#^Call to static method make\(\) on an unknown class App\\Neuron\\FitnessAgentWorkflow\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Console/Commands/Agent/ChatFitnessAgent.php
+
+		-
+			message: '#^Call to method run\(\) on an unknown class App\\Services\\WorkflowCsvToQdrant\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Console/Commands/Agent/ImportExercisesToQdrant.php
+
+		-
+			message: '#^Parameter \$service of method App\\Console\\Commands\\Agent\\ImportExercisesToQdrant\:\:handle\(\) has invalid type App\\Services\\WorkflowCsvToQdrant\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Console/Commands/Agent/ImportExercisesToQdrant.php
+
+		-
+			message: '#^Method App\\Enums\\SubscriptionPlan\:\:generationLimit\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Enums/SubscriptionPlan.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Api\\AuthController\:\:verifyEmail\(\) should return Illuminate\\Http\\RedirectResponse but returns App\\Http\\Responses\\ApiSuccess\.$#'
+			identifier: return.type
+			count: 2
+			path: app/Http/Controllers/Api/AuthController.php
+
+		-
+			message: '#^Access to an undefined property Laravel\\Cashier\\Checkout\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/PaymentController.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\StoreUserRequest\:\:rules\(\) should return array\<string, array\<int, string\>\> but returns array\<string, list\<Illuminate\\Validation\\Rules\\Password\|string\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Requests/StoreUserRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$duration_seconds\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$exercise_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$order\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$reps\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$rest_seconds\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$rpe\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$sets\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\BlockExerciseResource\:\:\$workout_block_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/BlockExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$additional_metrics\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$equipment\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$infos\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$instructions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$muscle_group\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ExerciseResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ExerciseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FeedbackResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FeedbackResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FeedbackResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FeedbackResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FeedbackResource\:\:\$message\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FeedbackResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FeedbackResource\:\:\$rating\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FeedbackResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FeedbackResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FeedbackResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FeedbackResource\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Resources/FeedbackResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FeedbackResource\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FeedbackResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FitnessInfoResource\:\:\$age\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FitnessInfoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FitnessInfoResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FitnessInfoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FitnessInfoResource\:\:\$experience_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FitnessInfoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FitnessInfoResource\:\:\$gender\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FitnessInfoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FitnessInfoResource\:\:\$height\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FitnessInfoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FitnessInfoResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FitnessInfoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FitnessInfoResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FitnessInfoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FitnessInfoResource\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FitnessInfoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\FitnessInfoResource\:\:\$weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/FitnessInfoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlanDayResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlanDayResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlanDayResource\:\:\$day_of_week\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlanDayResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlanDayResource\:\:\$duration_minutes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlanDayResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlanDayResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlanDayResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlanDayResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlanDayResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlanDayResource\:\:\$workout_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlanDayResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlanDayResource\:\:\$workout_plan_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlanDayResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$email_verified_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$subscriptions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$surname\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\UserResource\:\:getRoleNames\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutBlockResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutBlockResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutBlockResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutBlockResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutBlockResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutBlockResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutBlockResource\:\:\$order\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutBlockResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutBlockResource\:\:\$plan_day_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutBlockResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutBlockResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutBlockResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$experience_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$generation_request\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$goal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$training_days_per_week\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\WorkoutPlanResource\:\:\$workout_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/WorkoutPlanResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 5
+			path: app/Providers/AppServiceProvider.php
+
+		-
+			message: '#^Variable \$abilities in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: app/Providers/AppServiceProvider.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:active\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/SubscriptionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$stripe_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/UserService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:cancelNow\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/UserService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$age\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/WorkoutGenerationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$experience_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/WorkoutGenerationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$gender\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/WorkoutGenerationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$height\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/WorkoutGenerationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/WorkoutGenerationService.php
+
+		-
+			message: '#^Parameter \#3 \$callback of static method Illuminate\\Cache\\Repository\:\:remember\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/WorkoutGenerationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$day_of_week\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/WorkoutPlanService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$planDay\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/WorkoutPlanService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$workoutBlocks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/WorkoutPlanService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:workoutBlocks\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/WorkoutPlanService.php
+
+		-
+			message: '#^Instanceof between string\|null and App\\Enums\\ExperienceLevel will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: app/Services/WorkoutPlanService.php
+
+		-
+			message: '#^Instanceof between string\|null and App\\Enums\\TrainingGoalType will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: app/Services/WorkoutPlanService.php

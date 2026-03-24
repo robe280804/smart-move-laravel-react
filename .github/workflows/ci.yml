@@ -45,3 +45,68 @@ jobs:
 
       - name: Run tests
         run: php artisan test --compact
+
+  security:
+    name: Security & Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── PHP setup ────────────────────────────────────────────────────────────
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, pdo_sqlite, bcmath, zip, intl, pcntl
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        working-directory: backend
+
+      # ── PHP vulnerability scan ────────────────────────────────────────────────
+
+      - name: PHP dependency vulnerability scan
+        run: composer audit
+        working-directory: backend
+
+      # ── PHPStan static analysis ───────────────────────────────────────────────
+
+      - name: Static analysis (PHPStan / Larastan)
+        run: vendor/bin/phpstan analyse --memory-limit=256M --no-progress
+        working-directory: backend
+
+      # ── Node setup ────────────────────────────────────────────────────────────
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      # ── JS vulnerability scan ─────────────────────────────────────────────────
+
+      - name: JS dependency vulnerability scan
+        run: npm audit --audit-level=high
+        working-directory: frontend
+
+      # ── Frontend lint ─────────────────────────────────────────────────────────
+
+      - name: Frontend lint
+        run: npm run lint
+        working-directory: frontend

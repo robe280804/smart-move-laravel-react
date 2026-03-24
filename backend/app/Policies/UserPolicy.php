@@ -41,6 +41,14 @@ class UserPolicy
     }
 
     /**
+     * Users can only export their own data (GDPR Article 20).
+     */
+    public function export(User $user, User $model): bool
+    {
+        return $user->id === $model->id;
+    }
+
+    /**
      * Admins can update any user except themselves.
      */
     public function adminUpdate(User $user, User $model): bool
