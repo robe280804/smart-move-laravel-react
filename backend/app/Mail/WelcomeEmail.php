@@ -3,8 +3,8 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -16,10 +16,7 @@ class WelcomeEmail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(public string $name, public string $surname)
-    {
-        //
-    }
+    public function __construct(public string $name, public string $surname) {}
 
     /**
      * Get the message envelope.
@@ -27,7 +24,7 @@ class WelcomeEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome Email',
+            subject: 'Welcome to '.config('app.name'),
         );
     }
 
@@ -44,7 +41,7 @@ class WelcomeEmail extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

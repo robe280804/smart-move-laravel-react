@@ -57,7 +57,7 @@ class PaymentService
 
         if ($activeSubscriptions->isNotEmpty()) {
             $primary = $activeSubscriptions->first();
-            $primary->swapAndInvoice($priceId);
+            $primary->noProrate()->swap($priceId);
 
             $this->cancelOtherSubscriptions($user, $activeSubscriptions->skip(1));
 
@@ -95,6 +95,16 @@ class PaymentService
             ->get()
             ->each(function ($subscription) use ($user): void {
                 try {
+                    $stripeSubscription = $subscription->asStripeSubscription();
+
+                    // If Stripe already confirmed payment but the webhook hasn't arrived yet,
+                    // sync the local status instead of canceling a subscription the user paid for.
+                    if (in_array($stripeSubscription->status, ['active', 'trialing', 'past_due'], true)) {
+                        $subscription->update(['stripe_status' => $stripeSubscription->status]);
+
+                        return;
+                    }
+
                     $subscription->cancelNow();
                 } catch (\Throwable $e) {
                     Log::warning("Failed to cancel incomplete subscription {$subscription->stripe_id} for user {$user->id}: {$e->getMessage()}");
