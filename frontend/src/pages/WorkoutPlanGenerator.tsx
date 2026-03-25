@@ -78,25 +78,25 @@ export function WorkoutPlanGenerator() {
     const showStartOver = step > 0 && step < WORKOUT_STEPS.length - 1;
 
     return (
-        <div className="space-y-5 sm:space-y-6">
+        <div className="space-y-3 sm:space-y-6">
             <div className="animate-fade-in-up">
                 <WorkoutProgressBar step={step} />
             </div>
 
             <div
-                className="grid lg:grid-cols-3 gap-5 sm:gap-6 animate-fade-in-up"
+                className="grid lg:grid-cols-3 gap-3 sm:gap-6 animate-fade-in-up"
                 style={{ animationDelay: "75ms" }}
             >
                 {/* Wizard Card */}
-                <Card className="lg:col-span-2">
+                <Card className="lg:col-span-2 py-4 gap-3 sm:py-6 sm:gap-6">
                     {hasStepHeader && (
-                        <CardHeader className="pb-4">
-                            <div className="flex items-start justify-between gap-4">
+                        <CardHeader className="px-4 sm:px-6 pb-0">
+                            <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
-                                    <CardTitle className="text-lg sm:text-xl">
+                                    <CardTitle className="text-base sm:text-xl">
                                         {WORKOUT_STEPS[step].title}
                                     </CardTitle>
-                                    <CardDescription className="mt-1">
+                                    <CardDescription className="mt-0.5 sm:mt-1 text-xs sm:text-sm">
                                         {WORKOUT_STEPS[step].description}
                                     </CardDescription>
                                 </div>
@@ -105,16 +105,16 @@ export function WorkoutPlanGenerator() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setShowResetConfirm(true)}
-                                        className="flex-shrink-0 text-slate-500 hover:text-slate-700"
+                                        className="flex-shrink-0 text-slate-500 hover:text-slate-700 h-8 w-8 p-0 sm:h-auto sm:w-auto sm:px-3 sm:py-1.5"
                                     >
-                                        <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                                        <RotateCcw className="w-3.5 h-3.5 sm:mr-1.5" />
                                         <span className="hidden sm:inline">Start Over</span>
                                     </Button>
                                 )}
                             </div>
                         </CardHeader>
                     )}
-                    <CardContent className={hasStepHeader ? "pt-0" : undefined}>
+                    <CardContent className={`px-4 sm:px-6 ${hasStepHeader ? "pt-0" : ""}`}>
                         <WorkoutStepInput
                             step={step}
                             planData={planData}

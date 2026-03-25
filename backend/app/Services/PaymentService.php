@@ -57,7 +57,7 @@ class PaymentService
 
         if ($activeSubscriptions->isNotEmpty()) {
             $primary = $activeSubscriptions->first();
-            $primary->swap($priceId);
+            $primary->swapAndInvoice($priceId);
 
             $this->cancelOtherSubscriptions($user, $activeSubscriptions->skip(1));
 

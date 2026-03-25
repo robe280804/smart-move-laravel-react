@@ -397,23 +397,23 @@ function PreferencesStep({
     handleDetails,
 }: Pick<WorkoutStepInputProps, "planData" | "setPlanData" | "handleBack" | "handleDetails">) {
     return (
-        <div className="space-y-4 overflow-hidden">
-            <div className="flex gap-3 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p className="text-xs sm:text-sm text-blue-800">
+        <div className="space-y-3 sm:space-y-4 overflow-hidden">
+            <div className="flex gap-2.5 p-2.5 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl">
+                <Info className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
                     All fields are optional — the more context you provide, the more tailored your plan will be.
                 </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
                 {/* Injuries */}
-                <div className="space-y-1.5">
-                    <Label htmlFor="injuries" className="text-sm">Injuries or physical limitations</Label>
+                <div className="space-y-1">
+                    <Label htmlFor="injuries" className="text-xs sm:text-sm">Injuries or limitations</Label>
                     <Input
                         id="injuries"
                         placeholder="e.g., Lower back pain, knee injury..."
                         value={planData.injuries}
-                        className="w-full"
+                        className="w-full h-9 sm:h-10 text-sm"
                         onChange={(e) =>
                             setPlanData({
                                 ...planData,
@@ -422,32 +422,32 @@ function PreferencesStep({
                         }
                         maxLength={TEXT_MAX_LENGTHS.injuries}
                     />
-                    <p className={`text-[10px] sm:text-xs text-right ${planData.injuries.length >= TEXT_MAX_LENGTHS.injuries ? "text-red-500" : "text-slate-400"}`}>
+                    <p className={`text-[10px] text-right ${planData.injuries.length >= TEXT_MAX_LENGTHS.injuries ? "text-red-500" : "text-slate-400"}`}>
                         {planData.injuries.length}/{TEXT_MAX_LENGTHS.injuries}
                     </p>
                 </div>
 
                 {/* Sports */}
-                <div className="space-y-1.5">
-                    <Label htmlFor="sports" className="text-sm">Sports or activities you practice</Label>
+                <div className="space-y-1">
+                    <Label htmlFor="sports" className="text-xs sm:text-sm">Sports or activities</Label>
                     <Input
                         id="sports"
                         placeholder="e.g., Football, cycling, tennis..."
                         value={planData.sports}
-                        className="w-full"
+                        className="w-full h-9 sm:h-10 text-sm"
                         onChange={(e) =>
                             setPlanData({ ...planData, sports: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.sports) })
                         }
                         maxLength={TEXT_MAX_LENGTHS.sports}
                     />
-                    <p className={`text-[10px] sm:text-xs text-right ${planData.sports.length >= TEXT_MAX_LENGTHS.sports ? "text-red-500" : "text-slate-400"}`}>
+                    <p className={`text-[10px] text-right ${planData.sports.length >= TEXT_MAX_LENGTHS.sports ? "text-red-500" : "text-slate-400"}`}>
                         {planData.sports.length}/{TEXT_MAX_LENGTHS.sports}
                     </p>
                 </div>
 
                 {/* Preferred exercises */}
-                <div className="space-y-1.5">
-                    <Label htmlFor="preferredExercises" className="text-sm">Exercises to include or avoid</Label>
+                <div className="space-y-1">
+                    <Label htmlFor="preferredExercises" className="text-xs sm:text-sm">Exercises to include or avoid</Label>
                     <Textarea
                         id="preferredExercises"
                         placeholder="e.g., Include: pull-ups, deadlifts. Avoid: running..."
@@ -458,21 +458,21 @@ function PreferencesStep({
                                 preferredExercises: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.preferredExercises),
                             })
                         }
-                        className="w-full resize-none"
-                        rows={3}
+                        className="w-full resize-none text-sm"
+                        rows={2}
                         maxLength={TEXT_MAX_LENGTHS.preferredExercises}
                     />
-                    <p className={`text-[10px] sm:text-xs text-right ${planData.preferredExercises.length >= TEXT_MAX_LENGTHS.preferredExercises ? "text-red-500" : "text-slate-400"}`}>
+                    <p className={`text-[10px] text-right ${planData.preferredExercises.length >= TEXT_MAX_LENGTHS.preferredExercises ? "text-red-500" : "text-slate-400"}`}>
                         {planData.preferredExercises.length}/{TEXT_MAX_LENGTHS.preferredExercises}
                     </p>
                 </div>
 
                 {/* Additional notes */}
-                <div className="space-y-1.5">
-                    <Label htmlFor="additionalNotes" className="text-sm">Any other requests or notes</Label>
+                <div className="space-y-1">
+                    <Label htmlFor="additionalNotes" className="text-xs sm:text-sm">Other requests or notes</Label>
                     <Textarea
                         id="additionalNotes"
-                        placeholder="e.g., I travel often and need hotel-friendly workouts..."
+                        placeholder="e.g., Hotel-friendly workouts, no running..."
                         value={planData.additionalNotes}
                         onChange={(e) =>
                             setPlanData({
@@ -480,11 +480,11 @@ function PreferencesStep({
                                 additionalNotes: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.additionalNotes),
                             })
                         }
-                        className="w-full resize-none"
-                        rows={3}
+                        className="w-full resize-none text-sm"
+                        rows={2}
                         maxLength={TEXT_MAX_LENGTHS.additionalNotes}
                     />
-                    <p className={`text-[10px] sm:text-xs text-right ${planData.additionalNotes.length >= TEXT_MAX_LENGTHS.additionalNotes ? "text-red-500" : "text-slate-400"}`}>
+                    <p className={`text-[10px] text-right ${planData.additionalNotes.length >= TEXT_MAX_LENGTHS.additionalNotes ? "text-red-500" : "text-slate-400"}`}>
                         {planData.additionalNotes.length}/{TEXT_MAX_LENGTHS.additionalNotes}
                     </p>
                 </div>
