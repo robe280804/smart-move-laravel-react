@@ -99,6 +99,7 @@ export const Workouts = () => {
         setIsDeleting(true);
         try {
             await deletePlan(id);
+            dismissPlan(id);
             notify.success("Workout plan deleted.");
         } catch {
             notify.error("Failed to delete plan. Please try again.");

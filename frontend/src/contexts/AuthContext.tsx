@@ -3,6 +3,7 @@ import type { User, AuthResponse, AuthContextValue, AccessToken } from "../types
 import { tokenStore } from "../lib/tokenStore";
 import { refresh, logoutUser } from "../services/authentication";
 import { notify } from "../lib/toast";
+import { clearAllGeneratingPlans } from "../hooks/useGeneratingPlans";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -89,6 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             await logoutUser(); // invalidates the refresh token cookie server-side
         } finally {
+            clearAllGeneratingPlans();
             sessionStorage.clear();
             tokenStore.clear();
             setAccessToken(null);
