@@ -143,17 +143,17 @@ export const Workouts = () => {
 
                 {/* Stats row */}
                 {!isLoading && plans.length > 0 && (
-                    <div className="relative flex items-center gap-6 mt-5 pt-5 border-t border-white/10">
+                    <div className="relative flex flex-wrap items-center gap-x-6 gap-y-2 mt-5 pt-5 border-t border-white/10">
                         <div className="flex items-center gap-2 text-slate-300">
-                            <BarChart3 className="w-4 h-4 text-indigo-400" />
-                            <span className="text-sm">
+                            <BarChart3 className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                            <span className="text-sm whitespace-nowrap">
                                 <span className="font-semibold text-white">{plans.length}</span>{" "}
                                 {plans.length === 1 ? "plan" : "plans"}
                             </span>
                         </div>
                         <div className="flex items-center gap-2 text-slate-300">
-                            <Calendar className="w-4 h-4 text-indigo-400" />
-                            <span className="text-sm">
+                            <Calendar className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                            <span className="text-sm whitespace-nowrap">
                                 <span className="font-semibold text-white">
                                     {plans.reduce((acc, p) => acc + p.plan_days.length, 0)}
                                 </span>{" "}
@@ -161,8 +161,8 @@ export const Workouts = () => {
                             </span>
                         </div>
                         <div className="flex items-center gap-2 text-slate-300">
-                            <Zap className="w-4 h-4 text-indigo-400" />
-                            <span className="text-sm">
+                            <Zap className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                            <span className="text-sm whitespace-nowrap">
                                 <span className="font-semibold text-white">
                                     {Math.max(...plans.map((p) => p.training_days_per_week))}
                                 </span>{" "}
