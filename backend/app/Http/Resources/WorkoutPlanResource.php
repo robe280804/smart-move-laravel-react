@@ -21,6 +21,7 @@ class WorkoutPlanResource extends JsonResource
             'experience_level' => $this->experience_level,
             'workout_type' => $this->workout_type,
             'generation_request' => $this->generation_request,
+            'failure_reason' => $this->failure_reason,
             'plan_days' => PlanDayResource::collection($this->whenLoaded('planDays')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

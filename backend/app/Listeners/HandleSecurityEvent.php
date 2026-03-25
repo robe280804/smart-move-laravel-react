@@ -70,6 +70,7 @@ class HandleSecurityEvent implements ShouldQueue
             SecurityEventType::ForbiddenAccess => 'warning',
             SecurityEventType::UnhandledException => 'error',
             SecurityEventType::AiGenerationFailure => 'error',
+            SecurityEventType::AiCreditsExhausted => 'error',
             SecurityEventType::AccountDeletion => 'warning',
             default => 'info',
         };
@@ -87,6 +88,7 @@ class HandleSecurityEvent implements ShouldQueue
             SecurityEventType::UnhandledException,
             SecurityEventType::ForbiddenAccess,
             SecurityEventType::AiGenerationFailure,
+            SecurityEventType::AiCreditsExhausted,
         ];
 
         if (! in_array($type, $criticalTypes, true)) {

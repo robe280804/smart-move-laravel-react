@@ -7,6 +7,7 @@ import {
     Check,
     ChevronDown,
     ChevronRight,
+    CreditCard,
     Info,
     MailCheck,
     Sparkles,
@@ -551,6 +552,25 @@ function CompletionStep({
                             Go Back
                         </Button>
                     </div>
+                </div>
+            );
+        }
+
+        if (failureReason === "credits_exhausted") {
+            return (
+                <div className="flex flex-col items-center justify-center py-12 gap-5 text-center">
+                    <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                        <CreditCard className="w-8 h-8 text-red-500" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-slate-900">Service Temporarily Unavailable</h3>
+                        <p className="text-slate-500 text-sm mt-1 max-w-xs">
+                            The AI service is temporarily unavailable. Our team has been notified and is working on a fix. Please try again later.
+                        </p>
+                    </div>
+                    <Button variant="outline" className="w-full max-w-xs" onClick={handleReset}>
+                        Try Again Later
+                    </Button>
                 </div>
             );
         }

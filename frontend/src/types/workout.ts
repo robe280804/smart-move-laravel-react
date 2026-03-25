@@ -93,6 +93,7 @@ export type WorkoutPlan = {
     experience_level: string;
     workout_type: string;
     generation_request: GenerationRequest | null;
+    failure_reason: string | null;
     plan_days: PlanDay[];
     created_at: string;
     updated_at: string;

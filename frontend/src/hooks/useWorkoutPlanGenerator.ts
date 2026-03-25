@@ -28,7 +28,7 @@ const INITIAL_PLAN_DATA: WorkoutPlanData = {
 //  4 → Generating (auto)
 //  5 → Done
 
-export type GenerationFailureReason = "email_not_verified" | "plan_limit" | "generic";
+export type GenerationFailureReason = "email_not_verified" | "plan_limit" | "credits_exhausted" | "generic";
 
 export function useWorkoutPlanGenerator() {
     const [step, setStep] = useState(0);
@@ -130,6 +130,11 @@ export function useWorkoutPlanGenerator() {
                         updateGeneratingPlanStatus(pendingPlan.id, "failed");
                         setIsGenerating(false);
                         setGenerationFailed(true);
+                        setFailureReason(
+                            plan.failure_reason === "credits_exhausted"
+                                ? "credits_exhausted"
+                                : "generic"
+                        );
                         setStep(5);
                     }
                 } catch {

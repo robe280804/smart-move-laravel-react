@@ -13,4 +13,5 @@ enum SecurityEventType: string
     case ForbiddenAccess = 'forbidden_access';
     case UnhandledException = 'unhandled_exception';
     case AiGenerationFailure = 'ai_generation_failure';
+    case AiCreditsExhausted = 'ai_credits_exhausted';
 }

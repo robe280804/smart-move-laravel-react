@@ -17,6 +17,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Laravel\Ai\Exceptions\InsufficientCreditsException;
 
 class GenerateWorkoutPlanJob implements ShouldQueue
 {
@@ -57,12 +58,28 @@ class GenerateWorkoutPlanJob implements ShouldQueue
 
     public function failed(\Throwable $e): void
     {
-        $this->plan->update(['status' => WorkoutPlanStatus::Failed]);
+        $isCreditsExhausted = $e instanceof InsufficientCreditsException;
+
+        $this->plan->update([
+            'status' => WorkoutPlanStatus::Failed,
+            'failure_reason' => $isCreditsExhausted ? 'credits_exhausted' : 'generation_error',
+        ]);
 
         Log::error('GenerateWorkoutPlanJob failed', [
             'plan_id' => $this->plan->id,
             'error' => $e->getMessage(),
         ]);
+
+        if ($isCreditsExhausted) {
+            event(new SecurityAlert(
+                type: SecurityEventType::AiCreditsExhausted,
+                ip: 'queue',
+                userId: $this->user->id,
+                details: "Workout plan {$this->plan->id} failed: AI provider has insufficient credits. Top up your API key.",
+            ));
+
+            return;
+        }
 
         event(new SecurityAlert(
             type: SecurityEventType::AiGenerationFailure,

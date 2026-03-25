@@ -86,6 +86,7 @@ enum SecurityEventType: string
     case ForbiddenAccess      = 'forbidden_access';
     case UnhandledException   = 'unhandled_exception';
     case AiGenerationFailure  = 'ai_generation_failure';
+    case AiCreditsExhausted   = 'ai_credits_exhausted';
 }
 ```
 
@@ -108,6 +109,7 @@ Only **critical** event types:
 | `forbidden_access`      | Warning  | Yes         |
 | `unhandled_exception`   | Error    | Yes         |
 | `ai_generation_failure` | Error    | Yes         |
+| `ai_credits_exhausted`  | Error    | Yes         |
 
 ### Throttling
 
@@ -144,6 +146,7 @@ Body includes:
 | `forbidden_access`      | `warning` |
 | `unhandled_exception`   | `error`   |
 | `ai_generation_failure` | `error`   |
+| `ai_credits_exhausted`  | `error`   |
 
 ## Configuration Checklist
 
@@ -181,6 +184,6 @@ CACHE_STORE=redis
 | `UserController::destroy()`            | `SecurityAlert` | `account_deletion`      |
 | `AdminUserController::update()`        | `AdminAction`   | `admin_action`          |
 | `AdminUserController::destroy()`       | `AdminAction`   | `admin_action`          |
-| `GenerateWorkoutPlanJob::failed()`     | `SecurityAlert` | `ai_generation_failure` |
+| `GenerateWorkoutPlanJob::failed()`     | `SecurityAlert` | `ai_generation_failure` or `ai_credits_exhausted` |
 | Exception handler (403)                | `SecurityAlert` | `forbidden_access`      |
 | Exception handler (other)              | `SecurityAlert` | `unhandled_exception`   |

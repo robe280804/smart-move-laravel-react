@@ -26,6 +26,7 @@ class WorkoutPlan extends Model
         'experience_level',
         'workout_type',
         'generation_request',
+        'failure_reason',
     ];
 
     protected function casts(): array
