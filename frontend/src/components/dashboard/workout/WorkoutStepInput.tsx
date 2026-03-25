@@ -4,13 +4,22 @@ import {
     AlertTriangle,
     ArrowLeft,
     ArrowRight,
+    ArrowUpFromLine,
+    Armchair,
+    Bike,
+    Cable,
     Check,
     ChevronDown,
     ChevronRight,
+    CircleDot,
     CreditCard,
+    Dumbbell,
     Info,
+    LucideIcon,
     MailCheck,
+    PersonStanding,
     Sparkles,
+    Waves,
     Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -208,16 +217,16 @@ function ScheduleStep({
 
 type EquipmentMode = "gym" | "home" | "bodyweight" | null;
 
-const EQUIPMENT_ICONS: Record<string, string> = {
-    "Dumbbells": "💪",
-    "Barbells": "🏋️",
-    "Resistance Bands": "🔗",
-    "Pull-up Bar": "🤸",
-    "Bench": "🪑",
-    "Kettlebells": "⚫",
-    "Cable Machine": "⚙️",
-    "Cardio Equipment": "🚴",
-    "Bodyweight Only": "🏃",
+const EQUIPMENT_ICONS: Record<string, LucideIcon> = {
+    "Dumbbells": Dumbbell,
+    "Barbells": Dumbbell,
+    "Resistance Bands": Waves,
+    "Pull-up Bar": ArrowUpFromLine,
+    "Bench": Armchair,
+    "Kettlebells": CircleDot,
+    "Cable Machine": Cable,
+    "Cardio Equipment": Bike,
+    "Bodyweight Only": PersonStanding,
 };
 
 const EQUIPMENT_MODES = [
@@ -334,7 +343,7 @@ function EquipmentStep({
                                     {isSelected && (
                                         <Check className="w-4 h-4 text-blue-600 absolute top-2 right-2" />
                                     )}
-                                    <span className="text-2xl sm:text-3xl block">{EQUIPMENT_ICONS[equipment]}</span>
+                                    {(() => { const Icon = EQUIPMENT_ICONS[equipment] ?? Dumbbell; return <Icon className="w-7 h-7 sm:w-9 sm:h-9 mx-auto" />; })()}
                                     <p className={`font-semibold text-xs sm:text-sm mt-1.5 leading-tight ${isSelected ? "text-blue-600" : "text-slate-900"}`}>
                                         {equipment}
                                     </p>
@@ -393,13 +402,8 @@ function PreferencesStep({
             </div>
 
             {/* Injuries */}
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="injuries">Injuries or physical limitations</Label>
-                    <span className={`text-xs ${planData.injuries.length >= TEXT_MAX_LENGTHS.injuries ? "text-red-500" : "text-slate-400"}`}>
-                        {planData.injuries.length}/{TEXT_MAX_LENGTHS.injuries}
-                    </span>
-                </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="injuries">Injuries or physical limitations</Label>
                 <Input
                     id="injuries"
                     placeholder="e.g., Lower back pain, knee injury... (leave blank if none)"
@@ -412,16 +416,14 @@ function PreferencesStep({
                     }
                     maxLength={TEXT_MAX_LENGTHS.injuries}
                 />
+                <p className={`text-xs text-right ${planData.injuries.length >= TEXT_MAX_LENGTHS.injuries ? "text-red-500" : "text-slate-400"}`}>
+                    {planData.injuries.length}/{TEXT_MAX_LENGTHS.injuries}
+                </p>
             </div>
 
             {/* Sports */}
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="sports">Sports or activities you practice</Label>
-                    <span className={`text-xs ${planData.sports.length >= TEXT_MAX_LENGTHS.sports ? "text-red-500" : "text-slate-400"}`}>
-                        {planData.sports.length}/{TEXT_MAX_LENGTHS.sports}
-                    </span>
-                </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="sports">Sports or activities you practice</Label>
                 <Input
                     id="sports"
                     placeholder="e.g., Football, cycling, tennis..."
@@ -431,16 +433,14 @@ function PreferencesStep({
                     }
                     maxLength={TEXT_MAX_LENGTHS.sports}
                 />
+                <p className={`text-xs text-right ${planData.sports.length >= TEXT_MAX_LENGTHS.sports ? "text-red-500" : "text-slate-400"}`}>
+                    {planData.sports.length}/{TEXT_MAX_LENGTHS.sports}
+                </p>
             </div>
 
             {/* Preferred exercises */}
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="preferredExercises">Exercises to include or avoid</Label>
-                    <span className={`text-xs ${planData.preferredExercises.length >= TEXT_MAX_LENGTHS.preferredExercises ? "text-red-500" : "text-slate-400"}`}>
-                        {planData.preferredExercises.length}/{TEXT_MAX_LENGTHS.preferredExercises}
-                    </span>
-                </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="preferredExercises">Exercises to include or avoid</Label>
                 <Textarea
                     id="preferredExercises"
                     placeholder="e.g., Include: pull-ups, deadlifts. Avoid: running..."
@@ -455,16 +455,14 @@ function PreferencesStep({
                     rows={3}
                     maxLength={TEXT_MAX_LENGTHS.preferredExercises}
                 />
+                <p className={`text-xs text-right ${planData.preferredExercises.length >= TEXT_MAX_LENGTHS.preferredExercises ? "text-red-500" : "text-slate-400"}`}>
+                    {planData.preferredExercises.length}/{TEXT_MAX_LENGTHS.preferredExercises}
+                </p>
             </div>
 
             {/* Additional notes */}
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="additionalNotes">Any other requests or notes</Label>
-                    <span className={`text-xs ${planData.additionalNotes.length >= TEXT_MAX_LENGTHS.additionalNotes ? "text-red-500" : "text-slate-400"}`}>
-                        {planData.additionalNotes.length}/{TEXT_MAX_LENGTHS.additionalNotes}
-                    </span>
-                </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="additionalNotes">Any other requests or notes</Label>
                 <Textarea
                     id="additionalNotes"
                     placeholder="e.g., I travel often and need hotel-friendly workouts..."
@@ -479,6 +477,9 @@ function PreferencesStep({
                     rows={3}
                     maxLength={TEXT_MAX_LENGTHS.additionalNotes}
                 />
+                <p className={`text-xs text-right ${planData.additionalNotes.length >= TEXT_MAX_LENGTHS.additionalNotes ? "text-red-500" : "text-slate-400"}`}>
+                    {planData.additionalNotes.length}/{TEXT_MAX_LENGTHS.additionalNotes}
+                </p>
             </div>
 
             <StepNav

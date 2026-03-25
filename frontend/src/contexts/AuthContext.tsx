@@ -89,6 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             await logoutUser(); // invalidates the refresh token cookie server-side
         } finally {
+            sessionStorage.clear();
             tokenStore.clear();
             setAccessToken(null);
             setUser(null);
