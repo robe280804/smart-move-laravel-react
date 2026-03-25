@@ -15,7 +15,6 @@ import {
     CreditCard,
     Dumbbell,
     Info,
-    LucideIcon,
     MailCheck,
     PersonStanding,
     Sparkles,
@@ -32,6 +31,7 @@ import type { WorkoutPlanData } from "@/types/workout";
 import { sanitizeTextInput, TEXT_MAX_LENGTHS } from "@/lib/sanitize";
 import { WorkoutGeneratingStatus } from "@/components/dashboard/workout/WorkoutGeneratingStatus";
 import type { GenerationFailureReason } from "@/hooks/useWorkoutPlanGenerator";
+import type { LucideIcon } from "lucide-react";
 
 const BODYWEIGHT_ONLY = "Bodyweight Only" as const;
 
@@ -101,11 +101,10 @@ function GoalStep({
                         <button
                             key={goal.value}
                             onClick={() => handleGoalToggle(goal.value)}
-                            className={`p-4 border-2 rounded-xl transition-all text-left ${
-                                isSelected
-                                    ? "border-blue-600 bg-blue-50"
-                                    : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
-                            }`}
+                            className={`p-4 border-2 rounded-xl transition-all text-left ${isSelected
+                                ? "border-blue-600 bg-blue-50"
+                                : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                                }`}
                         >
                             <div className="flex items-start gap-3">
                                 <span className="text-2xl">{goal.icon}</span>
@@ -187,11 +186,10 @@ function ScheduleStep({
                     {DAYS_OF_WEEK.map((day) => (
                         <label
                             key={day}
-                            className={`flex items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                                planData.availableDays.includes(day)
-                                    ? "border-blue-600 bg-blue-50"
-                                    : "border-slate-200 hover:border-slate-300"
-                            }`}
+                            className={`flex items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${planData.availableDays.includes(day)
+                                ? "border-blue-600 bg-blue-50"
+                                : "border-slate-200 hover:border-slate-300"
+                                }`}
                         >
                             <Checkbox
                                 checked={planData.availableDays.includes(day)}
@@ -306,11 +304,10 @@ function EquipmentStep({
                         <button
                             key={m.key}
                             onClick={() => selectMode(m.key)}
-                            className={`p-2 sm:p-4 border-2 rounded-xl transition-all text-center ${
-                                isSelected
-                                    ? "border-blue-600 bg-blue-50"
-                                    : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
-                            }`}
+                            className={`p-2 sm:p-4 border-2 rounded-xl transition-all text-center ${isSelected
+                                ? "border-blue-600 bg-blue-50"
+                                : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                                }`}
                         >
                             <span className="text-xl sm:text-3xl block">{m.icon}</span>
                             <p className={`font-semibold text-[11px] sm:text-sm mt-1 sm:mt-2 leading-tight ${isSelected ? "text-blue-600" : "text-slate-900"}`}>
@@ -334,11 +331,10 @@ function EquipmentStep({
                                 <button
                                     key={equipment}
                                     onClick={() => handleItemToggle(equipment)}
-                                    className={`relative p-3 sm:p-4 border-2 rounded-xl transition-all text-center ${
-                                        isSelected
-                                            ? "border-blue-600 bg-blue-50"
-                                            : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
-                                    }`}
+                                    className={`relative p-3 sm:p-4 border-2 rounded-xl transition-all text-center ${isSelected
+                                        ? "border-blue-600 bg-blue-50"
+                                        : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                                        }`}
                                 >
                                     {isSelected && (
                                         <Check className="w-4 h-4 text-blue-600 absolute top-2 right-2" />

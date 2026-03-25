@@ -1,4 +1,5 @@
-import { Armchair, ArrowUpFromLine, Bike, Cable, Check, CircleDot, Dumbbell, LucideIcon, PersonStanding, Waves } from "lucide-react";
+import { Armchair, ArrowUpFromLine, Bike, Cable, Check, CircleDot, Dumbbell, PersonStanding, Waves } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
