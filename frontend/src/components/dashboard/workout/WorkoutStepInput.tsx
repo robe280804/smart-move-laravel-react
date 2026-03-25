@@ -4,21 +4,21 @@ import {
     AlertTriangle,
     ArrowLeft,
     ArrowRight,
-    ArrowUpFromLine,
-    Armchair,
     Bike,
     Cable,
     Check,
     ChevronDown,
     ChevronRight,
-    CircleDot,
     CreditCard,
     Dumbbell,
+    GripHorizontal,
     Info,
     MailCheck,
     PersonStanding,
     Sparkles,
+    Target,
     Waves,
+    Weight,
     Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -215,16 +215,16 @@ function ScheduleStep({
 
 type EquipmentMode = "gym" | "home" | "bodyweight" | null;
 
-const EQUIPMENT_ICONS: Record<string, LucideIcon> = {
-    "Dumbbells": Dumbbell,
-    "Barbells": Dumbbell,
-    "Resistance Bands": Waves,
-    "Pull-up Bar": ArrowUpFromLine,
-    "Bench": Armchair,
-    "Kettlebells": CircleDot,
-    "Cable Machine": Cable,
-    "Cardio Equipment": Bike,
-    "Bodyweight Only": PersonStanding,
+const EQUIPMENT_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
+    "Dumbbells": { icon: Dumbbell, color: "text-violet-600", bg: "bg-violet-100" },
+    "Barbells": { icon: Weight, color: "text-blue-600", bg: "bg-blue-100" },
+    "Resistance Bands": { icon: Waves, color: "text-emerald-600", bg: "bg-emerald-100" },
+    "Pull-up Bar": { icon: GripHorizontal, color: "text-orange-600", bg: "bg-orange-100" },
+    "Bench": { icon: Dumbbell, color: "text-amber-600", bg: "bg-amber-100" },
+    "Kettlebells": { icon: Target, color: "text-rose-600", bg: "bg-rose-100" },
+    "Cable Machine": { icon: Cable, color: "text-slate-600", bg: "bg-slate-200" },
+    "Cardio Equipment": { icon: Bike, color: "text-cyan-600", bg: "bg-cyan-100" },
+    "Bodyweight Only": { icon: PersonStanding, color: "text-indigo-600", bg: "bg-indigo-100" },
 };
 
 const EQUIPMENT_MODES = [
@@ -339,8 +339,16 @@ function EquipmentStep({
                                     {isSelected && (
                                         <Check className="w-4 h-4 text-blue-600 absolute top-2 right-2" />
                                     )}
-                                    {(() => { const Icon = EQUIPMENT_ICONS[equipment] ?? Dumbbell; return <Icon className="w-7 h-7 sm:w-9 sm:h-9 mx-auto" />; })()}
-                                    <p className={`font-semibold text-xs sm:text-sm mt-1.5 leading-tight ${isSelected ? "text-blue-600" : "text-slate-900"}`}>
+                                    {(() => {
+                                        const config = EQUIPMENT_CONFIG[equipment] ?? { icon: Dumbbell, color: "text-slate-600", bg: "bg-slate-100" };
+                                        const Icon = config.icon;
+                                        return (
+                                            <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-xl ${config.bg} flex items-center justify-center mx-auto`}>
+                                                <Icon className={`w-5 h-5 sm:w-7 sm:h-7 ${config.color}`} />
+                                            </div>
+                                        );
+                                    })()}
+                                    <p className={`font-semibold text-xs sm:text-sm mt-2 leading-tight ${isSelected ? "text-blue-600" : "text-slate-700"}`}>
                                         {equipment}
                                     </p>
                                 </button>
@@ -389,93 +397,97 @@ function PreferencesStep({
     handleDetails,
 }: Pick<WorkoutStepInputProps, "planData" | "setPlanData" | "handleBack" | "handleDetails">) {
     return (
-        <div className="space-y-4">
-            <div className="flex gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+        <div className="space-y-4 overflow-hidden">
+            <div className="flex gap-3 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-xl">
                 <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-blue-800">
+                <p className="text-xs sm:text-sm text-blue-800">
                     All fields are optional — the more context you provide, the more tailored your plan will be.
                 </p>
             </div>
 
-            {/* Injuries */}
-            <div className="space-y-1.5">
-                <Label htmlFor="injuries">Injuries or physical limitations</Label>
-                <Input
-                    id="injuries"
-                    placeholder="e.g., Lower back pain, knee injury... (leave blank if none)"
-                    value={planData.injuries}
-                    onChange={(e) =>
-                        setPlanData({
-                            ...planData,
-                            injuries: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.injuries),
-                        })
-                    }
-                    maxLength={TEXT_MAX_LENGTHS.injuries}
-                />
-                <p className={`text-xs text-right ${planData.injuries.length >= TEXT_MAX_LENGTHS.injuries ? "text-red-500" : "text-slate-400"}`}>
-                    {planData.injuries.length}/{TEXT_MAX_LENGTHS.injuries}
-                </p>
-            </div>
+            <div className="space-y-4">
+                {/* Injuries */}
+                <div className="space-y-1.5">
+                    <Label htmlFor="injuries" className="text-sm">Injuries or physical limitations</Label>
+                    <Input
+                        id="injuries"
+                        placeholder="e.g., Lower back pain, knee injury..."
+                        value={planData.injuries}
+                        className="w-full"
+                        onChange={(e) =>
+                            setPlanData({
+                                ...planData,
+                                injuries: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.injuries),
+                            })
+                        }
+                        maxLength={TEXT_MAX_LENGTHS.injuries}
+                    />
+                    <p className={`text-[10px] sm:text-xs text-right ${planData.injuries.length >= TEXT_MAX_LENGTHS.injuries ? "text-red-500" : "text-slate-400"}`}>
+                        {planData.injuries.length}/{TEXT_MAX_LENGTHS.injuries}
+                    </p>
+                </div>
 
-            {/* Sports */}
-            <div className="space-y-1.5">
-                <Label htmlFor="sports">Sports or activities you practice</Label>
-                <Input
-                    id="sports"
-                    placeholder="e.g., Football, cycling, tennis..."
-                    value={planData.sports}
-                    onChange={(e) =>
-                        setPlanData({ ...planData, sports: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.sports) })
-                    }
-                    maxLength={TEXT_MAX_LENGTHS.sports}
-                />
-                <p className={`text-xs text-right ${planData.sports.length >= TEXT_MAX_LENGTHS.sports ? "text-red-500" : "text-slate-400"}`}>
-                    {planData.sports.length}/{TEXT_MAX_LENGTHS.sports}
-                </p>
-            </div>
+                {/* Sports */}
+                <div className="space-y-1.5">
+                    <Label htmlFor="sports" className="text-sm">Sports or activities you practice</Label>
+                    <Input
+                        id="sports"
+                        placeholder="e.g., Football, cycling, tennis..."
+                        value={planData.sports}
+                        className="w-full"
+                        onChange={(e) =>
+                            setPlanData({ ...planData, sports: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.sports) })
+                        }
+                        maxLength={TEXT_MAX_LENGTHS.sports}
+                    />
+                    <p className={`text-[10px] sm:text-xs text-right ${planData.sports.length >= TEXT_MAX_LENGTHS.sports ? "text-red-500" : "text-slate-400"}`}>
+                        {planData.sports.length}/{TEXT_MAX_LENGTHS.sports}
+                    </p>
+                </div>
 
-            {/* Preferred exercises */}
-            <div className="space-y-1.5">
-                <Label htmlFor="preferredExercises">Exercises to include or avoid</Label>
-                <Textarea
-                    id="preferredExercises"
-                    placeholder="e.g., Include: pull-ups, deadlifts. Avoid: running..."
-                    value={planData.preferredExercises}
-                    onChange={(e) =>
-                        setPlanData({
-                            ...planData,
-                            preferredExercises: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.preferredExercises),
-                        })
-                    }
-                    className="resize-none"
-                    rows={3}
-                    maxLength={TEXT_MAX_LENGTHS.preferredExercises}
-                />
-                <p className={`text-xs text-right ${planData.preferredExercises.length >= TEXT_MAX_LENGTHS.preferredExercises ? "text-red-500" : "text-slate-400"}`}>
-                    {planData.preferredExercises.length}/{TEXT_MAX_LENGTHS.preferredExercises}
-                </p>
-            </div>
+                {/* Preferred exercises */}
+                <div className="space-y-1.5">
+                    <Label htmlFor="preferredExercises" className="text-sm">Exercises to include or avoid</Label>
+                    <Textarea
+                        id="preferredExercises"
+                        placeholder="e.g., Include: pull-ups, deadlifts. Avoid: running..."
+                        value={planData.preferredExercises}
+                        onChange={(e) =>
+                            setPlanData({
+                                ...planData,
+                                preferredExercises: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.preferredExercises),
+                            })
+                        }
+                        className="w-full resize-none"
+                        rows={3}
+                        maxLength={TEXT_MAX_LENGTHS.preferredExercises}
+                    />
+                    <p className={`text-[10px] sm:text-xs text-right ${planData.preferredExercises.length >= TEXT_MAX_LENGTHS.preferredExercises ? "text-red-500" : "text-slate-400"}`}>
+                        {planData.preferredExercises.length}/{TEXT_MAX_LENGTHS.preferredExercises}
+                    </p>
+                </div>
 
-            {/* Additional notes */}
-            <div className="space-y-1.5">
-                <Label htmlFor="additionalNotes">Any other requests or notes</Label>
-                <Textarea
-                    id="additionalNotes"
-                    placeholder="e.g., I travel often and need hotel-friendly workouts..."
-                    value={planData.additionalNotes}
-                    onChange={(e) =>
-                        setPlanData({
-                            ...planData,
-                            additionalNotes: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.additionalNotes),
-                        })
-                    }
-                    className="resize-none"
-                    rows={3}
-                    maxLength={TEXT_MAX_LENGTHS.additionalNotes}
-                />
-                <p className={`text-xs text-right ${planData.additionalNotes.length >= TEXT_MAX_LENGTHS.additionalNotes ? "text-red-500" : "text-slate-400"}`}>
-                    {planData.additionalNotes.length}/{TEXT_MAX_LENGTHS.additionalNotes}
-                </p>
+                {/* Additional notes */}
+                <div className="space-y-1.5">
+                    <Label htmlFor="additionalNotes" className="text-sm">Any other requests or notes</Label>
+                    <Textarea
+                        id="additionalNotes"
+                        placeholder="e.g., I travel often and need hotel-friendly workouts..."
+                        value={planData.additionalNotes}
+                        onChange={(e) =>
+                            setPlanData({
+                                ...planData,
+                                additionalNotes: sanitizeTextInput(e.target.value, TEXT_MAX_LENGTHS.additionalNotes),
+                            })
+                        }
+                        className="w-full resize-none"
+                        rows={3}
+                        maxLength={TEXT_MAX_LENGTHS.additionalNotes}
+                    />
+                    <p className={`text-[10px] sm:text-xs text-right ${planData.additionalNotes.length >= TEXT_MAX_LENGTHS.additionalNotes ? "text-red-500" : "text-slate-400"}`}>
+                        {planData.additionalNotes.length}/{TEXT_MAX_LENGTHS.additionalNotes}
+                    </p>
+                </div>
             </div>
 
             <StepNav

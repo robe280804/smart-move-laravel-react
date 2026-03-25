@@ -1,4 +1,4 @@
-import { Armchair, ArrowUpFromLine, Bike, Cable, Check, CircleDot, Dumbbell, PersonStanding, Waves } from "lucide-react";
+import { Bike, Cable, Check, Dumbbell, GripHorizontal, PersonStanding, Target, Waves, Weight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,16 +13,16 @@ import { EQUIPMENT_OPTIONS } from "@/constants/const";
 
 const BODYWEIGHT_ONLY = "Bodyweight Only" as const;
 
-const EQUIPMENT_ICONS: Record<string, LucideIcon> = {
-    "Dumbbells": Dumbbell,
-    "Barbells": Dumbbell,
-    "Resistance Bands": Waves,
-    "Pull-up Bar": ArrowUpFromLine,
-    "Bench": Armchair,
-    "Kettlebells": CircleDot,
-    "Cable Machine": Cable,
-    "Cardio Equipment": Bike,
-    "Bodyweight Only": PersonStanding,
+const EQUIPMENT_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
+    "Dumbbells": { icon: Dumbbell, color: "text-violet-600", bg: "bg-violet-100" },
+    "Barbells": { icon: Weight, color: "text-blue-600", bg: "bg-blue-100" },
+    "Resistance Bands": { icon: Waves, color: "text-emerald-600", bg: "bg-emerald-100" },
+    "Pull-up Bar": { icon: GripHorizontal, color: "text-orange-600", bg: "bg-orange-100" },
+    "Bench": { icon: Dumbbell, color: "text-amber-600", bg: "bg-amber-100" },
+    "Kettlebells": { icon: Target, color: "text-rose-600", bg: "bg-rose-100" },
+    "Cable Machine": { icon: Cable, color: "text-slate-600", bg: "bg-slate-200" },
+    "Cardio Equipment": { icon: Bike, color: "text-cyan-600", bg: "bg-cyan-100" },
+    "Bodyweight Only": { icon: PersonStanding, color: "text-indigo-600", bg: "bg-indigo-100" },
 };
 
 interface EquipmentModalProps {
@@ -50,6 +50,8 @@ export function EquipmentModal({ isOpen, selectedEquipment, isLocked, onToggle, 
                                 ? !isBodyweight
                                 : selectedEquipment.includes(equipment);
                             const isDisabled = isLocked;
+                            const config = EQUIPMENT_CONFIG[equipment] ?? { icon: Dumbbell, color: "text-slate-600", bg: "bg-slate-100" };
+                            const Icon = config.icon;
 
                             return (
                                 <button
@@ -67,7 +69,9 @@ export function EquipmentModal({ isOpen, selectedEquipment, isLocked, onToggle, 
                                     }`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        {(() => { const Icon = EQUIPMENT_ICONS[equipment] ?? Dumbbell; return <Icon className="w-5 h-5 flex-shrink-0" />; })()}
+                                        <div className={`w-9 h-9 rounded-lg ${config.bg} flex items-center justify-center flex-shrink-0`}>
+                                            <Icon className={`w-4 h-4 ${config.color}`} />
+                                        </div>
                                         <div className="flex-1 min-w-0">
                                             <p className={`font-semibold text-sm ${isSelected && !isDisabled ? "text-blue-600" : "text-slate-900"}`}>
                                                 {equipment}
