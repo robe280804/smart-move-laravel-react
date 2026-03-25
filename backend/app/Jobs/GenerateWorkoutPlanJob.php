@@ -37,6 +37,12 @@ class GenerateWorkoutPlanJob implements ShouldQueue
     public int $tries = 1;
 
     /**
+     * Discard the job silently if the WorkoutPlan or User was deleted
+     * before the worker had a chance to process it.
+     */
+    public bool $deleteWhenMissingModels = true;
+
+    /**
      * @param  array<string, mixed>  $workflowState  Serialisable state bag built by the controller.
      */
     public function __construct(
