@@ -35,6 +35,7 @@ export function WorkoutPlanGenerator() {
         showResetConfirm,
         setShowResetConfirm,
         generationFailed,
+        failureReason,
         planData,
         setPlanData,
         handleGoalToggle,
@@ -128,6 +129,7 @@ export function WorkoutPlanGenerator() {
                             setShowAllGoals={setShowAllGoals}
                             generatedPlanId={generatedPlanId}
                             generationFailed={generationFailed}
+                            failureReason={failureReason}
                         />
                     </CardContent>
                 </Card>

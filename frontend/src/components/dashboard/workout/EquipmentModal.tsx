@@ -13,8 +13,8 @@ import { EQUIPMENT_OPTIONS } from "@/constants/const";
 const BODYWEIGHT_ONLY = "Bodyweight Only" as const;
 
 const EQUIPMENT_ICONS: Record<string, string> = {
-    "Dumbbells": "🏋️",
-    "Barbells": "🪜",
+    "Dumbbells": "💪",
+    "Barbells": "🏋️",
     "Resistance Bands": "🔗",
     "Pull-up Bar": "🤸",
     "Bench": "🪑",

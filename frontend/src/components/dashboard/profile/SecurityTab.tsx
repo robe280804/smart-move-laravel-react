@@ -154,8 +154,8 @@ export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }:
                     <CardDescription>Manage your email verification status</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border rounded-lg">
+                        <div className="flex items-center gap-3 flex-1">
                             {user?.email_verified ? (
                                 <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
                             ) : (
@@ -173,6 +173,7 @@ export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }:
                                 variant="outline"
                                 disabled={isResending}
                                 onClick={handleResend}
+                                className="w-full sm:w-auto"
                             >
                                 {isResending ? "Sending…" : "Resend email"}
                             </Button>
@@ -187,8 +188,8 @@ export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }:
                     <CardDescription>Download a copy of all personal data we hold about you (GDPR Article 20)</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border rounded-lg">
+                        <div className="flex-1">
                             <p className="font-medium text-slate-900">Download My Data</p>
                             <p className="text-sm text-slate-500">Exports your profile, fitness info, workout plans, and feedback as a JSON file</p>
                         </div>
@@ -196,6 +197,7 @@ export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }:
                             variant="outline"
                             disabled={isExporting}
                             onClick={handleExport}
+                            className="w-full sm:w-auto"
                         >
                             <Download className="w-4 h-4 mr-2" />
                             {isExporting ? "Exporting…" : "Export"}
@@ -210,14 +212,14 @@ export function SecurityTab({ form, errors, isLoading, onFormChange, onSubmit }:
                     <CardDescription>Irreversible account actions</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center justify-between p-4 border rounded-lg border-red-200 bg-red-50">
-                        <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border rounded-lg border-red-200 bg-red-50">
+                        <div className="flex-1">
                             <p className="font-medium text-red-900">Delete Account</p>
                             <p className="text-sm text-red-600">Permanently delete your account and all associated data</p>
                         </div>
                         <Button
                             variant="outline"
-                            className="border-red-300 text-red-700 hover:bg-red-100"
+                            className="w-full sm:w-auto border-red-300 text-red-700 hover:bg-red-100"
                             onClick={() => setShowDeleteDialog(true)}
                         >
                             Delete

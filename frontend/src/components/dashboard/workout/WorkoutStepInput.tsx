@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
     AlertTriangle,
     ArrowLeft,
@@ -8,7 +8,9 @@ import {
     ChevronDown,
     ChevronRight,
     Info,
+    MailCheck,
     Sparkles,
+    Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +18,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DAYS_OF_WEEK, EQUIPMENT_OPTIONS, FITNESS_GOALS, STRENGTH_FOCUSED_GOALS } from "@/constants/const";
-import { EquipmentModal } from "@/components/dashboard/workout/EquipmentModal";
 import type { WorkoutPlanData } from "@/types/workout";
 import { sanitizeTextInput, TEXT_MAX_LENGTHS } from "@/lib/sanitize";
 import { WorkoutGeneratingStatus } from "@/components/dashboard/workout/WorkoutGeneratingStatus";
+import type { GenerationFailureReason } from "@/hooks/useWorkoutPlanGenerator";
 
 const BODYWEIGHT_ONLY = "Bodyweight Only" as const;
 
@@ -37,6 +39,7 @@ interface WorkoutStepInputProps {
     setShowAllGoals: (show: boolean) => void;
     generatedPlanId: number | null;
     generationFailed: boolean;
+    failureReason: GenerationFailureReason | null;
 }
 
 function StepNav({
@@ -202,9 +205,11 @@ function ScheduleStep({
 
 // ─── Step 2: Equipment ───────────────────────────────────────────────────────
 
+type EquipmentMode = "gym" | "home" | "bodyweight" | null;
+
 const EQUIPMENT_ICONS: Record<string, string> = {
-    "Dumbbells": "🏋️",
-    "Barbells": "🪜",
+    "Dumbbells": "💪",
+    "Barbells": "🏋️",
     "Resistance Bands": "🔗",
     "Pull-up Bar": "🤸",
     "Bench": "🪑",
@@ -214,173 +219,140 @@ const EQUIPMENT_ICONS: Record<string, string> = {
     "Bodyweight Only": "🏃",
 };
 
+const EQUIPMENT_MODES = [
+    {
+        key: "gym" as const,
+        icon: "🏢",
+        title: "Full Gym",
+        shortTitle: "Gym",
+        description: "I train at a fully equipped gym",
+    },
+    {
+        key: "home" as const,
+        icon: "🏠",
+        title: "Home / Limited",
+        shortTitle: "Home",
+        description: "I have some equipment at home",
+    },
+    {
+        key: "bodyweight" as const,
+        icon: "🏃",
+        title: "Bodyweight Only",
+        shortTitle: "No Equip.",
+        description: "No equipment needed",
+    },
+];
+
+function initialMode(planData: WorkoutPlanData): EquipmentMode {
+    if (planData.gymAccess) return "gym";
+    if (planData.equipment.length === 1 && planData.equipment[0] === BODYWEIGHT_ONLY) return "bodyweight";
+    if (planData.equipment.length > 0) return "home";
+    return null;
+}
+
 function EquipmentStep({
     planData,
     setPlanData,
     handleBack,
     handleEquipment,
 }: Pick<WorkoutStepInputProps, "planData" | "setPlanData" | "handleBack" | "handleEquipment">) {
-    const [showAllEquipment, setShowAllEquipment] = useState(false);
-
-    const isBodyweightOnly =
-        planData.equipment.length > 0 &&
-        planData.equipment.every(e => e === BODYWEIGHT_ONLY);
+    const nonBodyweightOptions = EQUIPMENT_OPTIONS.filter(e => e !== BODYWEIGHT_ONLY);
+    const [mode, setMode] = useState<EquipmentMode>(() => initialMode(planData));
 
     const isStrengthGoal = (STRENGTH_FOCUSED_GOALS as readonly string[]).includes(planData.fitnessGoals);
-    const showConflictWarning = isStrengthGoal && isBodyweightOnly;
+    const showConflictWarning = isStrengthGoal && mode === "bodyweight";
 
-    const hasEverything = planData.equipment.includes("everything");
-    const equipmentLocked = planData.gymAccess || hasEverything;
-
-    const nonBodyweightOptions = EQUIPMENT_OPTIONS.filter(e => e !== BODYWEIGHT_ONLY);
-    const visibleEquipment = nonBodyweightOptions.slice(0, 4);
-
-    const handleGymAccessChange = (checked: boolean) => {
-        if (checked) {
+    const selectMode = (newMode: EquipmentMode) => {
+        setMode(newMode);
+        if (newMode === "gym") {
             setPlanData({
                 ...planData,
                 gymAccess: true,
                 equipment: [...nonBodyweightOptions, "everything"],
             });
-        } else {
+        } else if (newMode === "bodyweight") {
+            setPlanData({ ...planData, gymAccess: false, equipment: [BODYWEIGHT_ONLY] });
+        } else if (newMode === "home") {
             setPlanData({ ...planData, gymAccess: false, equipment: [] });
         }
     };
 
-    const handleEverythingToggle = (checked: boolean) => {
-        if (checked) {
-            setPlanData({ ...planData, equipment: [...nonBodyweightOptions, "everything"] });
-        } else {
-            setPlanData({ ...planData, equipment: [] });
-        }
-    };
-
-    const handleBodyweightToggle = (checked: boolean) => {
-        if (checked) {
-            // Bodyweight only: clear all other equipment and gym access
-            setPlanData({ ...planData, gymAccess: false, equipment: [BODYWEIGHT_ONLY] });
-        } else {
-            setPlanData({ ...planData, equipment: [] });
-        }
-    };
-
-    const handleItemToggle = (item: string, checked: boolean) => {
-        if (checked) {
-            // Adding any real equipment removes "Bodyweight Only"
-            const updated = planData.equipment
-                .filter(e => e !== BODYWEIGHT_ONLY)
-                .concat(item);
-            setPlanData({ ...planData, equipment: updated });
-        } else {
+    const handleItemToggle = (item: string) => {
+        const has = planData.equipment.includes(item);
+        if (has) {
             setPlanData({ ...planData, equipment: planData.equipment.filter(e => e !== item) });
-        }
-    };
-
-    const handleModalToggle = (equipment: string) => {
-        if (equipment === BODYWEIGHT_ONLY) {
-            handleBodyweightToggle(!isBodyweightOnly);
         } else {
-            handleItemToggle(equipment, !planData.equipment.includes(equipment));
+            setPlanData({ ...planData, equipment: [...planData.equipment, item] });
         }
     };
 
     return (
         <div className="space-y-4">
-            {/* Gym access shortcut */}
-            <label className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg cursor-pointer">
-                <Checkbox
-                    id="gymAccess"
-                    checked={planData.gymAccess}
-                    onCheckedChange={(checked) => handleGymAccessChange(checked as boolean)}
-                />
-                <div>
-                    <p className="font-medium text-slate-900 text-sm">I have gym access</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Selects all available equipment automatically</p>
-                </div>
-            </label>
-
-            <div className="space-y-3">
-                <Label>Available equipment</Label>
-
-                {/* "Everything" shortcut */}
-                <label
-                    className={`flex items-center gap-2 p-3 border-2 rounded-lg w-full transition-all ${
-                        hasEverything || planData.gymAccess
-                            ? "border-blue-600 bg-blue-50 cursor-not-allowed"
-                            : "border-blue-300 bg-blue-50/50 hover:border-blue-500 cursor-pointer"
-                    }`}
-                >
-                    <Checkbox
-                        checked={hasEverything || planData.gymAccess}
-                        disabled={planData.gymAccess}
-                        onCheckedChange={(checked) => handleEverythingToggle(checked as boolean)}
-                    />
-                    <span className="text-sm font-semibold text-blue-700">Everything (all equipment)</span>
-                </label>
-
-                {/* First 4 equipment as cards */}
-                <div className="grid grid-cols-2 gap-3">
-                    {visibleEquipment.map((equipment) => {
-                        const isSelected = equipmentLocked || planData.equipment.includes(equipment);
-                        return (
-                            <button
-                                key={equipment}
-                                onClick={() => !equipmentLocked && handleItemToggle(equipment, !planData.equipment.includes(equipment))}
-                                disabled={equipmentLocked}
-                                className={`p-3 sm:p-4 border-2 rounded-xl transition-all text-left ${
-                                    isSelected
-                                        ? equipmentLocked
-                                            ? "border-blue-400 bg-blue-50 cursor-not-allowed opacity-70"
-                                            : "border-blue-600 bg-blue-50"
-                                        : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
-                                }`}
-                            >
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <span className="text-xl sm:text-2xl">{EQUIPMENT_ICONS[equipment]}</span>
-                                    <div className="flex-1 min-w-0">
-                                        <p className={`font-semibold text-xs sm:text-sm truncate ${isSelected && !equipmentLocked ? "text-blue-600" : "text-slate-900"}`}>
-                                            {equipment}
-                                        </p>
-                                    </div>
-                                    {isSelected && (
-                                        <Check className={`w-3.5 h-3.5 flex-shrink-0 ${equipmentLocked ? "text-blue-400" : "text-blue-600"}`} />
-                                    )}
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* View all equipment button */}
-                <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setShowAllEquipment(true)}
-                >
-                    View all equipment <ChevronDown className="w-4 h-4 ml-2" />
-                </Button>
-
-                {/* Bodyweight Only — mutually exclusive with all others */}
-                <label
-                    className={`flex items-center gap-2 p-3 border-2 rounded-lg w-full transition-all ${
-                        equipmentLocked
-                            ? "border-slate-200 bg-slate-50 cursor-not-allowed opacity-50"
-                            : isBodyweightOnly
-                                ? "border-slate-600 bg-slate-50 cursor-pointer"
-                                : "border-slate-200 hover:border-slate-400 cursor-pointer"
-                    }`}
-                >
-                    <Checkbox
-                        checked={isBodyweightOnly}
-                        disabled={equipmentLocked}
-                        onCheckedChange={(checked) => handleBodyweightToggle(checked as boolean)}
-                    />
-                    <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium">{BODYWEIGHT_ONLY}</span>
-                        <span className="text-xs text-slate-500 ml-2">— no equipment available</span>
-                    </div>
-                </label>
+            {/* Mode selector */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                {EQUIPMENT_MODES.map((m) => {
+                    const isSelected = mode === m.key;
+                    return (
+                        <button
+                            key={m.key}
+                            onClick={() => selectMode(m.key)}
+                            className={`p-2 sm:p-4 border-2 rounded-xl transition-all text-center ${
+                                isSelected
+                                    ? "border-blue-600 bg-blue-50"
+                                    : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                            }`}
+                        >
+                            <span className="text-xl sm:text-3xl block">{m.icon}</span>
+                            <p className={`font-semibold text-[11px] sm:text-sm mt-1 sm:mt-2 leading-tight ${isSelected ? "text-blue-600" : "text-slate-900"}`}>
+                                <span className="sm:hidden">{m.shortTitle}</span>
+                                <span className="hidden sm:inline">{m.title}</span>
+                            </p>
+                            <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 hidden sm:block">{m.description}</p>
+                        </button>
+                    );
+                })}
             </div>
+
+            {/* Equipment picker — only shown for "home" mode */}
+            {mode === "home" && (
+                <div className="space-y-3">
+                    <Label>Select your equipment</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                        {nonBodyweightOptions.map((equipment) => {
+                            const isSelected = planData.equipment.includes(equipment);
+                            return (
+                                <button
+                                    key={equipment}
+                                    onClick={() => handleItemToggle(equipment)}
+                                    className={`relative p-3 sm:p-4 border-2 rounded-xl transition-all text-center ${
+                                        isSelected
+                                            ? "border-blue-600 bg-blue-50"
+                                            : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                                    }`}
+                                >
+                                    {isSelected && (
+                                        <Check className="w-4 h-4 text-blue-600 absolute top-2 right-2" />
+                                    )}
+                                    <span className="text-2xl sm:text-3xl block">{EQUIPMENT_ICONS[equipment]}</span>
+                                    <p className={`font-semibold text-xs sm:text-sm mt-1.5 leading-tight ${isSelected ? "text-blue-600" : "text-slate-900"}`}>
+                                        {equipment}
+                                    </p>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Gym mode confirmation */}
+            {mode === "gym" && (
+                <div className="flex gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-blue-800">
+                        All equipment will be available for your plan — the AI will pick the best exercises from the full range of gym machines and free weights.
+                    </p>
+                </div>
+            )}
 
             {/* Conflict warning: strength goal + bodyweight only */}
             {showConflictWarning && (
@@ -392,21 +364,12 @@ function EquipmentStep({
                             Your goal (<span className="font-medium">{FITNESS_GOALS.find(g => g.value === planData.fitnessGoals)?.label}</span>) typically
                             benefits from resistance equipment. With bodyweight only, your plan will focus on
                             calisthenics — still effective, but different from traditional strength training.
-                            You can continue or add some equipment above.
                         </p>
                     </div>
                 </div>
             )}
 
             <StepNav onBack={handleBack} onContinue={handleEquipment} />
-
-            <EquipmentModal
-                isOpen={showAllEquipment}
-                selectedEquipment={planData.equipment}
-                isLocked={equipmentLocked}
-                onToggle={handleModalToggle}
-                onClose={() => setShowAllEquipment(false)}
-            />
         </div>
     );
 }
@@ -532,11 +495,66 @@ function PreferencesStep({
 function CompletionStep({
     generatedPlanId,
     generationFailed,
+    failureReason,
     handleReset,
-}: Pick<WorkoutStepInputProps, "generatedPlanId" | "generationFailed" | "handleReset">) {
+}: Pick<WorkoutStepInputProps, "generatedPlanId" | "generationFailed" | "failureReason" | "handleReset">) {
     const navigate = useNavigate();
 
     if (generationFailed) {
+        if (failureReason === "email_not_verified") {
+            return (
+                <div className="flex flex-col items-center justify-center py-12 gap-5 text-center">
+                    <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+                        <MailCheck className="w-8 h-8 text-amber-500" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-slate-900">Email Not Verified</h3>
+                        <p className="text-slate-500 text-sm mt-1 max-w-xs">
+                            You need to verify your email address before generating a workout plan.
+                        </p>
+                    </div>
+                    <div className="flex flex-col gap-3 w-full max-w-xs">
+                        <Link to="/dashboard/profile?tab=security">
+                            <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500">
+                                <MailCheck className="w-4 h-4 mr-2" />
+                                Verify Your Email
+                            </Button>
+                        </Link>
+                        <Button variant="outline" className="w-full" onClick={handleReset}>
+                            Go Back
+                        </Button>
+                    </div>
+                </div>
+            );
+        }
+
+        if (failureReason === "plan_limit") {
+            return (
+                <div className="flex flex-col items-center justify-center py-12 gap-5 text-center">
+                    <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <Zap className="w-8 h-8 text-indigo-500" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-slate-900">Generation Limit Reached</h3>
+                        <p className="text-slate-500 text-sm mt-1 max-w-xs">
+                            You've used all your available plan generations. Upgrade your plan to generate more.
+                        </p>
+                    </div>
+                    <div className="flex flex-col gap-3 w-full max-w-xs">
+                        <Link to="/dashboard/profile?tab=subscription">
+                            <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600">
+                                <Zap className="w-4 h-4 mr-2" />
+                                Upgrade Your Plan
+                            </Button>
+                        </Link>
+                        <Button variant="outline" className="w-full" onClick={handleReset}>
+                            Go Back
+                        </Button>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="flex flex-col items-center justify-center py-12 gap-5 text-center">
                 <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">

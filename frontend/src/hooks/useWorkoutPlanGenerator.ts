@@ -28,12 +28,15 @@ const INITIAL_PLAN_DATA: WorkoutPlanData = {
 //  4 → Generating (auto)
 //  5 → Done
 
+export type GenerationFailureReason = "email_not_verified" | "plan_limit" | "generic";
+
 export function useWorkoutPlanGenerator() {
     const [step, setStep] = useState(0);
     const [showAllGoals, setShowAllGoals] = useState(false);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [generationFailed, setGenerationFailed] = useState(false);
+    const [failureReason, setFailureReason] = useState<GenerationFailureReason | null>(null);
     const [planData, setPlanData] = useState<WorkoutPlanData>(INITIAL_PLAN_DATA);
     const [generatedPlanId, setGeneratedPlanId] = useState<number | null>(null);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -77,7 +80,7 @@ export function useWorkoutPlanGenerator() {
 
     const handleEquipment = () => {
         if (planData.equipment.length === 0) {
-            notify.info("Please select at least one equipment option.");
+            notify.info("Please select a training setup and at least one equipment option.");
             return;
         }
         setStep(3);
@@ -101,6 +104,7 @@ export function useWorkoutPlanGenerator() {
     const generatePlan = async () => {
         setIsGenerating(true);
         setGenerationFailed(false);
+        setFailureReason(null);
         setGeneratedPlanId(null);
 
         try {
@@ -141,6 +145,14 @@ export function useWorkoutPlanGenerator() {
 
             if (error instanceof ApiError && error.statusCode === 403) {
                 notify.error(error.message);
+                const msg = error.message.toLowerCase();
+                if (msg.includes("verif")) {
+                    setFailureReason("email_not_verified");
+                } else if (msg.includes("limit") || msg.includes("generation") || msg.includes("active plan")) {
+                    setFailureReason("plan_limit");
+                } else {
+                    setFailureReason("generic");
+                }
                 setGenerationFailed(true);
                 setStep(5);
                 return;
@@ -149,6 +161,7 @@ export function useWorkoutPlanGenerator() {
             if (error instanceof ApiError && error.statusCode === 422) {
                 notify.error(error.message);
                 setGenerationFailed(true);
+                setFailureReason("generic");
                 setStep(5);
                 return;
             }
@@ -173,6 +186,7 @@ export function useWorkoutPlanGenerator() {
         setPlanData(INITIAL_PLAN_DATA);
         setGeneratedPlanId(null);
         setGenerationFailed(false);
+        setFailureReason(null);
         setShowResetConfirm(false);
         setIsGenerating(false);
     };
@@ -185,6 +199,7 @@ export function useWorkoutPlanGenerator() {
         setShowResetConfirm,
         isGenerating,
         generationFailed,
+        failureReason,
         planData,
         setPlanData,
         handleGoalToggle,

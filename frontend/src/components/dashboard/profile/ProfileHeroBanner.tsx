@@ -18,7 +18,7 @@ export function ProfileHeroBanner({ user, fitnessInfo, onLogout }: ProfileHeroBa
     const fullName = user ? `${user.name} ${user.surname}` : "";
 
     return (
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 p-6">
+        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 p-4 sm:p-6">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
             <div className="absolute bottom-0 left-1/3 w-40 h-40 bg-blue-500/10 rounded-full translate-y-1/2 pointer-events-none" />
 
@@ -51,48 +51,52 @@ export function ProfileHeroBanner({ user, fitnessInfo, onLogout }: ProfileHeroBa
                 </div>
             </div>
 
-            <div className="relative flex flex-wrap items-center gap-6 mt-5 pt-5 border-t border-white/10">
-                {fitnessInfo && (
-                    <>
-                        <div className="flex items-center gap-2 text-slate-300">
-                            <Ruler className="w-4 h-4 text-indigo-400" />
-                            <span className="text-sm">
-                                <span className="font-semibold text-white">{fitnessInfo.height}</span>{" "}cm
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-300">
-                            <Weight className="w-4 h-4 text-indigo-400" />
-                            <span className="text-sm">
-                                <span className="font-semibold text-white">{fitnessInfo.weight}</span>{" "}kg
-                            </span>
-                        </div>
-                        {fitnessInfo.age && (
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <User className="w-4 h-4 text-indigo-400" />
-                                <span className="text-sm">
-                                    <span className="font-semibold text-white">{fitnessInfo.age}</span>{" "}years old
-                                </span>
-                            </div>
+            <div className="relative mt-5 pt-5 border-t border-white/10">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                        {fitnessInfo && (
+                            <>
+                                <div className="flex items-center gap-2 text-slate-300">
+                                    <Ruler className="w-4 h-4 text-indigo-400" />
+                                    <span className="text-sm">
+                                        <span className="font-semibold text-white">{fitnessInfo.height}</span>{" "}cm
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-slate-300">
+                                    <Weight className="w-4 h-4 text-indigo-400" />
+                                    <span className="text-sm">
+                                        <span className="font-semibold text-white">{fitnessInfo.weight}</span>{" "}kg
+                                    </span>
+                                </div>
+                                {fitnessInfo.age && (
+                                    <div className="flex items-center gap-2 text-slate-300">
+                                        <User className="w-4 h-4 text-indigo-400" />
+                                        <span className="text-sm">
+                                            <span className="font-semibold text-white">{fitnessInfo.age}</span>{" "}yrs
+                                        </span>
+                                    </div>
+                                )}
+                                {fitnessInfo.experience_level && (
+                                    <div className="flex items-center gap-2 text-slate-300">
+                                        <Trophy className="w-4 h-4 text-indigo-400" />
+                                        <span className="text-sm font-semibold text-white">
+                                            {fitnessInfo.experience_level.charAt(0).toUpperCase() + fitnessInfo.experience_level.slice(1)}
+                                        </span>
+                                    </div>
+                                )}
+                            </>
                         )}
-                        {fitnessInfo.experience_level && (
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <Trophy className="w-4 h-4 text-indigo-400" />
-                                <span className="text-sm font-semibold text-white">
-                                    {fitnessInfo.experience_level.charAt(0).toUpperCase() + fitnessInfo.experience_level.slice(1)}
-                                </span>
-                            </div>
-                        )}
-                    </>
-                )}
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onLogout}
-                    className="ml-auto border-white/20 text-white bg-white/10 hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300 transition-colors"
-                >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Log Out
-                </Button>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onLogout}
+                        className="flex-shrink-0 border-white/20 text-white bg-white/10 hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300 transition-colors"
+                    >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Log Out
+                    </Button>
+                </div>
             </div>
         </div>
     );

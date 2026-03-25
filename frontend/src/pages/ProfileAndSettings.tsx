@@ -33,22 +33,22 @@ export function ProfileAndSettings() {
             <ProfileHeroBanner user={user} fitnessInfo={fitnessInfo} onLogout={logout} />
 
             <Tabs defaultValue={initialTab}>
-                <TabsList className="grid grid-cols-4 w-full">
-                    <TabsTrigger value="personal" className="flex items-center gap-1.5">
+                <TabsList className="grid grid-cols-4 w-full h-auto">
+                    <TabsTrigger value="personal" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 py-2.5 sm:py-2">
                         <User className="w-4 h-4 flex-shrink-0" />
-                        <span className="hidden sm:inline">Personal</span>
+                        <span className="text-[10px] sm:text-sm">Personal</span>
                     </TabsTrigger>
-                    <TabsTrigger value="fitness" className="flex items-center gap-1.5">
+                    <TabsTrigger value="fitness" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 py-2.5 sm:py-2">
                         <Dumbbell className="w-4 h-4 flex-shrink-0" />
-                        <span className="hidden sm:inline">Fitness</span>
+                        <span className="text-[10px] sm:text-sm">Fitness</span>
                     </TabsTrigger>
-                    <TabsTrigger value="subscription" className="flex items-center gap-1.5">
+                    <TabsTrigger value="subscription" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 py-2.5 sm:py-2">
                         <CreditCard className="w-4 h-4 flex-shrink-0" />
-                        <span className="hidden sm:inline">Plan</span>
+                        <span className="text-[10px] sm:text-sm">Plan</span>
                     </TabsTrigger>
-                    <TabsTrigger value="security" className="flex items-center gap-1.5">
+                    <TabsTrigger value="security" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 py-2.5 sm:py-2">
                         <Shield className="w-4 h-4 flex-shrink-0" />
-                        <span className="hidden sm:inline">Security</span>
+                        <span className="text-[10px] sm:text-sm">Security</span>
                     </TabsTrigger>
                 </TabsList>
 
