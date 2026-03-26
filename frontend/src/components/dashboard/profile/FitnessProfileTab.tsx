@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EXPERIENCE_LEVELS, GENDERS } from "@/constants/const";
 import type { ExperienceLevel, Gender } from "@/constants/const";
 import type { FitnessInfo } from "@/types/user";
@@ -71,34 +72,38 @@ export function FitnessProfileTab({ fitnessInfo, form, errors, isLoading, onForm
                     <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="gender">Gender</Label>
-                            <select
-                                id="gender"
+                            <Select
                                 required
                                 value={form.gender}
-                                onChange={(e) => onFormChange({ ...form, gender: e.target.value as Gender })}
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                onValueChange={(value) => onFormChange({ ...form, gender: value as Gender })}
                             >
-                                <option value="" disabled>Select gender</option>
-                                {GENDERS.map((g) => (
-                                    <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>
-                                ))}
-                            </select>
+                                <SelectTrigger id="gender">
+                                    <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {GENDERS.map((g) => (
+                                        <SelectItem key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             {errors.gender && <p className="text-sm text-red-500">{errors.gender}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="experience_level">Experience Level</Label>
-                            <select
-                                id="experience_level"
+                            <Select
                                 required
                                 value={form.experience_level}
-                                onChange={(e) => onFormChange({ ...form, experience_level: e.target.value as ExperienceLevel })}
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                onValueChange={(value) => onFormChange({ ...form, experience_level: value as ExperienceLevel })}
                             >
-                                <option value="" disabled>Select experience level</option>
-                                {EXPERIENCE_LEVELS.map((lvl) => (
-                                    <option key={lvl} value={lvl}>{lvl.charAt(0).toUpperCase() + lvl.slice(1)}</option>
-                                ))}
-                            </select>
+                                <SelectTrigger id="experience_level">
+                                    <SelectValue placeholder="Select experience level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {EXPERIENCE_LEVELS.map((lvl) => (
+                                        <SelectItem key={lvl} value={lvl}>{lvl.charAt(0).toUpperCase() + lvl.slice(1)}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             {errors.experience_level && <p className="text-sm text-red-500">{errors.experience_level}</p>}
                         </div>
                     </div>
