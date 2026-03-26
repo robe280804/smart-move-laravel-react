@@ -1,1 +1,3 @@
 # SmartMove AI
+
+## Tech stack
