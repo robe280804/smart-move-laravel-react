@@ -347,7 +347,7 @@ export const Dashboard = () => {
                                 history and more.
                             </p>
                         </div>
-                        <Link to="/dashboard/profile">
+                        <Link to="/dashboard/profile?tab=subscription">
                             <Button
                                 size="sm"
                                 className="bg-white text-indigo-600 hover:bg-indigo-50 flex-shrink-0"
