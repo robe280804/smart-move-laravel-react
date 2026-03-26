@@ -21,7 +21,7 @@ export function WelcomeHero({ onGetStarted }: { onGetStarted: () => void }) {
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
 
                     {/* Left — text content, fades in from the left */}
-                    <AnimatedSection direction="left" className="space-y-8">
+                    <AnimatedSection direction="left" className="space-y-8 text-center lg:text-left">
                         {/* Badge */}
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-blue-200 shadow-sm hover:border-blue-400 hover:shadow-md hover:bg-white transition-all duration-200 cursor-default">
                             <Sparkles className="w-4 h-4 text-blue-600" />
@@ -40,7 +40,7 @@ export function WelcomeHero({ onGetStarted }: { onGetStarted: () => void }) {
                             </p>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-3 flex flex-col items-center lg:items-start">
                             <Button
                                 onClick={onGetStarted}
                                 size="lg"

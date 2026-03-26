@@ -29,8 +29,8 @@ export function FeaturesSection() {
                                 <Card className="group h-full border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-default overflow-hidden">
                                     {/* Top accent bar slides in on hover */}
                                     <div className={`h-1 w-0 group-hover:w-full bg-gradient-to-r ${feature.gradient} transition-all duration-300`} />
-                                    <CardContent className="p-6 space-y-4">
-                                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-md group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
+                                    <CardContent className="p-6 space-y-4 text-center lg:text-left">
+                                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-md group-hover:scale-110 group-hover:shadow-lg transition-all duration-300 mx-auto lg:mx-0`}>
                                             <Icon className="w-6 h-6 text-white" />
                                         </div>
                                         <div className="space-y-1.5">
