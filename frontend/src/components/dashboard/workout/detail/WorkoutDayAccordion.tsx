@@ -95,7 +95,7 @@ export const WorkoutDayAccordion = ({ day, isExpanded, onToggle, onUpdate, canEd
                         </span>
                     </div>
                     <div className="min-w-0">
-                        <h3 className="font-semibold text-slate-900 text-base sm:text-lg truncate">
+                        <h3 className="font-semibold text-slate-900 text-base sm:text-lg">
                             {day.workout_name ?? "Session"}
                         </h3>
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-600 mt-1">
