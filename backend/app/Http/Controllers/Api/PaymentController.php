@@ -12,6 +12,7 @@ use App\Http\Responses\ApiSuccess;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
+use Laravel\Cashier\Exceptions\IncompletePayment;
 use Symfony\Component\HttpFoundation\Response;
 
 class PaymentController extends Controller
@@ -35,6 +36,8 @@ class PaymentController extends Controller
             return new ApiError($e, $e->getMessage(), Response::HTTP_CONFLICT);
         } catch (InvalidArgumentException $e) {
             return new ApiError($e, 'Payment configuration error. Please try again later.', Response::HTTP_INTERNAL_SERVER_ERROR);
+        } catch (IncompletePayment $e) {
+            return new ApiSuccess(['checkout_url' => route('cashier.payment', [$e->payment->id])], [], Response::HTTP_OK);
         }
 
         // Swap was performed — no redirect needed
