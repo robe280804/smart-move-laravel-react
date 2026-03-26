@@ -44,7 +44,7 @@ Route::prefix('v1')
             ->middleware([
                 SetBearerTokenFromCookie::class,
                 'auth:sanctum',
-                'ability:'.TokenAbility::ISSUE_ACCESS_TOKEN->value,
+                'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value,
                 'throttle:token-refresh',
             ])
             ->name('refresh');
@@ -52,7 +52,7 @@ Route::prefix('v1')
         // ── Protected routes ──────────────────────────────────────────────────
         Route::middleware([
             'auth:sanctum',
-            'ability:'.TokenAbility::ACCESS_API->value,
+            'ability:' . TokenAbility::ACCESS_API->value,
         ])->group(function () {
 
             Route::post('auth/logout', [AuthController::class, 'logout'])
