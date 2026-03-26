@@ -268,7 +268,7 @@ function EquipmentStep({
     const [mode, setMode] = useState<EquipmentMode>(() => initialMode(planData));
 
     const isStrengthGoal = (STRENGTH_FOCUSED_GOALS as readonly string[]).includes(planData.fitnessGoals);
-    const showConflictWarning = isStrengthGoal && mode === "bodyweight";
+    const showConflictWarning = isStrengthGoal && (mode === "bodyweight" || mode === "home");
 
     const selectMode = (newMode: EquipmentMode) => {
         setMode(newMode);
@@ -376,8 +376,10 @@ function EquipmentStep({
                         <p className="text-sm font-semibold text-amber-900">Heads up</p>
                         <p className="text-sm text-amber-800">
                             Your goal (<span className="font-medium">{FITNESS_GOALS.find(g => g.value === planData.fitnessGoals)?.label}</span>) typically
-                            benefits from resistance equipment. With bodyweight only, your plan will focus on
-                            calisthenics — still effective, but different from traditional strength training.
+                            benefits from resistance equipment.{" "}
+                            {mode === "bodyweight"
+                                ? "With bodyweight only, your plan will focus on calisthenics — still effective, but different from traditional strength training."
+                                : "With limited home equipment, results may be less optimal than training in a fully equipped gym."}
                         </p>
                     </div>
                 </div>
